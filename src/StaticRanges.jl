@@ -4,6 +4,8 @@ using StaticArrays
 
 import Base.unsafe_getindex
 
+export srange
+
 struct StaticRange{B,E,S,F,L,T} <: AbstractRange{T} #<: StaticVector{L,T}
     function StaticRange{B,E,S,F,L,T}() where {B,E,S,F,L,T}
         L >= 0 || throw(ArgumentError("length cannot be negative, got $L"))
