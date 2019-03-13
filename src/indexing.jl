@@ -1,4 +1,28 @@
+@pure Base.iterate(::StaticRange{T,B,E,S,0}) where {T,B,E,S} = nothing
+@pure Base.iterate(::StaticRange{T,B,E,S,L}) where {T,B,E,S,L} = (B, 1)::Tuple{T,Int}
+@pure function Base.iterate(::StaticRange{T,B,E,S,L}, i::Int) where {T,B,E,S,L}
+    Base.@_inline_meta
+    i == L && return nothing
+    (T(B + i * S), i + 1)::Tuple{T,Int}
+end
 
+@pure @propagate_inbounds function getindex(r::StaticRange{T,B,E,S,L}, i::Int) where {T,B,E,S,L}
+    @boundscheck if i < 1 || i > L
+        throw(BoundsError(r, i))
+    end
+    return T(B + (i - 1) * S)
+end
+
+
+
+#function getindex(A::AbstractArray, I...)
+#    @_propagate_inbounds_meta
+#    error_if_canonical_getindex(IndexStyle(A), A, I...)
+#    _getindex(IndexStyle(A), A, to_indices(A, I)...)
+#end
+
+
+# Always index with the exactly indices provided.
 """
     getindex(A, StaticRange)
 
@@ -28,58 +52,176 @@ julia> A[srange(1, 8, step=2), srange(1, 8, step=2)]
  7  47  87  127
 ```
 """
-unsafe_getindex(::SRBoth{B,E,S,F,L,T}, i::Int) where {B,E,S,F,L,T} = T(B + (i - F)*S)
+# ## Index StaticRange
 
-# AbstractArray
-#Base.checkbounds(a::AbstractArray, I::SRBoth) = checkbounds(Bool, a, I) || throw(BoundsError(a,I))
-#function Base.checkbounds(::Type{Bool}, a::AbstractArray{T,N}, I::SRBoth{B,E,S,F,L}) where {T,N,B,E,S,F,L}
-#    firstindex(a) <= B && E <= lastindex(a)
-#end
-#function Base.getindex(a::AbstractArray, I::SRBoth{B,E,S,F,L,T}) where {T,N,B,E,S,F,L}
-#    @boundscheck checkbounds(a, I)
-#    @inbounds unsafe_getindex(a, I)
-#end
-#
-
-@inline function Base.getindex(r::SRBoth, s::SRBoth{B,E,S,F,L,<:Integer}) where {B,E,S,F,L}
-    Base.@_inline_meta
-    @boundscheck checkbounds(r, s)
-    return srange(oftype(first(r), first(r) + B-1), step=S*step(r), length=L)
-end
-
-
-@inline function Base.getindex(r::AbstractRange, s::SRBoth{B,E,S,F,L,<:Integer}) where {B,E,S,F,L}
-    Base.@_inline_meta
-    @boundscheck checkbounds(r, s)
-    f = first(r)
-    st = oftype(f, f + B-1)
-    range(st, step=S*step(r), length=L)
-end
-
-@inline function Base.getindex(r::Base.OneTo{T}, s::SRBoth) where T
-    @boundscheck checkbounds(r, s)
-    OneTo(T(last(s)))
-end
-
-@inline function getindex(r::LinRange, s::StaticRange)
-    @boundscheck checkbounds(r, s)
-    return LinRange(Base.unsafe_getindex(r, first(s)), Base.unsafe_getindex(r, last(s)), length(s))
-end
-
-# Bounds checking
-Base.checkbounds(r::SRBoth, i::Int) = checkbounds(Bool, r, i)
-Base.checkbounds(r::SRBoth, i::AbstractRange) = checkbounds(Bool, r, i)
-Base.checkbounds(r::SRBoth, i::SRBoth) = checkbounds(Bool, r, i)
-
-
-
-Base.checkbounds(::Type{Bool}, r::SRBoth, i::Int) = firstindex(r) <= i <= lastindex(r) || throw(BoundsError(r, i))
-function Base.checkbounds(::Type{Bool}, r::SRBoth, i::AbstractRange)
-    firstindex(r) <= first(i) || throw(BoundsError(r, i))
-    last(i) <= lastindex(r) || throw(BoundsError(r, i))
-end
-
-@inline function Base.getindex(r::SRBoth, i::Int)
+"""
+Index with integer
+```jldoctest
+julia> srange(1,10,step=1)[4]
+4
+```
+"""
+# StaticRange[i]
+"""
+Index `SOneTo` with `StaticRange`
+```jldoctest
+julia> SOneTo(10)[srange(1,3,step=1)]
+SOneTo(3)
+```
+"""
+@pure @propagate_inbounds function getindex(r::SOneTo{N}, i::StaticRange{T,B,E,S,L}) where {T,B,E,S,L,N}
     @boundscheck checkbounds(r, i)
-    @inbounds unsafe_getindex(r, i)
+    return i
 end
+
+"""
+Index with `Base.OneTo`
+```jldoctest
+julia> srange(1,10,step=1)[Base.OneTo(5)]
+StaticRange(1:1:5)
+```
+"""
+# StaticRange[OneTo]
+@inline function getindex(r::StaticRangeUnion{T,B,E,S,L}, i::OneTo) where {T,B,E,S,L}
+    @boundscheck checkbounds(r, i)
+    StaticRange{T,B,B+(length(i)-1)*S,S,1,length(i)}()
+end
+
+
+"""
+Index with `UnitRange`
+```jldoctest
+julia> srange(1,10,step=1)[3:10]
+StaticRange(3:1:10)
+```
+"""
+# StaticRange[UnitRange]
+@inline function getindex(r::StaticRangeUnion{T,B,E,S,L}, i::AbstractUnitRange{<:Integer}) where {T,B,E,S,L}
+    @boundscheck checkbounds(r, i)
+    StaticRange{T,T(B + (first(i)-1) * S),T(B + (last(i) -1) * S),S,length(i)}()
+end
+
+"""
+Index with `StepRange`
+```jldoctest
+julia> srange(1,10,step=1)[3:2:10]
+StaticRange(3:2:9)
+```
+"""
+# StaticRange[StepRange]
+@inline function getindex(r::StaticRangeUnion{T,B,E,S,L}, i::StepRange{<:Integer}) where {T,B,E,S,L}
+    @boundscheck checkbounds(r, i)
+    StaticRange{T,T(B + (first(i)-1) * S),T(B + (first(i)-1) * S) + (length(i)-1)*(S*step(i)),S*step(i),length(i)}()
+end
+
+# ## Index Other Ranges
+
+"""
+Index `UnitRange` with `StepRange`
+```jldoctest
+julia> (1:2:10)[srange(1,5,step=1)]
+1:2:9
+```
+"""
+# ### AbstractUnitRange[srange]
+@inline function getindex(r::AbstractUnitRange, i::StaticRange{T,B,E,S,L}) where {T,B,E,S,L}
+    @boundscheck checkbounds(r, i)
+    range(oftype(r.start, r.start + B*S), step=S, length=L)
+end
+
+# OneTo[UnitSRange]
+@inline function getindex(r::OneTo{T}, i::StaticRange{T,B,E,S,L}) where {T,B,E,S,L}
+    @boundscheck checkbounds(r, i)
+    range(T(B), T(E), step=S)
+end
+
+# LinRange[UnitSRange]
+@inline function getindex(r::LinRange, i::UnitSRange{T,B,E,L}) where {T,B,E,L}
+    @boundscheck checkbounds(r, i)
+    return LinRange(B, E, L)
+end
+
+# LinRange{srange]
+@inline function getindex(r::LinRange, i::StaticRange{T,B,E,S,L}) where {T,B,E,S,L}
+    @boundscheck checkbounds(r, i)
+    return range(B, step=S, length=L)
+end
+
+
+# ## Index <:AbstractArray
+
+"""
+```jldoctest
+julia> [1:10...][srange(2,10,step=2)]
+10-element Array{Int64,1}:
+  2
+  4
+  6
+  8
+  10
+```
+"""
+# Array[srange]
+@inline function getindex(a::Array{T}, I::StaticRange{Tr,B,E,S,L}) where {Tr,B,E,S,L,T}
+    @boundscheck checkbounds(a, I)
+    out = Vector{T}(undef, L)
+    unsafe_copyto!(pointer(out), OneToSRange{L}(), pointer(a), I)
+    return out
+end
+
+
+"""
+```jldoctest
+julia> SVector(1:10...)[srange(2,10,step=2)]
+5-element SArray{Tuple{5},Int64,1,5}:
+  2
+  4
+  6
+  8
+ 10
+ ```
+ """
+_unsafe_pointer(a::SArray{S,T}) where {S,T} = convert(Ptr{T}, Base.unsafe_convert(Ptr{Nothing}, Ref(a.data)))
+_unsafe_pointer(a::MArray{S,T}) where {S,T} = Base.unsafe_convert(Ptr{T}, pointer_from_objref(a))
+_unsafe_pointer(a::Array{T}) where T = pointer(a)
+_unsafe_pointer(a::SizedArray{S,T}) where {S,T} = pointer(a.data)::Ptr{T}
+
+
+# StaticArray[srange]
+@inline function getindex(
+    a::StaticArray{S,T,N}, I::StaticRange{<:Integer,<:Integer,<:Integer,<:Integer,L}) where {S,T,N,L}
+    @boundscheck checkbounds(a, I)
+    ref = Ref{NTuple{L,T}}()
+    unsafe_copyto!(convert(Ptr{T},Base.unsafe_convert(Ptr{Nothing}, ref)), _unsafe_pointer(a), I)
+    return similar_type(a, Size(L))(ref[])
+end
+
+@pure @propagate_inbounds function getindex(r::StaticRangeUnion{T,B,E,S,L}, i::Int) where {T,B,E,S,L}
+    @boundscheck if i < 1 || i > L
+        throw(BoundsError(r, i))
+    end
+    return T(B + (i - 1) * S)
+end
+
+
+# TODO: ensure that r2 with offset actual gives right result
+@pure @propagate_inbounds function getindex(
+    r1::StaticRangeUnion{T1,B1,E1,S1,L1}, r2::StaticRange{T2,B2,E2,S2,L2}) where {T1,B1,E1,S1,L1,T2,B2,E2,S2,L2}
+    @boundscheck if B2 < 1 || E2 > L1
+        throw(BoundsError(r1, r2))
+    end
+    StaticRange{T1,T1(B1 + (B2-1) * S1),T1(B1 + (B2-1) * S1) + (L2-1)*(S1*S2),S1*S2,L2}()
+end
+
+@inline function Base.unsafe_copyto!(
+    dest::Ptr{T}, ::StaticRange{Int,B1,E1,S1,L},
+    src::Ptr{T}, ::StaticRange{Int,B2,E2,S2,L}) where {B1,E1,S1,B2,E2,S2,L,T}
+    i = 1
+    while i < L
+        unsafe_store!(dest, unsafe_load(src, B2 + (i-1) * S2)::T, B1 + (i-1) * S1)
+        i += 1
+    end
+end
+
+
+

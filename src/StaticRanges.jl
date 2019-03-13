@@ -1,55 +1,48 @@
+# TODO:
+# - ensure axes works on all appropriate types
+# - distributed StridedWindow (for each window) indexing creates more objects but is parallel
+# - non-distributed can be optimized within one function
+# - implement offset
+
 module StaticRanges
 
-using StaticArrays
-import Base.unsafe_getindex
+using StaticArrays, Base.Cartesian
 
-export srange, StaticRange
+import StaticArrays: tuple_length, tuple_prod, tuple_minimum
 
+import Base: # indexing
+             unsafe_getindex, getindex, checkbounds, to_index, axes, size,
+             @_inline_meta, @pure, @_propagate_inbounds_meta, @propagate_inbounds,
+             ==, +, -,
+             # range
+             step, OneTo, first, last, firstindex, lastindex, tail, eltype, length
+#             promote_op, , zero, trunc, floor, round, ceil,
+#             mod, rem, atan, hypot
 
-struct StaticRange{B,E,S,F,L,T} <: StaticVector{L,T}
-    function StaticRange{B,E,S,F,L,T}() where {B,E,S,F,L,T}
-        L >= 0 || throw(ArgumentError("length cannot be negative, got $L"))
-        1 <= F <= max(1,L) || throw(ArgumentError("StaticRange: step must be in [1,$L], got $S"))  # FIXME
-        new{B,E,S,F,L,T}()
-    end
-end
+export StaticRange, SRange, OneToSRange, SubRange, srange
+export StaticIndices, SubIndices,
+       CartesianSIndices, SubCartesianIndices,
+       LinearSIndices, SubLinearIndices, parentsize
 
-function StaticRange(start::Real, step::Real, stop::Real, offset::Real)
-    B, E, F = promote(start, stop, offset)
-    StaticRange{B,E,step,F}()
-end
+# this is the default number of dimensions supported by default. Users can compile methods
+# to support more dimensions by calling `create_nd_support(N)` where N is the max number of
+# supported dimensions.
+const NDSupport = 3::Int
 
-StaticRange{B,E,S,F}() where {B,E,S,F} = StaticRange{B,E,S,F,floor(Int, (E-B)/S)+1}()
-StaticRange{B,E,S,F,L}() where {B,E,S,F,L} = StaticRange{B,E,S,F,L,typeof(B+0*S)}()
-
-SRBoth{B,E,S,F,L,T} = Union{StaticRange{B,E,S,F,L,T},Type{<:StaticRange{B,E,S,F,L,T}}}
-
-# Indexing interface
-Base.length(r::SRBoth{B,E,S,F,L}) where {B,E,S,F,L} = L
-Base.step(r::SRBoth{B,E,S}) where {B,E,S} = S
-Base.first(r::SRBoth{B}) where {B} = unsafe_getindex(r, 1)
-Base.last(r::SRBoth{B,E}) where {B,E} = unsafe_getindex(r, length(r))
-Base.firstindex(::SRBoth) = 1
-Base.lastindex(::SRBoth{B,E,S,F,L}) where {B,E,S,F,L} = L
-offset(::SRBoth{B,E,S,F}) where {B,E,S,F} = F
-
-Base.iterate(r::SRBoth) = (r[1], 1)
-function Base.iterate(r::SRBoth, state::Int)
-    if state < lastindex(r)
-        r[state+1], state+1
-    else
-        return nothing
-    end
-end
-
-function showrange(io::IO, r::StaticRange)
-    print(io, "StaticRange: $(first(r)):$(step(r)):$(last(r))")
-end
-Base.show(io::IO, r::StaticRange) = showrange(io, r)
-Base.show(io::IO, ::MIME"text/plain", r::StaticRange) = showrange(io, r)
-
-include("srange.jl")
+# Notes on project organization
+# - Abstract types and documentation are kept in this module file
+# - Each subtype has it's own file
+include("types.jl")
+include("traits.jl")
+include("checkbounds.jl")
 include("indexing.jl")
-#include("swindow.jl")
+include("multidimensional.jl")
+include("utils.jl")
+
+#include("SubIndices.jl")
+
+#include("SlidingWindow.jl")
+
+
 
 end
