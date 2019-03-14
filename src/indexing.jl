@@ -1,6 +1,6 @@
-@pure Base.iterate(::StaticRange{T,B,E,S,0}) where {T,B,E,S} = nothing
-@pure Base.iterate(::StaticRange{T,B,E,S,L}) where {T,B,E,S,L} = (B, 1)::Tuple{T,Int}
-@pure function Base.iterate(::StaticRange{T,B,E,S,L}, i::Int) where {T,B,E,S,L}
+@pure Base.iterate(::StaticRangeUnion{T,B,E,S,0}) where {T,B,E,S} = nothing
+@pure Base.iterate(::StaticRangeUnion{T,B,E,S,L}) where {T,B,E,S,L} = (B, 1)::Tuple{T,Int}
+@pure function Base.iterate(::StaticRangeUnion{T,B,E,S,L}, i::Int) where {T,B,E,S,L}
     Base.@_inline_meta
     i == L && return nothing
     (T(B + i * S), i + 1)::Tuple{T,Int}
@@ -12,8 +12,6 @@ end
     end
     return T(B + (i - 1) * S)
 end
-
-
 
 #function getindex(A::AbstractArray, I...)
 #    @_propagate_inbounds_meta
