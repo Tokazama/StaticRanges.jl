@@ -16,4 +16,4 @@ for a variety of use cases (sliding windows, multidimensional filters, etc.).
 
 ## Grab each index of a range
 
-![Indexing Benchmarks](benchmarks/indexing.svg)
+![Indexing Benchmarks](benchmark/indexing.svg)
