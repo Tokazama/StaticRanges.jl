@@ -11,9 +11,11 @@ for a variety of use cases (sliding windows, multidimensional filters, etc.).
 
 ## Installation
 ```julia
-]add https://github.com/JuliaDebug/JuliaInterpreter.jl
+]add https://github.com/Tokazama/StaticRanges.jl
 ```
 
-## Grab each index of a range
+## Performance
+
+Note: time is in nanoseconds
 
 ![Indexing Benchmarks](benchmark/indexing.svg)
