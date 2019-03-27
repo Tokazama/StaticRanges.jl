@@ -4,8 +4,7 @@ using StaticArrays
 
 import StaticArrays: tuple_length, tuple_prod, tuple_minimum
 
-import Base: unsafe_getindex, getindex, checkbounds,
-             @pure, ==, +, -, tail, eltype
+import Base: unsafe_getindex, getindex, checkbounds, @pure, ==, +, -, tail, eltype
 
 import Base.Checked: checked_sub, checked_add
 
@@ -34,12 +33,13 @@ srange(start::Val{B}; stop::Val{E}=Val(nothing), length::Val{L}=Val(nothing), st
 srange(start::Val{B}, stop::Val{E}; length::Val{L}=Val(nothing), step::Val{S}=Val(nothing), offset::Val{F}=Val(1)) where {B,E,S,F,L} =
     _srange(start, stop, step, offset, length)
 
-function _srange(b::Val{B}, e::Val{E}, s::Val{S}, f::Val{F}, len::Val{L}) where {B,E,S,F,L}
-    StaticRange{typeof(B),B,oftype(B, B+L-1),F,L}()
-end
-
-# 1. start, length
-function _srange(b::Val{B}, e::Val{nothing}, s::Val{nothing}, f::Val{F}, len::Val{L}) where {B,F,L}
+function _srange(
+    b::Val{B},
+    e::Val{nothing},
+    s::Val{nothing},
+    f::Val{F},
+    len::Val{L}
+   ) where {B,F,L}
     StaticRange{typeof(B),B,oftype(B, B+L-1),F,L}()
 end
 
@@ -66,20 +66,52 @@ end
 
 function _srange(
     b::Val{B},
+    e::Val{E},
+    s::Val{S},
+    f::Val{F},
+    len::Val{nothing}
+   ) where {B,E,S,F}
+    if isa(B, Integer)
+        return _srange_int(b, e, s, f, len)
+    elseif isa(B, AbstractFloat)
+        return _srange_float(b, e, s, f, len)
+    else
+        throw(ArgumentError("start must be a subtype of Real, got $B"))
+    end
+end
+
+function _srange(
+    b::Val{B},
     e::Val{nothing},
     s::Val{S},
     f::Val{F},
     len::Val{L}
    ) where {B,S,F,L}
     if isa(B, Integer)
-        _srange_int(start, stop, step, offset, length)
+        return _srange_int(b, e, s, f, len)
     elseif isa(B, AbstractFloat)
-        _srange_float(start, stop, step, offset, length)
+        return _srange_float(b, e, s, f, len)
     else
         throw(ArgumentError("start must be a subtype of Real, got $B"))
     end
-    _srange(b, e, s, )
 end
+
+# Final call with all parameters
+function _srange(
+    b::Val{B},
+    e::Val{E},
+    s::Val{S},
+    f::Val{F},
+    len::Val{L}
+    ) where {B,E,S,F,L}
+    if !isa(B, typeof(E)) || !isa(B, typeof(S))
+        bnew, enew, snew = promote(B, E, S)
+        _srange(Val(bnew), Val(enew), Val(snew), f, len)
+    else
+        StaticRange{typeof(B),B,E,S,F,L}()
+    end
+end
+
 
 
 function _srange_int(b::Val{B}, e::Val{E}, s::Val{S}, f::Val{F}, len::Val{nothing}) where {B,E,S,F}
@@ -127,15 +159,6 @@ function _srange_int(b::Val{B}, e::Val{E}, s::Val{S}, f::Val{F}, len::Val{nothin
         return _srange(b, Val(last), s, f, Val(checked_add(div(checked_sub(last, B), S), one(B))))
     else
         return _srange(b, Val(last), s, f, Val(checked_add(div(checked_sub(B, last), -S), one(B))))
-    end
-end
-
-function _srange(b::Val{B}, e::Val{E}, s::Val{S}, f::Val{F}, len::Val{L}) where {B,E,S,F,L}
-    if !isa(B, typeof(E)) || !isa(B, typeof(S))
-        bnew, enew, snew = promote(B, E, S)
-        _srange(Val(bnew), Val(enew), Val(snew), f, len)
-    else
-        StaticRange{typeof(B),B,E,S,F,L}()
     end
 end
 
@@ -202,11 +225,6 @@ _srange(start::Real, step::Real, stop::Real, length::Integer, offset) = # range(
     throw(ArgumentError("Too many arguments specified; try passing only one of `stop` or `length`"))
 _srange(::Val{nothing}, ::Val{nothing}, ::Val{nothing}, length, offset) = # range(nothing, length=l)
     throw(ArgumentError("Can't start a range at `nothing`"))
-
-# 1. start, length
-function _srange(b::Val{B}, e::Val{nothing}, s::Val{nothing}, f::Val{F}, len::Val{L}) where {B,F,L}
-    StaticRange{typeof(B),B,oftype(B, B+L-1),F,L}()
-end
 
 
 #=
@@ -378,7 +396,7 @@ end
     end
 
     z = div(B1 - B2, g)
-    b = S1 - x * z * s1
+    b = S1 - x * z * 1
     # Possible points of the intersection of r and s are
     # ..., b-2a, b-a, b, b+a, b+2a, ...
     # Determine where in the sequence to start and stop.
