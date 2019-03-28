@@ -10,190 +10,44 @@ import Base.Checked: checked_sub, checked_add
 
 export StaticRange, OneToSRange, srange
 
-abstract type AbstractStaticRange{T,B,E,S,F,L} <: AbstractRange{T} end
+abstract type StaticRange{T,B,E,S,F,L} <: AbstractRange{T} end
 
-@pure Base.first(::AbstractStaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = B::T
-@pure Base.first(::Type{<:AbstractStaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = B::T
+@pure Base.first(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = B::T
+@pure Base.first(::Type{<:StaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = B::T
 
-@pure Base.last(::AbstractStaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = E::T
-@pure Base.last(::Type{<:AbstractStaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = E::T
+@pure Base.last(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = E::T
+@pure Base.last(::Type{<:StaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = E::T
 
-@pure Base.step(::AbstractStaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = S::T
-@pure Base.step(::Type{<:AbstractStaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = S::T
+@pure Base.step(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = S::T
+@pure Base.step(::Type{<:StaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = S::T
 
-@pure Base.firstindex(::AbstractStaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = F
-@pure Base.firstindex(::Type{<:AbstractStaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = F
+@pure Base.firstindex(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = F
+@pure Base.firstindex(::Type{<:StaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = F
 
-@pure Base.lastindex(::AbstractStaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = L - F + 1
-@pure Base.lastindex(::Type{<:AbstractStaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = L - F + 1
+@pure Base.lastindex(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = L - F + 1
+@pure Base.lastindex(::Type{<:StaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = L - F + 1
 
-@pure Base.length(::AbstractStaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = L
-@pure Base.length(::Type{<:AbstractStaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = L
+@pure Base.length(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = L
+@pure Base.length(::Type{<:StaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = L
 
-@pure Base.size(::AbstractStaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = (L,)
-@pure Base.size(::Type{<:AbstractStaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = (L,)
+@pure Base.size(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = (L,)
+@pure Base.size(::Type{<:StaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = (L,)
 
-@pure Base.minimum(::AbstractStaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = B::T
-@pure Base.minimum(::Type{<:AbstractStaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = B::T
+@pure Base.minimum(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = B::T
+@pure Base.minimum(::Type{<:StaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = B::T
 
-@pure Base.maximum(::AbstractStaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = E::T
-@pure Base.maximum(::Type{<:AbstractStaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = E::T
+@pure Base.maximum(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = E::T
+@pure Base.maximum(::Type{<:StaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = E::T
 
-@pure Base.extrema(::AbstractStaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = (B, E)::Tuple{T,T}
-@pure Base.extrema(::Type{<:AbstractStaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = (B, E)::Tuple{T,T}
+@pure Base.extrema(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = (B, E)::Tuple{T,T}
+@pure Base.extrema(::Type{<:StaticRange{T,B,E,S,F,L}}) where {T,B,E,S,F,L} = (B, E)::Tuple{T,T}
 
+include("srange.jl")
+include("IntSRange.jl")
+include("FloatSRange.jl")
+include("NamedRange.jl")
+include("IndirectRange.jl")
 
-"""
-    StaticRange
-
-"""
-struct StaticRange{T,B,E,S,F,L} <: AbstractStaticRange{T,B,E,S,F,L}
-    StaticRange{T,B,E,S,F,L}() where {T,B,E,S,F,L} = new{T,B,E,S,F,L}()
-end
-
-const OneToSRange{N} = StaticRange{Int,1,N,1,1,N}
-OneToSRange(N::Int) = OneToSRange{N}()
-
-function srange(
-    start::Real;
-    length::Union{Int,Nothing}=nothing,
-    stop::Union{Real,Nothing}=nothing,
-    step::Union{Real,Nothing}=nothing,
-    offset::Int=1)
-    _srange(Val(start), Val(stop), Val(step), Val(offset), Val(length))
-end
-
-function srange(
-    start::Real, stop::Real;
-    length::Union{Int,Nothing}=nothing,
-    step::Union{Real,Nothing}=nothing,
-    offset::Int=1)
-    _srange(Val(start), Val(stop), Val(step), Val(offset), Val(length))
-end
-
-function srange(
-    start::Val{B};
-    stop::Val{E}=Val(nothing),
-    length::Val{L}=Val(nothing),
-    step::Val{S}=Val(nothing),
-    offset::Val{F}=Val(1)) where {B,E,S,F,L}
-    _srange(start, stop, step, offset, length)
-end
-
-function srange(
-    start::Val{B}, stop::Val{E};
-    length::Val{L}=Val(nothing),
-    step::Val{S}=Val(nothing),
-    offset::Val{F}=Val(1)) where {B,E,S,F,L}
-    _srange(start, stop, step, offset, length)
-end
-
-function _srange(
-    b::Val{B},
-    e::Val{nothing},
-    s::Val{nothing},
-    f::Val{F},
-    len::Val{L}
-   ) where {B,F,L}
-    StaticRange{typeof(B),B,oftype(B, B+L-1),F,L}()
-end
-
-# 2. start, stop, length
-function _srange(
-    b::Val{B},
-    e::Val{E},
-    s::Val{nothing},
-    f::Val{F},
-    len::Val{L}
-   ) where {B,E,F,L}
-    _srange(b, e, Val(oftype(B, (E-B)/L)), f, len)
-end
-
-function _srange(
-    b::Val{B},
-    e::Val{E},
-    s::Val{nothing},
-    f::Val{F},
-    len::Val{nothing}
-   ) where {B,E,F}
-    _srange(b, e, Val(oftype(B, 1)), f, Val(Int(E - B + 1)))
-end
-
-function _srange(
-    b::Val{B},
-    e::Val{E},
-    s::Val{S},
-    f::Val{F},
-    len::Val{nothing}
-   ) where {B,E,S,F}
-    if isa(B, Integer) || isa(E, Integer) || isa(S, Integer)
-        return _srange_int(b, e, s, f, len)
-    elseif isa(B, AbstractFloat)
-        return _srange_float(b, e, s, f, len)
-    else
-        throw(ArgumentError("start must be a subtype of Real, got $B"))
-    end
-end
-
-function _srange(
-    b::Val{B},
-    e::Val{nothing},
-    s::Val{S},
-    f::Val{F},
-    len::Val{L}
-   ) where {B,S,F,L}
-    if !isa(B, typeof(S))
-        bnew, snew = promot(B, S)
-        # repeat this call with arguments promoted
-        return _srange(Val(bnew), e, Val(snew), f, len)
-    else
-        if isa(B, AbstractFloat)
-            return _srange_float(b, e, s, f, len)
-        elseif isa(B, Integer)
-            return _srange_int(b, e, s, f, len)
-        else
-            throw(ArgumentError("start must be a subtype of Real, got $B"))
-        end
-    end
-end
-
-function _srange(
-    b::Val{B},
-    e::Val{E},
-    s::Val{S},
-    f::Val{F},
-    len::Val{L}
-    ) where {B,E,S,F,L}
-    if !isa(B, typeof(S)) || !isa(S, typeof(E))
-        bnew, snew, enew = promot(B, S, E)
-        # repeat this call with arguments promoted
-        return _srange(Val(bnew), Val(enew), Val(snew), f, len)
-    else
-        if isa(B, AbstractFloat)
-            return _srange_float(b, e, s, f, len)
-        elseif isa(B, Integer)
-            return _srange_int(b, e, s, f, len)
-        else
-            throw(ArgumentError("start must be a subtype of Real, got $B"))
-        end
-    end
-end
-
-# <:AbstractFloat
-#_srange_float(b::Val{B}, e::Val{E}, s::Val{S}, f::Val{F}, len::Val{L}) where {B,E,S,F,L}
-
-srange(r::AbstractRange{T}) where T = _srange(Val(first(r)),Val(last(r)),Val(step(r)),Val(firstindex(r)),Val(length(r)))
-
-_srange(start, ::Val{nothing}, step, ::Val{nothing}, offset) = # range(a, step=s)
-    throw(ArgumentError("At least one of `length` or `stop` must be specified"))
-_srange(start, ::Val{nothing}, ::Val{nothing}, ::Val{nothing}, offset) = # range(a)
-    throw(ArgumentError("At least one of `length` or `stop` must be specified"))
-_srange(::Val{nothing}, ::Val{nothing}, ::Val{nothing}, ::Val{nothing}, offset) = # range(nothing)
-    throw(ArgumentError("At least one of `length` or `stop` must be specified"))
-_srange(start::Real, step::Real, stop::Real, length::Integer, offset) = # range(a, step=s, stop=b, length=l)
-    throw(ArgumentError("Too many arguments specified; try passing only one of `stop` or `length`"))
-_srange(::Val{nothing}, ::Val{nothing}, ::Val{nothing}, length, offset) = # range(nothing, length=l)
-    throw(ArgumentError("Can't start a range at `nothing`"))
 
 
 #=
@@ -370,7 +224,5 @@ Base.sum(r::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} =
     end
 end
 
-#include("HPStaticRange.jl")
-include("srange_int.jl")
 
 end
