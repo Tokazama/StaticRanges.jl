@@ -1,18 +1,74 @@
-import Base: TwicePrecision
-import Base: ==, +, -, *, /, ^, <, ~, abs, abs2, isless, max, min, div
-
-struct SVal{V,T}
+struct SVal{V,T<:Union{Number,Nothing}}
     function SVal{V,T}() where {V,T}
         !(typeof(V) === T) && throw(ArgumentError("val must be of type T"))
         new{V,T}()
     end
 end
 SVal(val::T) where T = SVal{val,T}()
+SVal{V}() where {V} = SVal{V,typeof(V)}()
+SVal(::Val{V}) where {V} = SVal{V}()
+SVal(::Type{SVal{V,T}}) where {V,T}  = SVal{V,T}()
+SVal(::SVal{V}) where {V} = SVal{V}()
+
+(::Type{T})(x::SVal{V,T2}) where {T<:Number,T2,V} = T(V)::T
+(::Type{SVal{<:Any,T}})(x::SVal{V}) where {T,V} = SVal{T(V),T}()
+
+const SReal{V} = SVal{V,<:Real}
+
+const SBigFloat{V} = SVal{V,BigFloat}
+ const SFloat16{V} = SVal{V,Float16}
+ const SFloat32{V} = SVal{V,Float32}
+ const SFloat64{V} = SVal{V,Float64}
+const StaticFloat{V} = Union{SFloat16{V},SFloat32{V},SFloat64{V},SBigFloat{V}}
+
+const SBigInt{V} = SVal{V,BigInt}
+const SInt128{V} = SVal{V,Int128}
+ const SInt16{V} = SVal{V,Int16}
+ const SInt32{V} = SVal{V,Int32}
+ const SInt64{V} = SVal{V,Int64}
+  const SInt8{V} = SVal{V,Int8}
+const StaticSigned{V} = Union{<:SInt8{V},<:SInt16{V},<:SInt32{V},<:SInt64{V},<:SInt128{V},<:SBigInt{V}}
+
+const SUInt128{V} = SVal{V,UInt128}
+ const SUInt64{V} = SVal{V,UInt64}
+ const SUInt32{V} = SVal{V,UInt32}
+ const SUInt16{V} = SVal{V,UInt16}
+  const SUInt8{V} = SVal{V,UInt8}
+const StaticUnsigned{V} = Union{<:SUInt8{V},<:SUInt16{V},<:SUInt32{V},<:SUInt64{V},<:SUInt128{V}}
+
+const SBool{V} = SVal{V,Bool}
+
+const SInteger{V} = Union{<:StaticUnsigned{V},<:StaticSigned{V},<:SBool{V}}
+
+const SNothing = SVal{nothing,Nothing}
+
+Base.big(::SVal{V,T}) where {V,T} = SVal{big(V)}()
+Base.float(::SVal{V,T}) where {V,T} = SVal{float(V)}()
+
+
+Base.oftype(x::T, ::SVal{V}) where {T,V} = SVal{T(V),T}()
+
+function Base.promote(::SVal{V1,T1}, ::SVal{V2,T2}) where {V1,T1,V2,T2}
+    T3 = promote_type(T1,T2)
+    SVal{T3(V1),T3}(), SVal{T3(V2),T3}()
+end
+
+function Base.promote(::SVal{V1,T1}, ::SVal{V2,T2}, ::SVal{V3,T3}) where {V1,T1,V2,T2,V3,T3}
+    T4 = promote_type(T1,T2,T3)
+    SVal{T4(V1),T4}(), SVal{T4(V2),T4}(), SVal{T4(V3),T4}()
+end
+
 
 @pure Base.get(::SVal{V,T}) where {V,T} = V::T
-@pure Base.eltype(::SVal{V,T}) where {V,T} = T
-@inline Base.typeof(::SVal{V,T}, val) where {V,T} = typeof(T, val)
+@pure Base.get(::Type{<:SVal{V,T}}) where {V,T} = V::T
 
+@pure Base.eltype(::SVal{V,T}) where {V,T} = T
+@pure Base.eltype(::Type{<:SVal{V,T}}) where {V,T} = T
+
+Base.convert(::Type{SVal{V,T}}, x) where {V,T} = SVal{oftype(V, x),T}()
+
+
+#=
 for f in (:+, :-, :*, :^, :\, :div)
     @eval begin
         @inline function ($f)(::SVal{V,T}, x::Real) where {V,T}
@@ -24,202 +80,95 @@ for f in (:+, :-, :*, :^, :\, :div)
             SVal{vnew,typeof(vnew)}()
         end
 
-        @inline function ($f)(::SVal{V1,T1}, ::SVal{V2,T,2}) where {V1,T1,V2,T2}
+        @inline function ($f)(::SVal{V1,T1}, ::SVal{V2,T2}) where {V1,T1,V2,T2}
             vnew = $f(V1, V2)
             SVal{vnew,typeof(vnew)}()
         end
     end
 end
+=#
 
 # bool
 for f in (:(==), :<, :isless, :max, :min)
-    @eval function ($f)(A::AbstractArray, B::AbstractArray)
-        @inline $f(::SVal{V,T}, x) where {V,T} = $f(V, x)
-        @inline $f(x,  ::SVal{V,T}) where {V,T} = $f(x, V)
-        @pure $f(::SVal{V1,T1}, ::SVal{V2,T2}) where {V1,T2,V2,T2} = $f(V1, V2)
+    @eval begin
+        @inline function $f(::SVal{V,T}, x::Real) where {V,T}
+            $(f)(V, x)
+        end
+
+        @inline function $f(x::Real, ::SVal{V,T}) where {V,T}
+            $(f)(x, V)
+        end
+
+        @pure function $f(::SVal{V1,T1}, ::SVal{V2,T2}) where {V1,T1,V2,T2}
+            SVal{$(f)(V1, V2)}()
+        end
     end
 end
+
+
++(::SVal{V,T}, y::Number) where {V,T} = SVal{V+y}()
++(x::Number, y::SVal) = y+x
+
++(x::SVal{V1,T}, y::SVal{V2,T}) where {V1,V2,T} = SVal{V1+V2}()
++(x::SVal{V1,T1}, y::SVal{V2,T2}) where {V1,V2,T1,T2} = +(promote(x, y)...)
+
+-(x::SVal{V,T}) where {V,T} = SVal{-V,T}()
+
+-(x::SVal, y::SVal) = x + (-y)
+-(x::Number, y::SVal) = x + (-y)
+-(x::SVal, y::Number) = x + (-y)
+
+*(x::SVal{V,T}, v::Number) where {V,T} = SVal{V*v}()
+*(v::Number, x::SVal) = x*v
+*(x::SVal{V1,T1}, y::SVal{V2,T2}) where {V1,V2,T1,T2} = *(promote(x, y)...)
+*(x::SVal{V1,T}, y::SVal{V2,T}) where {V1,V2,T} = SVal{V1*V2}()
+
+/(x::SVal{V,T}, v::Number) where {V,T} = x / SVal(oftype(V/v, v))
+/(v::Number, x::SVal{V,T}) where {V,T} = SVal(oftype(V/v, v)) / x
+/(x::SVal{V1,T1}, y::SVal{V2,T2}) where {V1,T1,V2,T2} = /(promote(x, y)...)
+/(x::SVal{V1,T}, y::SVal{V2,T}) where {V1,V2,T} = SVal{V1/V2}()
 
 copy(::SVal{V,T}) where {V,T} = SVal{V,T}()
 
-abs(::SValUnion{V,T}) where {V,T}= abs(I)
-abs2(::SValUnion{V,T}) where {V,T} = abs2(I)
+abs(::SVal{V,T}) where {V,T}= SVal{abs(V)}()
+abs2(::SVal{V,T}) where {V,T} = SVal{abs2(V),T}()
+
+Base.ceil(::SVal{V,T}) where {V,T} = SVal{ceil(V)}()
+Base.ceil(::Type{T}, ::SVal{V}) where {V,T} = SVal{ceil(T, V)}()
 
 
-_sr(b::SVal{B,Tt}, e::SVal{E,Tt}, s::SVal{S,Tt}, f::SVal{F,Ti}, l::Val{L,Ti}) where {B,E,S,Tt,F,L,Ti}
+const BASE2 = log(2)
+const BASE10 = log(10)
+Base.log(::SVal{V,T}) where {V,T} = SVal{log(V)}()
+# version from base erros on @code_inference
+Base.log2(::SVal{V,T}) where {V,T} = SVal{log(V) / BASE2}()
+Base.log10(::SVal{V,T}) where {V,T} = SVal{log(V) / BASE10}()
+Base.log1p(::SVal{V,T}) where {V,T} = SVal{logp(V)}()
 
-_sr(b::SVal{B,Tt}, e::SVal{E,Tt}, s::SVal{S,Tt}, f::SVal{F,Ti}, l::Val{L,Ti}) where {B,E,S,Tt<:Integer,F,L,Ti}
+Base.rem(::SVal{V1,T1}, ::SVal{V2,T2}) where {V1,V2,T1,T2} = SVal{rem(V1,V2)}()
+Base.rem(::SVal{V,T}, x::T2) where {V,T,T2} = SVal{rem(V,x)}()
+Base.rem(x::T2, ::SVal{V,T}) where {V,T,T2} = SVal{rem(x,V)}()
 
-
-# base/range.jl line 104
-function _sr(b::SVal{B      ,T},
-             e::SVal{nothing,  Nothing},
-             s::SVal{nothing,  Nothing},
-             f::SVal{      F,<:Integer},
-             l::SVal{      L,<:Integer}) where {B,F,L,T<:Real}
-    _srfinal(b,SVal(convert(T, B + len - 1)),SVal(convert(T, 1)),f,l)
-end
-
-# base/range.jl line 105
-function _sr(b::SVal{B      ,        T},
-             e::SVal{nothing,  Nothing},
-             s::SVal{nothing,  Nothing},
-             f::SVal{      F,<:Integer},
-             l::SVal{      L,<:Integer}) where {B,F,L,T<:AbstractFloat}
-    _sr(b, e, SVal(T(1)), f, l)
-end
-
-# base/range.jl line 106
-function _sr(b::SVal{      B,        T},
-             e::SVal{nothing,  Nothing},
-             s::SVal{      S,        T},
-             f::SVal{      F,<:Integer},
-             l::SVal{      L,<:Integer}) where {B,F,L,T<:AbstractFloat}
-    bnew, snew = promote(B, S)
-    _sr(SVal(bnew), e, SVal(snew), f, l)
-end
-
-# base/range.jl line 107
-function _sr(b::SVal{      B,   <:Real},
-             e::SVal{nothing,  Nothing},
-             s::SVal{      S,        T},
-             f::SVal{      F,<:Integer},
-             l::SVal{      L,<:Integer}) where {B,F,L,T<:AbstractFloat}
-    _sr(SVal(float(B)), e, s, f, l)
-end
-
-# base/range.jl line 108
-function _sr(b::SVal{      B,        T},
-             e::SVal{nothing,  Nothing},
-             s::SVal{      S,   <:Real},
-             f::SVal{      F,<:Integer},
-             l::SVal{      L,<:Integer}) where {B,F,L,T<:AbstractFloat}
-    _sr(SVal(float(B)), e, s, f, l)
-end
-
-# base/range.jl line 109
-function _sr(b::SVal{      B},
-             e::SVal{nothing,  Nothing},
-             s::SVal{nothing,  Nothing},
-             f::SVal{      F,<:Integer},
-             l::SVal{      L,<:Integer}) where {B,F,L}
-    _sr(b, e, SVal(oftype(B-B, 1)), f, l)
-end
-
-# base/range.jl line 111
-function _sr(b::SVal{      B,       T1},
-             e::SVal{nothing,  Nothing},
-             s::SVal{      S,       T2},
-             f::SVal{      F,<:Integer},
-             l::SVal{      L,<:Integer}) where {B,S,F,L,T1,T2}
-    _sr_style(Base.OrderStyle(T1), Base.ArithmeticStyle(T1), b, s, f, l)
-end
-
-# base/twiceprecision.jl line 427
-function _sr(b::SVal{      B,        T},
-             e::SVal{nothing,  Nothing},
-             s::SVal{      S,        T},
-             f::SVal{      F,<:Integer},
-             l::SVal{      L,<:Integer}) where {B,S,F,L,T<:Union{Float16,Float32,Float64}}
-    start_n, start_d = Base.rat(B)
-    step_n, step_d = Base.rat(S)
-    if start_d != 0 && step_d != 0 &&
-            T(start_n/start_d) == a && T(step_n/step_d) == S
-        den = lcm(start_d, step_d)
-        m = maxintfloat(T, Int)
-        if abs(den*B) <= m && abs(den*S) <= m &&
-                rem(den, start_d) == 0 && rem(den, step_d) == 0
-            start_n = round(Int, den*B)
-            step_n = round(Int, den*S)
-            return floatsrange(T, start_n, step_n, L, den)
-        end
-    end
-    _sr_hp(T, b, s, Val(0), f, l)
-end
-
-
-
-# base/range.jl line 113
-function _sr_style(::Base.Ordered,
-                   ::Base.ArithmeticWraps,
-                   b::SVal{      B,       T1},
-                   s::SVal{      S,       T2},
-                   f::SVal{      F,<:Integer},
-                   l::SVal{      L,<:Integer}) where {B,S,F,L,T1,T2}
-    _srfinal(b, _sr_last(b,e,SVal(B+S*(l-1)),f,l), SVal(B+S*(l-1)), f, l)
-end
-
-# base/range.jl line 115
-# TODO check this
-function _sr_style(::Any,
-                   ::Any,
-                   b::SVal{      B,       T1},
-                   s::SVal{      S,       T2},
-                   f::SVal{      F,<:Integer},
-                   l::SVal{      L,<:Integer}) where {B,S,F,L,T1,T2}
-    # steprange stuff
-    _sr(typeof(a+0*step), b, e, s, f, L)
-end
-
-
-
-# base/range.jl # 213 stop == start
-function _sr_last(b::SVal{B,Tt},
-                  e::SVal{B,Tt},
-                  s::SVal{S,Tt},
-                  f::SVal{F,Ti},
-                  l::SVal{L,Ti}) where {B,S,Tt<:Integer,F,L,Ti}
-    SVal{B,Tt}()
-end
-
-
-
-function _sr_last(b::SVal{B}, e::SVal{E}, s::SVal{S}, f::SVal{F}, len::SVal{L}) where {B,E,S,F,L}
-    if (S > 0) != (E > B)
-        last = srange_last_empty(b, e, s)
+function Base.clamp(::SVal{x,X}, ::SVal{lo,L}, ::SVal{hi,H}) where {x,X,lo,L,hi,H}
+    if x > hi
+        out  = Base.convert(promote_type(X,L,H), hi)
+    elseif x < lo
+        out = Base.convert(promote_type(X,L,H), lo)
     else
-        # Compute absolute value of difference between `B` and `E`
-        # (to simplify handling both signed and unsigned T and checking for signed overflow):
-        absdiff, absstep = E > B ? (E - B, S) : (B - E, -S)
-
-        # Compute remainder as a nonnegative number:
-        if typeof(B) <: Signed && absdiff < zero(absdiff)
-            # handle signed overflow with unsigned rem
-            remain = typeof(B, unsigned(absdiff) % absstep)
-        else
-            remain = absdiff % absstep
-        end
-        # Move `E` closer to `B` if there is a remainder:
-        last = E > B ? SVal(E - remain) : SVal(E + remain)
+        out = Base.convert(promote_type(X,L,H), x)
     end
-    return last
+    SVal{out}()
 end
 
-# base/range.jl # 236
-function srange_last_empty(::SVal{B,T}, ::SVal{E}, ::SVal{S}) where {B,E,S,T<:Integer}
-    # empty range has a special representation where stop = start-1
-    # this is needed to avoid the wrap-around that can happen computing
-    # start - step, which leads to a range that looks very large instead
-    # of empty.
-    if S > zero(S)
-        SVal(B - oneunit(E-B))
-    else
-        SVal(last = B + oneunit(E-B))
-    end
-end
-srange_last_empty(::SVal{B}, ::SVal{E}, ::SVal{S}) where {B,E,S} = SVal(B-S)
+Base.round(::Type{T}, ::SVal{V}) where {T,V} = SVal{round(T, V)}()
 
-_srfinal(::Type{T}, b::B, e::E, s::S, f::F, l::L) where {T,B,E,S,F,L} = SRange{T,B,E,S,F,L}
+Base.isfinite(::SVal{V,T}) where {V,T} = isfinite(V)
+Base.zero(::SVal{V,T}) where {V,T} = SVal{zero(V)}()
+Base.iszero(::SVal{V,T}) where {V,T} = iszero(V)
 
-function length()
-    if S > 1
-        return StaticRange{typeof(B),B,last,S,F,checked_add(convert(Int, div(unsigned(last - B), S)), one(B))}()
-    elseif S < -1
-        return StaticRange{typeof(B),B,last,S,F,checked_add(convert(Int, div(unsigned(B - last), -S)), one(B))}()
-    elseif S > 0
-        return StaticRange{typeof(B),B,last,S,F,checked_add(div(checked_sub(last, B), S), one(B))}()
-    else
-        return StaticRange{typeof(B),B,last,S,F,checked_add(div(checked_sub(B, last), -S), one(B))}()
-    end
-end
 
+Base.show(io::IO, r::SVal) = showsval(io, r)
+Base.show(io::IO, ::MIME"text/plain", r::SVal) = showsval(io, r)
+
+showsval(io::IO, r::SVal{V,T}) where {V,T} = print(io, "SVal($(V)::$(T))")
+showsval(io::IO, r::SNothing) where {V,T} = print(io, "SVal(nothing)")

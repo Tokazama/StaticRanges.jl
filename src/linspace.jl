@@ -10,7 +10,11 @@ end
 linspace(::Type{T}, b::SInteger{B}, e::SInteger{E}, l::SInteger{L}) where {B,E,L,T<:Union{Float16, Float32, Float64}} = linspace(T, b, e, l, SVal{1}())
 
 
-@inline function linspace(b::SVal{B,T}, e::SVal{E,T}, f::SInteger{F}, l::SInteger{L}) where {B,E,F,L,T<:Union{Float16, Float32, Float64}}
+@inline function linspace(
+    b::SVal{B,T},
+    e::SVal{E,T},
+    f::SInteger{F},
+    l::SInteger{L}) where {B,E,F,L,T<:Union{Float16, Float32, Float64}}
     (isfinite(B) && isfinite(E)) || throw(ArgumentError("start and stop must be finite, got $start and $stop"))
     # Find the index that returns the smallest-magnitude element
     Δ, Δfac = E-B, 1
@@ -57,14 +61,14 @@ end
 function linspace(::Type{T}, b::SInteger{B}, e::SInteger{E}, l::SInteger{L}, d::SInteger{D}) where {B,E,F,L,D,T<:Union{Float16, Float32, Float64}}
     L < 2 && return linspace1(T, SVal{B/D}(), SVal{E/D}(), l)
     B == E && return srangehp(T, (b, d), (zero(b), d), SVal{0}(), f, l)
-    tmin = -B/(float(E) - float(B))
+    tmin = -b/(float(e) - float(b))
     imin = round(Int, tmin*(l-1)+1)
-    imin = clamp(imin, 1, Int(L))
-    ref_num = SVal{Int128(L-imin) * B + Int128(imin-1) * E}()
-    ref_denom = SVal{Int128(L-1) * D}()
+    imin = clamp(imin, SVal{1}(), SInt64(l))
+    ref_num = SInt128(l-imin) * B + SInt128(imin-1) * e
+    ref_denom = SInt128(l-1) * d
     ref = (ref_num, ref_denom)
-    step_full = (SVal{Int128(E) - Int128(B)}(), ref_denom)
-    srangehp(T, ref, step_full,  SVal{nbitslen(T, l, SVal{imin}())}(),  SVal{Int(L),Int}(), SVal{imin}())
+    step_full = (SInt128(e) - SInt128(b), ref_denom)
+    srangehp(T, ref, step_full,  nbitslen(T, l, imin), SInt64(l), imin)
 end
 
 #=

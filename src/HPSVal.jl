@@ -266,7 +266,7 @@ end
 # The +1 here is for safety, because the precision of the significand
 # is 1 bit higher than the number that are explicitly stored.
 function nbitslen(l::SVal{L}, f::SVal{F}) where {L,F}
-    l < 2 ? SVal{0}() : SVal{ceil(Int, log2(max(f-1, l-f))) + 1}()
+    l < 2 ? SVal{0}() : ceil(Int, log2(max(f-1, l-f))) + 1
 end
 
 
