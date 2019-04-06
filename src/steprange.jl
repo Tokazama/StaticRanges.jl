@@ -19,6 +19,10 @@ function steprange_length(b::SVal{B}, s::SVal{S},e::SVal{E}) where {B,E,S}
     end
 end
 
+
+# stop == start
+steprange_last(b::SVal{B}, s::SVal{S}, e::SVal{B}) where {B,S} = SVal{B}()
+
 function steprange_last(b::SVal{B}, s::SVal{S}, e::SVal{E}) where {B,S,E}
     z = zero(s)
     s == z && throw(ArgumentError("step cannot be zero"))
@@ -42,6 +46,7 @@ function steprange_last(b::SVal{B}, s::SVal{S}, e::SVal{E}) where {B,S,E}
     end
     return last
 end
+
 
 function steprange_last_empty(::SInteger{B}, ::SVal{S}, ::SVal{E}) where {B,E,S}
     # empty range has a special representation where stop = start-1

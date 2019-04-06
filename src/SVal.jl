@@ -10,8 +10,11 @@ SVal(::Val{V}) where {V} = SVal{V}()
 SVal(::Type{SVal{V,T}}) where {V,T}  = SVal{V,T}()
 SVal(::SVal{V}) where {V} = SVal{V}()
 
+
 (::Type{T})(x::SVal{V,T2}) where {T<:Number,T2,V} = T(V)::T
-(::Type{SVal{<:Any,T}})(x::SVal{V}) where {T,V} = SVal{T(V),T}()
+(::Type{SVal{<:Any,T1}})(x::SVal{V,T2}) where {T1,V,T2} = SVal{T1(V),T1}()
+(::Type{SVal{<:Any,T}})(x::SVal{V,T}) where {T,V} = x
+
 
 const SReal{V} = SVal{V,<:Real}
 
@@ -89,7 +92,7 @@ end
 =#
 
 # bool
-for f in (:(==), :<, :isless, :max, :min)
+for f in (:(==), :<, :isless, )
     @eval begin
         @inline function $f(::SVal{V,T}, x::Real) where {V,T}
             $(f)(V, x)
@@ -100,11 +103,18 @@ for f in (:(==), :<, :isless, :max, :min)
         end
 
         @pure function $f(::SVal{V1,T1}, ::SVal{V2,T2}) where {V1,T1,V2,T2}
-            SVal{$(f)(V1, V2)}()
+            $(f)(V1, V2)
         end
     end
 end
 
+max(r::SVal{V,T}, x::Real) where {V,T} = max(x, r)
+max(x::Real, r::SVal{V,T}) where {V,T} = ifelse(x > V, x, r)
+max(::SVal{V1,T1}, ::SVal{V2,T2}) where {V1,T1,V2,T2} = SVal{max(V1, V2)}()
+
+min(r::SVal{V,T}, x::Real) where {V,T} = min(x, r)
+min(x::Real, r::SVal{V,T}) where {V,T} = ifelse(x > V, x, r)
+min(::SVal{V1,T1}, ::SVal{V2,T2}) where {V1,T1,V2,T2} = SVal{min(V1, V2)}()
 
 +(::SVal{V,T}, y::Number) where {V,T} = SVal{V+y}()
 +(x::Number, y::SVal) = y+x

@@ -7,7 +7,7 @@ function steprangelen(b::HPSVal{T,Hb,Lb}, s::HPSVal{T,Hs,Ls}, l::SInteger{L}, f:
 end
 
 function steprangelen(::Type{T}, b::SVal{B,Tb}, s::SVal{S,Ts}, l::SInteger{L}, f::SInteger{F}=SVal{1,Int}()) where {T,B,Tb,S,Ts,L,F}
-    SRange{T,SVal{B,Tb},SVal{S,Ts},B + (L-F) * S,L,F}()
+    SRange{T,SVal{B,Tb},SVal{S,Ts},T(B + (L-F) * S),L,F}()
 end
 
 function steprangelen(

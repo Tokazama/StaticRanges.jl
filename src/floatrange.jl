@@ -1,16 +1,27 @@
-function floatrange(::Type{T}, b::SInteger{B}, s::SInteger{S}, l::SInteger{L}, den::Integer) where {T,B,S,L}
+function floatrange(
+    ::Type{T},
+    b::SInteger{B},
+    s::SInteger{S},
+    l::SInteger{L},
+    d::SInteger{D}
+    ) where {T,B,S,L,D}
     if L < 2 || S == 0
-        return srangehp(T, (b, den), (s, den), SVal{0}(), SVal{1}(), l)
+        return srangehp(T, (b, d), (s, d), SVal{0}(), SVal{1}(), l)
     end
     # index of smallest-magnitude value
-    imin = clamp(round(Int, -B/S+1), 1, Int(L))
+    imin = clamp(round(Int, -b/s+1), SVal{1}(), SInt64(l))
     # Compute smallest-magnitude element to 2x precision
     ref_n = b+(imin-1)*s  # this shouldn't overflow, so don't check
-    nb = Base.nbitslen(T, L, imin)
-    srangehp(T, (ref_n, den), (step_n, den), SVal{nb}(), SVal{imin}(), Int(len))
+    nb = nbitslen(T, l, imin)
+    srangehp(T, (ref_n, d), (s, d), nb, imin, SInt64(l))
 end
 
-function floatrange(b::StaticFloat{B}, s::StaticFloat{S}, l::SVal{L,<:Real}, d::StaticFloat{D}) where {B,S,L,D}
+function floatrange(
+    b::StaticFloat{B},
+    s::StaticFloat{S},
+    l::SVal{L,<:Real},
+    d::StaticFloat{D}
+    ) where {B,S,L,D}
     T = promote_type(typeof(B), typeof(S), typeof(D))
     m = maxintfloat(T, Int)
     if abs(B) <= m && abs(S) <= m && abs(D) <= m

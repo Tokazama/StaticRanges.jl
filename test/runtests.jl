@@ -32,9 +32,9 @@ using StaticRanges, Test
         @test L32[2] == 2 && L64[2] == 2
         @test L32[3] == 3 && L64[3] == 3
         @test L32[4] == 4 && L64[4] == 4
-        @test @inferred(srange(1.0, stop=2.0, length=2))[1] === 1.0
-        @test @inferred(srange(1.0f0, stop=2.0f0, length=2))[1] === 1.0f0
-        @test @inferred(srange(Float16(1.0), stop=Float16(2.0), length=2))[1] === Float16(1.0)
+        @test @inferred(srange(Val(1.0), stop=Val(2.0), length=Val(2)))[1] === 1.0
+        @test @inferred(srange(Val(1.0f0), stop=Val(2.0f0), length=Val(2)))[1] === 1.0f0
+        @test @inferred(srange(Val(Float16(1.0)), stop=Val(Float16(2.0)), length=Val(2)))[1] === Float16(1.0)
 
         let r = srange(5:-1:1)
             @test r[1]==5

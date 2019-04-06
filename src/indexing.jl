@@ -1,8 +1,8 @@
 @inline checkbounds(r::AbstractArray, I::StaticRange) =
-    (first(I) < firstindex(r) || last(I) > lastindex(r)) && throw(BoundsError(r, I))
+    (minimum(I) < firstindex(r) || maximum(I) > lastindex(r)) && throw(BoundsError(r, I))
 
 @inline checkbounds(r::StaticRange, i::AbstractRange) =
-    (first(i) < firstindex(r) || last(i) > lastindex(r)) && throw(BoundsError(r, i))
+    (minimum(i) < firstindex(r) || maximum(i) > lastindex(r)) && throw(BoundsError(r, i))
 
 Base.iterate(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = nothing
 @inline function Base.iterate(::StaticRange{T,SVal{B},SVal{S},E,L,F}, state::Int) where {T,B,S,E,L,F}
@@ -27,9 +27,8 @@ end
 
 @pure Base.to_index(A::Array, r::StaticRange) = r
 
-@pure function unsafe_getindex(::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F}, i::Int) where {T,B,Tb,S,Ts,E,L,F}
-    B + (i - F) * S
-end
+@pure unsafe_getindex(r::StaticRange{T,B,S,E,L,F}, i::Int) where {T,B,S,E,L,F} =
+    (first(r) + (i - F) * step(r))::T
 
 @pure function unsafe_getindex(::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F}, i::Integer) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F}
     Base.@_inline_meta

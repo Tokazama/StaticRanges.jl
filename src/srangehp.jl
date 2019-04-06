@@ -25,8 +25,8 @@ b = (SVal(Int128(3)), SVal(Int128(3)))
 
 function srangehp(
     ::Type{T},
-    b::Tuple{SVal{Hb,<:Integer},SVal{Lb,Integer}},
-    s::Tuple{SVal{Hs,<:Integer},SVal{Ls,Integer}},
+    b::Tuple{SVal{Hb,<:Integer},SVal{Lb,<:Integer}},
+    s::Tuple{SVal{Hs,<:Integer},SVal{Ls,<:Integer}},
     nb::SInteger{N},
     l::SInteger{L},
     f::SInteger{F}) where {Hb,Lb,Hs,Ls,L,F,N,T<:Union{Float16, Float32, Float64}}
@@ -41,7 +41,12 @@ function srangehp(
     l::SInteger{L},
     f::SInteger{F}
    ) where {L,F,N}
-   steprangelen(HPSVal{Floa64}(b), SNothing(), twiceprecision(HPSVal{Float64}(s), nb), SVal{Int(L)}(), f)
+   steprangelen(
+       HPSVal{Floa64}(b),
+       SNothing(),
+       twiceprecision(HPSVal{Float64}(s), nb),
+       SVal{Int(L)}(),
+       f)
 end
 
 

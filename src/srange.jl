@@ -26,29 +26,29 @@ _sr(b::StaticFloat{B}, s::StaticFloat{S}, e::SNothing,  l::SInteger{L}) where {B
 _sr(b::SReal{B},       s::StaticFloat{S}, e::SNothing,  l::SInteger{L}) where {B,S,L} = _sr(float(b), s, e, l)
 _sr(b::StaticFloat{B}, s::SReal{S},       e::SNothing,  l::SInteger{L}) where {B,S,L} = _sr(b, float(s), e, l)
 _sr(b::SVal{B},        s::SNothing,       e::SNothing,  l::SInteger{L}) where {L,B}   = _sr(b, oftype(B-B, 1), e, l)
-_sr(b::SVal{B,T},      s,                 e::SNothing,  l::SInteger{L}) where {T,B,L} = _srangestyle(Base.OrderStyle(T), Base.ArithmeticStyle(T), b, s, l)
+_sr(b::SVal{B,T},      s,                 e::SNothing,  l::SInteger{L}) where {T,B,L} = _srangestyle(Base.OrderStyle(T), Base.ArithmeticStyle(T), b, s, e, l)
 
 _sr(b::SVal{B,T},      s::SNothing,       e::SVal{E,T}, l::SInteger{L}) where {T<:Real,B,E,L} = linrange(T, b, e, l)
 _sr(b::SVal{B,T},      s::SNothing,       e::SVal{E,T}, l::SInteger{L}) where {T,B,E,L} = linrange(T, b, e, l)
 _sr(b::SVal{B,T},      s::SNothing,       e::SVal{E,T}, l::SInteger{L}) where {T<:Integer,B,E,L} = linspace(float(T), b, e, l)
 
 # high precision
-function _sr(b::SVal{B,T}, e::SNothing, s::SVal{S,T}, l::SInteger{L}) where {B,S,F,L,T<:Union{Float16,Float32,Float64}}
+function _sr(b::SVal{B,T}, s::SVal{S,T}, e::SNothing, l::SInteger{L}) where {B,S,F,L,T<:Union{Float16,Float32,Float64}}
     start_n, start_d = Base.rat(B)
     step_n, step_d = Base.rat(S)
-    if start_d != 0 && step_d != 0 && T(start_n/start_d) == a && T(step_n/step_d) == S
+    if start_d != 0 && step_d != 0 && T(start_n/start_d) == B && T(step_n/step_d) == S
         den = lcm(start_d, step_d)
         m = maxintfloat(T, Int)
-        if abs(den*a) <= m && abs(den*st) <= m && rem(den, start_d) == 0 && rem(den, step_d) == 0
+        if abs(den*B) <= m && abs(den*S) <= m && rem(den, start_d) == 0 && rem(den, step_d) == 0
             start_n = round(Int, den*B)
             step_n = round(Int, den*S)
             return floatrange(T, SVal{start_n}(), SVal{step_n}(), l, SVal{den}())
         end
     end
-    srangehp(T, b, s, SVal{0}(), f, l)
+    srangehp(T, b, s, SVal{0}(), l, SVal{1}())
 end
 
-function _sr(b::SVal{B,T}, e::SVal{E,T}, ::SNothing, l::SInteger{L}) where {B,E,F,L,T<:Union{Float16, Float32, Float64}}
+function _sr(b::SVal{B,T}, s::SNothing, e::SVal{E,T}, l::SInteger{L}) where {B,E,F,L,T<:Union{Float16, Float32, Float64}}
     L < 2 && return linspace1(T, b, e, f, l)
     if B == E
         return srangehp(T, b, SVal{zero(T)}(), SVal{0}(), f, l)
@@ -67,18 +67,14 @@ function _sr(b::SVal{B,T}, e::SVal{E,T}, ::SNothing, l::SInteger{L}) where {B,E,
             end
         end
     end
-    linspace(b, e, f, l)
+    linspace(b, e, l)
 end
 
-
-_srangestyle(::Base.Ordered, ::Base.ArithmeticWraps, b::SVal{B,T}, s::SVal{S}, l::SInteger{L}) where {T,B,S,L} =
-    steprange(b, s, SVal{oftype(B, B+S*(L-1))}())
-_srangestyle(::Any, ::Any, b::SVal{B,T}, s::SVal{S}, e::SNothing,  l::SInteger{L}) where {T,B,S,L} =
-    steprangelen(typeof(B+0*S), b, s, l)
-_srangestyle(::Base.Ordered, ::Base.ArithmeticRounds, b::SVal{B,T}, s::SVal{S}, e::SVal{E,T}, l::SNothing) where {T,B,S,E} =
-    steprangelen(b, s, SVal{floor(Int, (E-B)/S)+1}())
-_srangestyle(::Any, ::Any, b::SVal{B,T}, s::SVal{S}, e::SVal{E,T}, l::SNothing) where {T,B,S,E} =
-    steprangelen(b, s, SVal{floor(Int, (E-B)/S)+1}())
+_srangestyle(::Base.Ordered, ::Base.ArithmeticWraps,  b::SVal{B,T}, s::SVal{S}, e::SNothing,  l::SInteger{L}) where {T,B,S,L} = steprange(b, s, SVal{oftype(B, B+S*(L-1))}())
+_srangestyle(::Base.Ordered, ::Any,                   b::SVal{B,T}, s::SVal{S}, e::SVal{E,T}, l::SNothing) where {T,B,S,E} = steprange(b, s, e)
+_srangestyle(::Any,          ::Any,                   b::SVal{B,T}, s::SVal{S}, e::SNothing,  l::SInteger{L}) where {T,B,S,L} = steprangelen(typeof(B+0*S), b, s, l)
+_srangestyle(::Base.Ordered, ::Base.ArithmeticRounds, b::SVal{B,T}, s::SVal{S}, e::SVal{E,T}, l::SNothing) where {T,B,S,E} = steprangelen(b, s, SVal{floor(Int, (E-B)/S)+1}())
+_srangestyle(::Any,          ::Any,                   b::SVal{B,T}, s::SVal{S}, e::SVal{E,T}, l::SNothing) where {T,B,S,E} = steprangelen(b, s, SVal{floor(Int, (E-B)/S)+1}())
 
 
 #=
@@ -136,15 +132,21 @@ end
 #_range(start, ::Nothing, stop, ::Nothing) = (:)(start, stop)
 #_sr(b::SVal{B},   s::SNothing,  e::SVal{E}, l::SNothing)
 
-_sr(b::SVal{B,Tb}, s::SNothing,   e::SVal{E,Te}, l::SNothing) where {B,Tb<:Real,E,Te<:Real} = (T = promote_type(Tb,Te); _sr(SVal{T(B)}(), s, SVal{T(E)}(), l))
-_sr(b::SVal{B,T},  s::SNothing,   e::SVal{E,T},  l::SNothing) where {B,E,T<:Real} = unitrange(T, b, e)
-_sr(b::SVal{B,Tb}, s::SNothing,   e::SVal{E,Te}, l::SNothing) where {B,Tb,E,Te} = _sr(b, SVal{oftype(E-B, 1)}(), e, l)
+_sr(b::SVal{B,Tb}, s::SNothing,   e::SVal{E,Te}, l::SNothing) where {B,Tb<:Real,E,Te<:Real} =
+    (T = promote_type(Tb,Te); _sr(SVal{T(B)}(), s, SVal{T(E)}(), l))
+_sr(b::SVal{B,T},  s::SNothing,   e::SVal{E,T},  l::SNothing) where {B,E,T<:Real} =
+    unitrange(T, b, e)
+_sr(b::SVal{B,Tb}, s::SNothing,   e::SVal{E,Te}, l::SNothing) where {B,Tb,E,Te} = 
+    _sr(b, SVal{oftype(E-B, 1)}(), e, l)
 #_sr(b::SVal{B,Tb}, s::SVal{S,Ts}, e::SVal{E,Te}, l::SNothing) where {B,Tb,S,Ts,E,Te} = _sr(SVal{convert(promote_type(Tb,Te), B)}(), s,  SVal{convert(promote_type(Tb,Te), E)}(), l)
-_sr(b::SVal{B,T},  s::SNothing,   e::SVal{E,T},  l::SNothing) where {B,E,T<:AbstractFloat} = _sr(b, SVal{T(1)}(), e, l)
-
-_sr(b::SVal{B,Tb}, s::SVal{S,Ts}, e::SVal{E,Te}, l::SNothing) where {B,Tb,S,Ts,E,Te} = _sr(promote(b, s, e)..., l)
-_sr(b::SVal{B,T}, s::SVal{S,T},         e::SVal{E,T}, l::SNothing) where {B,S,E,T<:AbstractFloat} = _srangestyle(Base.OrderStyle(T), Base.ArithmeticStyle(T), b, s, e, l)
-_sr(b::SVal{B,T}, s::SVal{S,T},         e::SVal{E,T}, l::SNothing) where {B,S,E,T<:Real} = _srangestyle(Base.OrderStyle(T), Base.ArithmeticStyle(T), b, s, e)
+_sr(b::SVal{B,T},  s::SNothing,   e::SVal{E,T},  l::SNothing) where {B,E,T<:AbstractFloat} =
+    _sr(b, SVal{T(1)}(), e, l)
+_sr(b::SVal{B,Tb}, s::SVal{S,Ts}, e::SVal{E,Te}, l::SNothing) where {B,Tb,S,Ts,E,Te} =
+    _sr(promote(b, s, e)..., l)
+_sr(b::SVal{B,T},  s::SVal{S,T},  e::SVal{E,T},  l::SNothing) where {B,S,E,T<:AbstractFloat} =
+    _srangestyle(Base.OrderStyle(T), Base.ArithmeticStyle(T), b, s, e, l)
+_sr(b::SVal{B,T},  s::SVal{S,T},  e::SVal{E,T},  l::SNothing) where {B,S,E,T<:Real} =
+    _srangestyle(Base.OrderStyle(T), Base.ArithmeticStyle(T), b, s, e, l)
 
 #_sr(b::SVal{B,T}, s::SVal{S,Ts}, e::SVal{E,T}, l::SNothing) where {B,S,Ts<:AbstractFloat,E,T<:AbstractFloat} = _sr(promote(b, s, e)..., l)
 #_sr(b::SVal{B,T}, s::SVal{S,Ts},  e::SVal{E,T}, l::SNothing) where {B,S,Ts<:Real,E,T<:AbstractFloat} = _sr(promote(b, s, e)..., l)
