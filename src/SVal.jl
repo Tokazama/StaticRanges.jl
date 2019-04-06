@@ -109,13 +109,14 @@ for f in (:(==), :<, :isless, )
     end
 end
 
-max(r::SVal{V,T}, x::Real) where {V,T} = max(x, r)
-max(x::Real, r::SVal{V,T}) where {V,T} = ifelse(x > V, x, r)
-max(::SVal{V1,T1}, ::SVal{V2,T2}) where {V1,T1,V2,T2} = SVal{max(V1, V2)}()
+Base.max(r::SVal{V,T}, x::Real) where {V,T} = max(V, r)
+Base.max(x::Real, r::SVal{V,T}) where {V,T} = ifelse(x > V, x, r)
+Base.max(x1::SVal{V1,T1}, x2::SVal{V2,T2}) where {V1,T1,V2,T2} = V1 < V2 ? x2 : x1
 
-min(r::SVal{V,T}, x::Real) where {V,T} = min(x, r)
-min(x::Real, r::SVal{V,T}) where {V,T} = ifelse(x > V, x, r)
-min(::SVal{V1,T1}, ::SVal{V2,T2}) where {V1,T1,V2,T2} = SVal{min(V1, V2)}()
+
+Base.min(r::SVal{V,T}, x::Real) where {V,T} = min(x, r)
+Base.min(x::Real, r::SVal{V,T}) where {V,T} = ifelse(x > V, x, r)
+Base.min(x1::SVal{V1,T1}, x2::SVal{V2,T2}) where {V1,T1,V2,T2} = V1 < V2 ? x1 : x2
 
 +(::SVal{V,T}, y::Number) where {V,T} = SVal{V+y}()
 +(x::Number, y::SVal) = y+x
@@ -216,3 +217,17 @@ function Base.lcm(a::SVal{A,T}, b::SVal{B,T}) where {A,B,T<:Integer}
         return abs(a * div(b, gcd(b,a)))
     end
 end
+
+function Base.cld(x::SVal{X,T}, y::SVal{Y,T}) where {X,Y,T<:Unsigned}
+    d = div(x, y)
+    return d + (d * y != x)
+end
+
+function Base.cld(x::SVal{X,T}, y::SVal{Y,T}) where {X,Y,T<:Integer}
+    d = div(x, y)
+    return d + (((x > 0) == (y > 0)) & (d * y != x))
+end
+
+Base.precision(x::SVal{X,T}) where {X,T<:AbstractFloat} = SVal{precision(T)}()
+
+

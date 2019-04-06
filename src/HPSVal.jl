@@ -263,31 +263,25 @@ end
 #@inline ($f)(x::Float64) = nan_dom_err(ccall(($(string(f)), libm), Float64, (Float64,), x), x) 
 
 function nbitslen(::Type{T}, l::SVal{L,Tl}, f::SVal{F,Tf}) where {L,F,T<:Union{Float16, Float32, Float64},Tl,Tf}
-    min(SVal{cld(precision(T), 2)}(), nbitslen(l, f))
+    min(nbithelper(T), nbitslen(l, f))
 end
+
+nbithelper(::Type{T}) where T = cld(SVal{precision(T)}(), SVal{2}())
+
 # The +1 here is for safety, because the precision of the significand
 # is 1 bit higher than the number that are explicitly stored.
 function nbitslen(l::SVal{L}, f::SVal{F}) where {L,F}
-    l < 2 ? SVal{0}() : ceil(Int, log2(max(f-1, l-f))) + 1
+    if l < 2
+        return SVal{0}()
+    else
+        # TODO: the log2 here is causing inference issues. certain log values
+        # just don't make it through inference of the basic `log` function.
+        # This really needs to be addressed at some point because it's the only
+        # thing preventing complete compatability with base range tests
+        return ceil(Int, log2(max(f-SVal{1}(), l-f))) + SVal{1,Int64}()
+    end
 end
 
-#=
-function rat(::SVal{x,T}) where {x,T}
-    y = x
-    a = d = 1
-    b = c = 0
-    m = maxintfloat(Base.narrow(T), Int)
-    while abs(y) <= m
-        f = trunc(Int, y)
-        y -= f
-        a, c = f*a + c, a
-        b, d = f*b + d, b
-        max(abs(a), abs(b)) <= Base.convert(Int,m) || return SVal{c}(), SVal{d}()
-        y = inv(y)
-    end
-    return SVal{a}(), SVal{b}()
-end
-=#
 
 function _rat(x::Val{X}, ::Val{y}, ::Val{m}, ::Val{a}, ::Val{b}, ::Val{c}, ::Val{d}) where {X,y,m,a,b,c,d}
     f = trunc(Int, y)
@@ -316,6 +310,7 @@ function rat(::SVal{V,T}) where {V,T}
     m = maxintfloat(Base.narrow(T), Int)
     _rat(Val{V}(), Val{V}(), Val{m}(), Val{a}(), Val{b}(), Val{c}(), Val{d}())
 end
+
 
 Base.show(io::IO, r::HPSVal) = showsval(io, r)
 Base.show(io::IO, ::MIME"text/plain", r::HPSVal) = showsval(io, r)

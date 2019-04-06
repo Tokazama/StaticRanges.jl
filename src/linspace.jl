@@ -71,9 +71,6 @@ function linspace(::Type{T}, b::SInteger{B}, e::SInteger{E}, l::SInteger{L}, d::
     srangehp(T, ref, step_full,  nbitslen(T, l, imin), SInt64(l), imin)
 end
 
-
-# linspace(::SVal{1.0,Float64}, ::SVal{2.0,Float64}, ::SVal{2,Int64})
-
 function linspace(
     start::SVal{B,T},
     stop::SVal{E,T},
