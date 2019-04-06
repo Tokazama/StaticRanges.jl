@@ -20,7 +20,6 @@ abstract type StaticRange{T,B,S,E,L,F} <: AbstractRange{T} end
 struct SRange{T,B,S,E,L,F} <: StaticRange{T,B,S,E,L,F} end
 
 include("traits.jl")
-
 include("unitrange.jl")
 include("steprange.jl")
 include("floatrange.jl")
@@ -28,18 +27,13 @@ include("srangehp.jl")
 include("linspace.jl")
 include("steprangelen.jl")
 include("srange.jl")
+include("rangemath.jl")
 include("indexing.jl")
 
 
 #########
 # Utils #
 #########
-
-@inline +(::StaticRange{T,B1,E1,S1,F,L}, ::StaticRange{T,B2,E2,S2,F,L}) where {T,B1,E1,S1,B2,E2,S2,F,L} =
-    StaticRange{T,B1+B2,E1+E2,S1+S2,F,L}()
-
-@inline -(::StaticRange{T,B1,E1,S1,F,L}, ::StaticRange{T,B2,E2,S2,F,L}) where {T,B1,E1,S1,B2,E2,S2,F,L} =
-    StaticRange{T,B1-B2,E1-E2,S1-S2,F,L}()
 
 
 @pure function Base.isequal(
@@ -97,8 +91,10 @@ function Base.sortperm(r::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L}
     issorted(r) ? StaticRange{Int,F,L-F+1,1,1,L}() : StaticRange{Int,L-F+1,F,-1,1,L}()
 end
 
-@inline function Base.intersect(r::StaticRange{T1,B1,E1,S1,F1,L1}, s::StaticRange{T2,B2,E2,S2,F2,L2}
-                       ) where {T1,B1,E1,S1,F1,L1,T2,B2,E2,S2,F2,L2}
+@inline function Base.intersect(
+    r::StaticRange{T1,B1,E1,S1,F1,L1},
+    s::StaticRange{T2,B2,E2,S2,F2,L2}
+    ) where {T1,B1,E1,S1,F1,L1,T2,B2,E2,S2,F2,L2}
     if S1 < 0
         return intersect(r, reverse(s))
     elseif S2 < 0
@@ -125,9 +121,6 @@ end
 
 Base.sum(r::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} =
     L * B + (iseven(L) ? (S * (L-1)) * (L>>1) : (S * L) * ((L-1)>>1))
-
--(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = StaticRange{T,-B,-E,-S,F,L}()
-
 
 
 end

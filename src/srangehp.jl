@@ -1,7 +1,4 @@
 const F_or_FF = Union{StaticFloat, Tuple{StaticFloat,StaticFloat}}
-asF64(x::StaticFloat{V}) where V = SVal{Float64(V),Float64}()
-asF64(x::Tuple{StaticFloat{V2},StaticFloat{V2}}) where {V1,V2} = SVal{Float64(V1) + Float64(V2),Float64}()
-
 
 function srangehp(
     ::Type{Float64},
@@ -12,16 +9,6 @@ function srangehp(
     f::SVal{F,<:Integer}) where {Hb,Lb,Hs,Ls,L,F,N}
     steprangelen(HPSVal{Float64}(b), HPSVal{Float64}(s, nb), l, f)
 end
-#=
-b = (SVal(Int128(3)), SVal(Int128(3)))
-   s = (SVal(Int128(3)), SVal(Int128(3)))
-    nb = SVal(Int(3))
-    l = SVal(4)
-    f = SVal(1)
-  | l::SVal{4,Int64} = SVal(4::Int64)
-  | f::SVal{1,Int64} = SVal(1::Int64)
-  =#
-
 
 function srangehp(
     ::Type{T},
@@ -33,29 +20,71 @@ function srangehp(
     steprangelen(T, SVal{Hb/Lb}(), SVal{Hs/Ls}(), SVal{Int(L)}(), f)
 end
 
+#=
+  | b::Tuple{SVal{1,Int128},SVal{1,Int128}} = (SVal(1::Int128), SVal(1::Int128))
+  | s::Tuple{SVal{1,Int128},SVal{1,Int128}} = (SVal(1::Int128), SVal(1::Int128))
+  | nb::SVal{1,Int64} = SVal(1::Int64)
+  | l::SVal{2,Int64} = SVal(2::Int64)
+  | f::SVal{1,Int64} = SVal(1::Int64)
+  | Hb::Int128 = 1
+  | Lb::Int128 = 1
+  | Hs::Int128 = 1
+  | Ls::Int128 = 1
+  | L::Int64 = 2
+  | F::Int64 = 1
+  | N::Int64 = 1
+  | T::DataType = Float32
+=#
 function srangehp(
     ::Type{Float64},
-    b::F_or_FF,
-    s::F_or_FF,
+    b::SVal{B,<:AbstractFloat},
+    s::SVal{S,<:AbstractFloat},
     nb::SInteger{N},
     l::SInteger{L},
     f::SInteger{F}
-   ) where {L,F,N}
+   ) where {B,S,L,F,N}
    steprangelen(
-       HPSVal{Floa64}(b),
-       SNothing(),
+       HPSVal{Float64}(b),
        twiceprecision(HPSVal{Float64}(s), nb),
-       SVal{Int(L)}(),
-       f)
+       SVal{Int(L)}(),f)
+end
+
+function srangehp(
+    ::Type{Float64},
+    b::Tuple{SVal{Hb,<:AbstractFloat},SVal{Lb,<:AbstractFloat}},
+    s::Tuple{SVal{Hs,<:AbstractFloat},SVal{Ls,<:AbstractFloat}},
+    nb::SInteger{N},
+    l::SInteger{L},
+    f::SInteger{F}
+   ) where {L,F,N,Hb,Lb,Hs,Ls}
+   steprangelen(
+       HPSVal{Float64}(b),
+       twiceprecision(HPSVal{Float64}(s), nb),
+       SVal{Int(L)}(),f)
+end
+
+#=
+   StepRangeLen(_TP(ref),
+                 twiceprecision(_TP(step), nb), Int(len), offset)
+=#
+function srangehp(
+    ::Type{T},
+    b::Tuple{SVal{Hb,<:AbstractFloat},SVal{Lb,<:AbstractFloat}},
+    s::Tuple{SVal{Hs,<:AbstractFloat},SVal{Ls,<:AbstractFloat}},
+    nb::SInteger{N},
+    l::SInteger{L},
+    f::SInteger{F}) where {L,F,Hb,Lb,Hs,Ls,N,T<:Union{Float16,Float32}}
+    steprangelen(T, SVal{Float64(Hb) + Float64(Lb),Float64}(), SVal{Float64(Hs) + Float64(Ls),Float64}(), SVal{Int(L),Int}(), f)
 end
 
 
 function srangehp(
     ::Type{T},
-     b::F_or_FF,
-     s::F_or_FF,
-     nb::Integer,
-     l::SInteger{L},
-     f::SInteger{F}) where {L,F,T<:Union{Float16,Float32}}
-     steprangelen(T, asF64(b), asF64(s), SVal{Int(L),Int}(), f)
+    b::SVal{B,<:AbstractFloat},
+    s::SVal{S,<:AbstractFloat},
+    nb::SInteger,
+    l::SInteger{L},
+    f::SInteger{F}
+    ) where {L,F,B,S,T<:Union{Float16,Float32}}
+    steprangelen(T, SFloat64(b), SFloat64(s), SVal{Int(L),Int}(), f)
  end

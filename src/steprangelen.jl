@@ -23,9 +23,6 @@ function steprangelen(
     SRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},T(x_hi + (x_lo + (shift_lo + Lb))),L,F}()
 end
 
-
-
-
 function *(x::Real, r::StaticRange{<:Real,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,F,L}) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,F,L}
     oftype(r, steprangelen(x*HPSVal{Tb,Hb,Lb}(), twiceprecision(x*HPSVal{Ts,Hs,Ls}(), nbitslen(r)), SVal{L}(), SVal{F}()))
 end

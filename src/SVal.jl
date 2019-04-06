@@ -72,7 +72,7 @@ Base.convert(::Type{SVal{V,T}}, x) where {V,T} = SVal{oftype(V, x),T}()
 
 
 #=
-for f in (:+, :-, :*, :^, :\, :div)
+for f in (:*, :^, :\, :div)
     @eval begin
         @inline function ($f)(::SVal{V,T}, x::Real) where {V,T}
             vnew = $f(V, x)
@@ -90,6 +90,7 @@ for f in (:+, :-, :*, :^, :\, :div)
     end
 end
 =#
+
 
 # bool
 for f in (:(==), :<, :isless, )
@@ -155,9 +156,9 @@ Base.log2(::SVal{V,T}) where {V,T} = SVal{log(V) / BASE2}()
 Base.log10(::SVal{V,T}) where {V,T} = SVal{log(V) / BASE10}()
 Base.log1p(::SVal{V,T}) where {V,T} = SVal{logp(V)}()
 
-Base.rem(::SVal{V1,T1}, ::SVal{V2,T2}) where {V1,V2,T1,T2} = SVal{rem(V1,V2)}()
-Base.rem(::SVal{V,T}, x::T2) where {V,T,T2} = SVal{rem(V,x)}()
-Base.rem(x::T2, ::SVal{V,T}) where {V,T,T2} = SVal{rem(x,V)}()
+Base.rem(::SVal{V1,T}, ::SVal{V2,<:Integer}) where {V1,V2,T} = SVal{rem(V1,V2)}()
+Base.rem(::SVal{V,T}, x::Integer) where {V,T} = SVal{rem(V,x)}()
+Base.rem(x::T, ::SVal{V,<:Integer}) where {V,T} = SVal{rem(x,V)}()
 
 function Base.clamp(::SVal{x,X}, ::SVal{lo,L}, ::SVal{hi,H}) where {x,X,lo,L,hi,H}
     if x > hi
@@ -182,3 +183,37 @@ Base.show(io::IO, ::MIME"text/plain", r::SVal) = showsval(io, r)
 
 showsval(io::IO, r::SVal{V,T}) where {V,T} = print(io, "SVal($(V)::$(T))")
 showsval(io::IO, r::SNothing) where {V,T} = print(io, "SVal(nothing)")
+
+
+Base.div(::SVal{A,T1}, ::SVal{B,T2}) where {A,T1,B,T2} = SVal{div(A,B)}()
+Base.div(::SVal{A,T1}, b::T2) where {A,T1,T2} = SVal{div(A,b)}()
+Base.div(a::T1, ::SVal{B,T2}) where {T1,B,T2} = SVal{div(a,B)}()
+
+#Base.oneunit(::SVal{V,T}) where {V,T} = SVal{T(1)}()
+Base.one(::SVal{V,T}) where {V,T} = SVal{T(1)}()
+
+Base.one(::Type{SVal{V,T}}) where {V,T} = SVal{T(1)}()
+
+Base.oneunit(::SVal{V,T}) where {V,T} = SVal{T(1)}()
+Base.oneunit(::Type{SVal{V,T}}) where {V,T} = SVal{T(1)}()
+
+
+Base.gcd(a::SVal{A,<:Integer}, b::SVal{B,<:Integer}) where {A,B} = gcd(promote(a,b)...)
+function Base.gcd(a::SVal{A,T}, b::SVal{B,T}) where {A,B,T<:Integer}
+    r = rem(a, b)
+    if r == 0
+        return b
+    else
+        return gcd(b, r)
+    end
+end
+
+Base.lcm(a::SVal{A,<:Integer}, b::SVal{B,<:Integer}) where {A,B} = lcm(promote(a,b)...)
+function Base.lcm(a::SVal{A,T}, b::SVal{B,T}) where {A,B,T<:Integer}
+    # explicit a==0 test is to handle case of lcm(0,0) correctly
+    if a == SVal{T(0),T}()
+        return a
+    else
+        return abs(a * div(b, gcd(b,a)))
+    end
+end

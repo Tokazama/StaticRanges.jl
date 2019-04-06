@@ -13,7 +13,7 @@ function floatrange(
     # Compute smallest-magnitude element to 2x precision
     ref_n = b+(imin-1)*s  # this shouldn't overflow, so don't check
     nb = nbitslen(T, l, imin)
-    srangehp(T, (ref_n, d), (s, d), nb, imin, SInt64(l))
+    srangehp(T, (ref_n, d), (s, d), nb, SInt64(l), imin)
 end
 
 function floatrange(

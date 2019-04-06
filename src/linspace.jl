@@ -15,7 +15,7 @@ linspace(::Type{T}, b::SInteger{B}, e::SInteger{E}, l::SInteger{L}) where {B,E,L
     e::SVal{E,T},
     f::SInteger{F},
     l::SInteger{L}) where {B,E,F,L,T<:Union{Float16, Float32, Float64}}
-    (isfinite(B) && isfinite(E)) || throw(ArgumentError("start and stop must be finite, got $start and $stop"))
+    (isfinite(B) && isfinite(E)) || throw(ArgumentError("start and stop must be finite, got $B and $E"))
     # Find the index that returns the smallest-magnitude element
     Δ, Δfac = E-B, 1
     if !isfinite(Δ)   # handle overflow for large endpoints
@@ -50,7 +50,7 @@ linspace(::Type{T}, b::SInteger{B}, e::SInteger{E}, l::SInteger{L}) where {B,E,L
     step_hi = Base.truncbits(step_hi_pre, nb)
     x1_hi, x1_lo = Base.add12((1-imin)*step_hi, ref)
     x2_hi, x2_lo = Base.add12((L-imin)*step_hi, ref)
-    a, c = (start - x1_hi) - x1_lo, (stop - x2_hi) - x2_lo
+    a, c = (B - x1_hi) - x1_lo, (E - x2_hi) - x2_lo
     step_lo = (c - a)/(L - 1)
     ref_lo = a - (1 - imin)*step_lo
     srangehp(t, (SVal{ref}(), SVal{ref_lo}()), (SVal{step_hi}(), SVal{step_lo}()), SVal{0}(), SVal{l}(), SVal{imin}())
@@ -60,7 +60,7 @@ end
 # Note this returns a StepRangeLen
 function linspace(::Type{T}, b::SInteger{B}, e::SInteger{E}, l::SInteger{L}, d::SInteger{D}) where {B,E,F,L,D,T<:Union{Float16, Float32, Float64}}
     L < 2 && return linspace1(T, SVal{B/D}(), SVal{E/D}(), l)
-    B == E && return srangehp(T, (b, d), (zero(b), d), SVal{0}(), f, l)
+    B == E && return srangehp(T, (b, d), (zero(b), d), SVal{0}(), l)
     tmin = -b/(float(e) - float(b))
     imin = round(Int, tmin*(l-1)+1)
     imin = clamp(imin, SVal{1}(), SInt64(l))
@@ -70,6 +70,17 @@ function linspace(::Type{T}, b::SInteger{B}, e::SInteger{E}, l::SInteger{L}, d::
     step_full = (SInt128(e) - SInt128(b), ref_denom)
     srangehp(T, ref, step_full,  nbitslen(T, l, imin), SInt64(l), imin)
 end
+#=
+b = SVal(1::Int64)
+e = SVal(2::Int64)
+l = SVal(2::Int64)
+d = SVal(1::Int64)
+  | B::Int64 = 1
+  | E::Int64 = 2
+  | L::Int64 = 2
+  | D::Int64 = 1
+  | T::DataType = Float32
+  =#
 
 #=
 function linspace(::Type{T}, b::SInteger{B}, e::SInteger{E}, l::SInteger{L}, d::SInteger{D}) where {B,E,F,L,D,T<:Union{Float16, Float32, Float64}}

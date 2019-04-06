@@ -6,7 +6,6 @@ using StaticRanges, Test
         #@inferred((:)(10, 1, 0))
         @inferred(srange(Val(10), step=Val(1), stop=Val(0)))
 
-        #= these differ from Base because I haven't implemented StepRangeLen double precision
         #@inferred((:)(1, .2, 2))
         @inferred(srange(Val(1), step=Val(.2), stop=Val(2)))
 
@@ -19,7 +18,6 @@ using StaticRanges, Test
         #@inferred((:)(0.0, -0.5))
         @inferred(srange(Val(0.0), Val(-0.5)))
 
-        =#
         #@inferred((:)(1, 0))
         @inferred(srange(Val(1),Val(0)))
     end
@@ -43,11 +41,11 @@ using StaticRanges, Test
             @test r[4]==2
             @test r[5]==1
         end
-        @test @inferred(srange(0.1:0.1:0.3)[2]) === 0.2
-        @test @inferred(srange(0.1f0:0.1f0:0.3f0)[2]) === 0.2f0
+        @test @inferred(srange(Val(0.1), step=Val(0.1), stop=Val(0.3))[2]) === 0.2
+        @test @inferred(srange(Val(0.1f0), step=Val(0.1f0), stop=Val(0.3f0))[2]) === 0.2f0
 
-        @test @inferred(srange(1:5)[1:4]) === srange(1:4)       # TODO
-        @test @inferred(srange(1.0:5)[1:4]) === srange(1.0:4)   # TODO
+        @test @inferred(srange(Val(1), stop=Val(5))[srange(Val(1), stop=Val(4))]) === srange(1:4)
+        #@test @inferred(srange(Val(1.0), stop=Val(5))[srange(Val(1), stop=Val(4))]) === srange(1.0:4)   # TODO
         @test srange(2:6)[1:4] == srange(2:5)
         @test srange(1:6)[2:5] === srange(2:5)
         @test srange(1:6)[2:2:5] === srange(2:2:4)

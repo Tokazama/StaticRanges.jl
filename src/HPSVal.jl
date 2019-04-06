@@ -269,25 +269,51 @@ function nbitslen(l::SVal{L}, f::SVal{F}) where {L,F}
     l < 2 ? SVal{0}() : ceil(Int, log2(max(f-1, l-f))) + 1
 end
 
-
-function rat(x)
-    y = get(x)
+#=
+function rat(::SVal{x,T}) where {x,T}
+    y = x
     a = d = 1
     b = c = 0
-    m = maxintfloat(Base.narrow(typeof(x)), Int)
+    m = maxintfloat(Base.narrow(T), Int)
     while abs(y) <= m
         f = trunc(Int, y)
         y -= f
         a, c = f*a + c, a
         b, d = f*b + d, b
-        max(abs(a), abs(b)) <= convert(Int,m) || return SVal{c}(), SVal{d}()
-        oftype(x,a)/oftype(x,b) == x && break
+        max(abs(a), abs(b)) <= Base.convert(Int,m) || return SVal{c}(), SVal{d}()
         y = inv(y)
     end
     return SVal{a}(), SVal{b}()
 end
+=#
 
+function _rat(x::Val{X}, ::Val{y}, ::Val{m}, ::Val{a}, ::Val{b}, ::Val{c}, ::Val{d}) where {X,y,m,a,b,c,d}
+    f = trunc(Int, y)
+    ynew = y
+    ynew -= f
+    anew = f*a + c
+    cnew = a
+    bnew = f*b + d
+    dnew = b
+    if max(abs(anew), abs(bnew)) <= Base.convert(Int,m)
+        return SVal{cnew}(), SVal{dnew}()
+    elseif oftype(X,anew)/oftype(X,bnew) == X
+        return SVal{anew}(), SVal{bnew}()
+    elseif abs(ynew) <= m
+        ynew = inv(ynew)
+        _rat(x, Val{ynew}(), Val{m}(), Val{anew}(), Val{bnew}(), Val{cnew}(), Val{dnew}())
+    else
+        return SVal{anew}(), SVal{bnew}()
+    end
+end
 
+function rat(::SVal{V,T}) where {V,T}
+    y = V
+    a = d = 1
+    b = c = 0
+    m = maxintfloat(Base.narrow(T), Int)
+    _rat(Val{V}(), Val{V}(), Val{m}(), Val{a}(), Val{b}(), Val{c}(), Val{d}())
+end
 
 Base.show(io::IO, r::HPSVal) = showsval(io, r)
 Base.show(io::IO, ::MIME"text/plain", r::HPSVal) = showsval(io, r)
