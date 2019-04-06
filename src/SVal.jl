@@ -197,7 +197,6 @@ Base.one(::Type{SVal{V,T}}) where {V,T} = SVal{T(1)}()
 Base.oneunit(::SVal{V,T}) where {V,T} = SVal{T(1)}()
 Base.oneunit(::Type{SVal{V,T}}) where {V,T} = SVal{T(1)}()
 
-
 Base.gcd(a::SVal{A,<:Integer}, b::SVal{B,<:Integer}) where {A,B} = gcd(promote(a,b)...)
 function Base.gcd(a::SVal{A,T}, b::SVal{B,T}) where {A,B,T<:Integer}
     r = rem(a, b)

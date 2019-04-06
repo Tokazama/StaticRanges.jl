@@ -70,6 +70,54 @@ function linspace(::Type{T}, b::SInteger{B}, e::SInteger{E}, l::SInteger{L}, d::
     step_full = (SInt128(e) - SInt128(b), ref_denom)
     srangehp(T, ref, step_full,  nbitslen(T, l, imin), SInt64(l), imin)
 end
+
+
+# linspace(::SVal{1.0,Float64}, ::SVal{2.0,Float64}, ::SVal{2,Int64})
+
+function linspace(
+    start::SVal{B,T},
+    stop::SVal{E,T},
+    len::SVal{L,<:Integer}) where {B,E,L,T<:Union{Float16,Float32,Float64}}
+    (isfinite(start) && isfinite(stop)) || throw(ArgumentError("start and stop must be finite, got $start and $stop"))
+    # Find the index that returns the smallest-magnitude element
+    Δ, Δfac = stop-start, 1
+    if !isfinite(Δ)   # handle overflow for large endpoints
+        Δ, Δfac = stop/len - start/len, Int(len)
+    end
+    tmin = -(start/Δ)/Δfac            # t such that (1-t)*start + t*stop == 0
+    imin = round(Int, tmin*(len-1)+1) # index approximately corresponding to t
+    if 1 < imin < len
+        # The smallest-magnitude element is in the interior
+        t = (imin-1)/(len-1)
+        ref = T((1-t)*start + t*stop)
+        step = imin-1 < len-imin ? (ref-start)/(imin-1) : (stop-ref)/(len-imin)
+    elseif imin <= 1
+        imin = SVal{1}()
+        ref = start
+        step = (Δ/(len-1))*Δfac
+    else
+        imin = SVal{Int(len)}()
+        ref = stop
+        step = (Δ/(len-1))*Δfac
+    end
+    if len == 2 && !isfinite(step)
+        # For very large endpoints where step overflows, exploit the
+        # split-representation to handle the overflow
+        return srangehp(T, start, (-start, stop), SVal{0}(), SVal{2}(), SVal{1}())
+    end
+    # 2x calculations to get high precision endpoint matching while also
+    # preventing overflow in ref_hi+(i-offset)*step_hi
+    m, k = SVal{prevfloat(floatmax(T))}(), max(imin-1, len-imin)
+    step_hi_pre = clamp(step, max(-(m+ref)/k, (-m+ref)/k), min((m-ref)/k, (m+ref)/k))
+    nb = nbitslen(T, len, imin)
+    step_hi = SVal{Base.truncbits(get(step_hi_pre), get(nb))}()
+    x1_hi, x1_lo = add12((1-imin)*step_hi, ref)
+    x2_hi, x2_lo = add12((len-imin)*step_hi, ref)
+    a, b = (start - x1_hi) - x1_lo, (stop - x2_hi) - x2_lo
+    step_lo = (b - a)/(len - 1)
+    ref_lo = a - (1 - imin)*step_lo
+    srangehp(T, (ref, ref_lo), (step_hi, step_lo), SVal{0}(), SVal{Int(len)}(), imin)
+end
 #=
 b = SVal(1::Int64)
 e = SVal(2::Int64)

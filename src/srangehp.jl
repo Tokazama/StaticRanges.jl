@@ -1,5 +1,3 @@
-const F_or_FF = Union{StaticFloat, Tuple{StaticFloat,StaticFloat}}
-
 function srangehp(
     ::Type{Float64},
     b::Tuple{<:SVal{Hb,<:Integer},<:SVal{Lb,<:Integer}},
@@ -21,6 +19,10 @@ function srangehp(
 end
 
 #=
+srangehp(::Type{Float64},
+::Tuple{SVal{1.0,Float64},SVal{0.0,Float64}},
+::Tuple{SVal{1.0,Float64},SVal{0.0,Float64}},
+::Int64, ::Int64, ::SVal{1,Int64})
   | b::Tuple{SVal{1,Int128},SVal{1,Int128}} = (SVal(1::Int128), SVal(1::Int128))
   | s::Tuple{SVal{1,Int128},SVal{1,Int128}} = (SVal(1::Int128), SVal(1::Int128))
   | nb::SVal{1,Int64} = SVal(1::Int64)
@@ -58,12 +60,25 @@ function srangehp(
     f::SInteger{F}
    ) where {L,F,N,Hb,Lb,Hs,Ls}
    steprangelen(
-       HPSVal{Float64}(b),
-       twiceprecision(HPSVal{Float64}(s), nb),
+       HPSVal{Float64}(SVal{Hb}(),SVal{Lb}()),
+       twiceprecision(HPSVal{Float64}(SVal{Hb}(), SVal{Lb}()), nb),
        SVal{Int(L)}(),f)
 end
 
 #=
+   b = (SVal(1.0::Float64), SVal(0.0::Float64))
+   s = (SVal(1.0::Float64), SVal(0.0::Float64))
+   n = SVal(0::Int64)
+   l = SVal(2::Int64)
+   f = SVal(1::Int64)
+   StaticRanges.srangehp(Float64, b, s, n, l, f)
+   L = 2
+  | F = 1
+  | N = 0
+  | Hb = 1.0
+  | Lb = 0.0
+  | Hs = 1.0
+  | Ls = 0.0
    StepRangeLen(_TP(ref),
                  twiceprecision(_TP(step), nb), Int(len), offset)
 =#

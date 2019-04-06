@@ -135,7 +135,12 @@ HPSVal{T}(::SVal{X,T}) where {X,T} = HPSVal{T,X,zero(T)}()
 HPSVal{T}(::SVal{X,T}, ::SVal{Y,T}) where {X,Y,T} = HPSVal{T,X,Y}()
 HPSVal(::SVal{X,T}, ::SVal{Y,T}) where {X,Y,T} = HPSVal{T,X,Y}()
 HPSVal(x::TwicePrecision{T}) where T = HPSVal{T,x.hi,x.lo}()
-HPSVal(x::Tuple{SVal{V1,T1},SVal{V2,V2}}) where {V1,T1,V2,T2} = HPSVal(SVal{V1,T1}(), SVal{V2,V2}())
+HPSVal{T}(::Tuple{SVal{N,<:Integer},SVal{D,<:Integer}}) where {N,D,T<:Union{Float16,Float32}} = HPSVal{T}(SVal{N/D}())
+HPSVal{T}(::Tuple{SVal{N,<:Any},SVal{D,<:Any}}) where {N,D,T} = HPSVal{T}(SVal{N}()) / D
+
+
+
+
 
 (::Type{SVal{<:Any,T}})(x::HPSVal{Th,H,L}) where {T,Th,H,L} = SVal{T(H + L),T}()
 
@@ -154,9 +159,6 @@ HPSVal(x::SVal{X,T}) where {X,T} = HPSVal{T}(x)
 
 #---
 # Numerator/Denominator constructors
-HPSVal{T}(::Tuple{SVal{N,<:Integer},SVal{D,<:Integer}}) where {N,D,T<:Union{Float16,Float32}} = HPSVal{T}(SVal{N/D}())
-HPSVal{T}(::Tuple{SVal{N,<:Any},SVal{D,<:Any}}) where {N,D,T} = HPSVal{T}(SVal{N}()) / D
-
 function HPSVal{T}(nd::Tuple{SVal{X,I},SVal{Y,I}}, nb::SVal{N,<:Integer}) where {T,X,Y,I,N}
     twiceprecision(HPSVal{T}(nd), nb)
 end
