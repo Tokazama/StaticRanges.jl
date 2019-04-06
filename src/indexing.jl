@@ -4,12 +4,13 @@
 @inline checkbounds(r::StaticRange, i::AbstractRange) =
     (minimum(i) < firstindex(r) || maximum(i) > lastindex(r)) && throw(BoundsError(r, i))
 
-@inline function checkbounds(r::StaticRange, i::StaticRange)
+@inline checkbounds(r::StaticRange, i::StaticRange) =
     (minimum(i) < firstindex(r) || maximum(i) > lastindex(r)) && throw(BoundsError(r, i))
-end
 
 Base.iterate(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = nothing
-@inline function Base.iterate(::StaticRange{T,SVal{B},SVal{S},E,L,F}, state::Int) where {T,B,S,E,L,F}
+@inline function Base.iterate(
+    ::StaticRange{T,SVal{B},SVal{S},E,L,F},
+     state::Int) where {T,B,S,E,L,F}
     state === nothing && return nothing
     (B + (state - F) * S, state + 1)::Tuple{T,Int}
 end
@@ -31,14 +32,17 @@ end
 
 @pure Base.to_index(A::Array, r::StaticRange) = r
 
-@pure function _unsafe_getindex(r::StaticRange{T,SVal{B,T},SVal{S,T},E,L,F}, i::Int) where {T,B,S,E,L,F}
+@pure function _unsafe_getindex(
+    r::StaticRange{T,SVal{B,T},SVal{S,T},E,L,F},
+    i::Int) where {T,B,S,E,L,F}
     (B + (i - F) * S)::T
 end
 
-@pure function _unsafe_getindex(r::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F}, i::Int) where {T,B,Tb,S,Ts,E,L,F}
+@pure function _unsafe_getindex(
+    r::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F},
+     i::Int) where {T,B,Tb,S,Ts,E,L,F}
     T(B + (i - F) * S)::T
 end
-
 
 @pure @inline function _unsafe_getindex(
     ::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
@@ -49,7 +53,9 @@ end
     return T(x_hi + (x_lo + (shift_lo + Lb)))
 end
 
-@inline function _getindex_hprec(::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,F,L}, i::Integer) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,F,L}
+@inline function _getindex_hprec(
+    ::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,F,L},
+    i::Integer) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,F,L}
     u = i - F
     shift_hi, shift_lo = u*Hs, u*Ls
     x_hi, x_lo = Base.add12(Hb, shift_hi)
@@ -59,19 +65,47 @@ end
 
 @inline function _unsafe_getindex(
     r1::StaticRange{T1,SVal{B1,T1},SVal{S1,T1},E1,L1,F1},
-    r2::StaticRange{T2,SVal{B2,T2},SVal{S2,T2},E2,L2,F2}) where {T1,B1,E1,S1,F2,L1,T2,B2,E2,S2,F1,L2}
-    SRange{T1,typeof(SVal{B1 + (B2 - F1) * S1}()),typeof(SVal{S1*S2}()),(B1 + (B2 - F1) * S1) + (L2-1)*(S1*S2),L2,1}()
+    r2::StaticRange{T2,SVal{B2,T2},SVal{S2,T2},E2,L2,F2}
+    ) where {T1,B1,E1,S1,F2,L1,T2,B2,E2,S2,F1,L2}
+    oftype(r1, SRange{T1,typeof(SVal{B1 + (B2 - F1) * S1}()),     # start
+                         typeof(SVal{S1*S2}()),                   # step
+                         (B1 + (B2 - F1) * S1) + (L2-1)*(S1*S2),  # stop
+                         L2,                                      # length
+                         1}())                                    # offset
 end
 
-@inline _unsafe_getindex(r::StaticRange{T,SVal{B},SVal{S},E,L,F}, i::AbstractRange) where {T,B,S,E,L,F} =
-    oftype(r, SRange{T,T(B + (first(i) - F) * S),T(B + (first(i) - F) * S) + (length(i)-F)*(S*step(i)),S*step(i),1,length(i)}())
+@inline function _unsafe_getindex(
+    r::StaticRange{T,SVal{B},SVal{S},E,L,F},
+    i::AbstractRange) where {T,B,S,E,L,F}
+    oftype(r,
+        SRange{T,T(B + (first(i) - F) * S),                              # start
+                 T(B + (first(i) - F) * S) + (length(i)-F)*(S*step(i)),  # step
+                       S*step(i),                                        # stop
+                       length(i),                                        # length
+                       1}())                                             # offset
+end
+
+@inline function _unsafe_getindex(
+    r::StaticRange{T,SVal{B,Tb},SVal{S,Tb},E,L,F},
+    s::StepRange{<:Integer}) where {T,B,Tb,S,Ts,E,L,F}
+    oftype(r, SRange{T,
+              SVal{T(B + (s.start-1) * S),T},  # start
+              SVal{T(step(s)*S),T},      # step
+              T(B + (last(s) - F) * S),  # stop
+              length(s),                 # length
+              1}())                      # offset
+end
 
 
 function _unsafe_getindex(
     r::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F},
     s::AbstractUnitRange{<:Integer}) where {T,B,Tb,S,Ts,E,L,F}
     Base.@_inline_meta
-    SRange{T,SVal{r[first(s)],Tb},SVal{S,Ts},r[last(s)],length(s),F}()
+    oftype(r, SRange{T,SVal{r[first(s)],Tb},  # start
+                       SVal{S,Ts},            # step
+                       r[last(s)],            # stop
+                       length(s),             # length
+                       F}())                  # offset
 end
 
 function _unsafe_getindex(
@@ -110,4 +144,3 @@ end
         steprangelen(HPSVal{Tb,Hb,Lb}() + (ioffset-F)*HPSVal{Ts,Hs,Ls}(), newstep, SVal{L2}(), max(SVal{1}(),soffset))
     end
 end
-

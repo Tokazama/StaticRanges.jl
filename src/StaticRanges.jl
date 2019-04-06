@@ -19,6 +19,11 @@ abstract type StaticRange{T,B,S,E,L,F} <: AbstractRange{T} end
 
 struct SRange{T,B,S,E,L,F} <: StaticRange{T,B,S,E,L,F} end
 
+Base.oftype(::SRange, r::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} =
+    SRange{T,B,S,E,L,F}()
+Base.oftype(::SRange, r::SRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} = r
+
+
 include("traits.jl")
 include("unitrange.jl")
 include("steprange.jl")

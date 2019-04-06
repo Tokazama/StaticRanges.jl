@@ -118,55 +118,7 @@ function linspace(
     ref_lo = a - (1 - imin)*step_lo
     srangehp(T, (ref, ref_lo), (step_hi, step_lo), SVal{0}(), SVal{Int(len)}(), imin)
 end
-#=
-b = SVal(1::Int64)
-e = SVal(2::Int64)
-l = SVal(2::Int64)
-d = SVal(1::Int64)
-  | B::Int64 = 1
-  | E::Int64 = 2
-  | L::Int64 = 2
-  | D::Int64 = 1
-  | T::DataType = Float32
-  =#
 
-#=
-function linspace(::Type{T}, b::SInteger{B}, e::SInteger{E}, l::SInteger{L}, d::SInteger{D}) where {B,E,F,L,D,T<:Union{Float16, Float32, Float64}}
-    L < 2 && return linspace1(T, SVal{B/D}(), SVal{E/D}(), l)
-    B == E && return srangehp(T, (b, d), (zero(b), d), SVal{0}(), f, l)
-    tmin = -b/(e - b)
-    imin = round(Int, tmin*(l-1)+1)
-    imin = clamp(imin, SVal{1}(), SVal{Int(L)}())
-    ref_num = SInt128(L-imin) * b + SInt128(imin-1) * e
-    ref_denom = SInt128(l-1) * d
-    ref = (ref_num, ref_denom)
-    step_full = (SInt128(e) - SInt128(b), ref_denom)
-    nb = StaticRanges.nbitslen(T, l, imin)
-    (T, ref, step_full,  nb,  SInt64(l), imin)
-end
-
-using StaticRanges
-using StaticRanges: SNothing, SInt128, SInteger
-  b = SVal(Int32(1))
-  e = SVal(Int32(4))
-  l = SVal(Int64(4))
-  d = SVal(Int64(1))
-  T = Float64
-  B = Int32(1)
-  E = Int32(4)
-  L = 4
-  D = 1
-  b = SVal(Int32(1))
-  e = SVal(Int32(4))
-  l = SVal(Int64(4))
-  d = SVal(Int64(1))
-  T = Float64
-  B = Int32(1)
-  E = Int32(4)
-  L = 4
-  D = 1
-   linspace(T, b, e, l, d)
-=#
 
 # For len < 2
 function linspace1(::Type{T}, b::SVal{B}, e::SVal{E}, f::SInteger{F}, l::SInteger{L}) where {B,E,F,L,D,T<:Union{Float16, Float32, Float64}}

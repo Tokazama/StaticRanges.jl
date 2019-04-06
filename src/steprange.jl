@@ -61,5 +61,104 @@ function steprange_last_empty(::SInteger{B}, ::SVal{S}, ::SVal{E}) where {B,E,S}
 end
 steprange_last_empty(::SVal{B}, ::SVal{S}, ::SVal{E}) where {B,E,S} = SVal{B-S}()
 
+function intersect(r::StaticRange, s::StepRange)
+    if isempty(r) || isempty(s)
+        return range(first(r), step=step(r), length=0)
+    elseif step(s) < 0
+        return intersect(r, reverse(s))
+    elseif step(r) < 0
+        return reverse(intersect(reverse(r), s))
+    end
 
+    start1 = first(r)
+    step1 = step(r)
+    stop1 = last(r)
+    start2 = first(s)
+    step2 = step(s)
+    stop2 = last(s)
+    a = lcm(step1, step2)
 
+    # if a == 0
+    #     # One or both ranges have step 0.
+    #     if step1 == 0 && step2 == 0
+    #         return start1 == start2 ? r : AbstractRange(start1, 0, 0)
+    #     elseif step1 == 0
+    #         return start2 <= start1 <= stop2 && rem(start1 - start2, step2) == 0 ? r : AbstractRange(start1, 0, 0)
+    #     else
+    #         return start1 <= start2 <= stop1 && rem(start2 - start1, step1) == 0 ? (start2:step1:start2) : AbstractRange(start1, step1, 0)
+    #     end
+    # end
+
+    g, x, y = gcdx(step1, step2)
+
+    if rem(start1 - start2, g) != 0
+        # Unaligned, no overlap possible.
+        return range(start1, step=a, length=0)
+    end
+
+    z = div(start1 - start2, g)
+    b = start1 - x * z * step1
+    # Possible points of the intersection of r and s are
+    # ..., b-2a, b-a, b, b+a, b+2a, ...
+    # Determine where in the sequence to start and stop.
+    m = max(start1 + mod(b - start1, a), start2 + mod(b - start2, a))
+    n = min(stop1 - mod(stop1 - b, a), stop2 - mod(stop2 - b, a))
+    m:a:n
+end
+
+function Base.intersect(
+    r1::StaticRange{T1,SVal{B1,T1},SVal{S1,T1},E1,L1,F1},
+    r2::StaticRange{T2,SVal{B2,T2},SVal{S2,T2},E2,0,F2}
+    ) where {T1,B1,E1,S1,F2,L1,T2,B2,E2,S2,F1}
+   oftype(r1, _sr(SVal{T1(B1)}(), SVal{T1(S1)}(), SNothing(), SVal{0}()))
+end
+
+function Base.intersect(
+    r1::StaticRange{T1,SVal{B1,T1},SVal{S1,T1},E1,0,F1},
+    r2::StaticRange{T2,SVal{B2,T2},SVal{S2,T2},E2,0,F2}
+    ) where {T1,B1,E1,S1,F2,T2,B2,E2,S2,F1}
+   oftype(r1, _sr(SVal{T1(B1)}(), SVal{T1(S1)}(), SNothing(), SVal{0}()))
+end
+
+function Base.intersect(
+    r1::StaticRange{T1,SVal{B1,T1},SVal{S1,T1},E1,0,F1},
+    r2::StaticRange{T2,SVal{B2,T2},SVal{S2,T2},E2,L2,F2}
+    ) where {T1,B1,E1,S1,F2,T2,B2,E2,S2,F1,L2}
+   oftype(r1, _sr(SVal{T1(B1)}(), SVal{T1(S1)}(), SNothing(), SVal{0}()))
+end
+
+function Base.intersect(
+    r1::StaticRange{T1,SVal{B1,T1},SVal{S1,T1},E1,L1,F1},
+    r2::StaticRange{T2,SVal{B2,T2},SVal{S2,T2},E2,L2,F2}
+    ) where {T1,B1,E1,S1,F2,L1,T2,B2,E2,S2,F1,L2}
+    if step(s) < 0
+        return intersect(r, reverse(s))
+    elseif step(r) < 0
+        return reverse(intersect(reverse(r), s))
+    end
+
+    # TODO finish modifying intersect function from here
+    start1 = first(r)
+    step1 = step(r)
+    stop1 = last(r)
+    start2 = first(s)
+    step2 = step(s)
+    stop2 = last(s)
+    a = lcm(step1, step2)
+
+    g, x, y = gcdx(step1, step2)
+
+    if rem(start1 - start2, g) != 0
+        # Unaligned, no overlap possible.
+        return range(start1, step=a, length=0)
+    end
+
+    z = div(start1 - start2, g)
+    b = start1 - x * z * step1
+    # Possible points of the intersection of r and s are
+    # ..., b-2a, b-a, b, b+a, b+2a, ...
+    # Determine where in the sequence to start and stop.
+    m = max(start1 + mod(b - start1, a), start2 + mod(b - start2, a))
+    n = min(stop1 - mod(stop1 - b, a), stop2 - mod(stop2 - b, a))
+    m:a:n
+end
