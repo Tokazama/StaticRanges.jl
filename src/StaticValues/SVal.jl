@@ -19,29 +19,29 @@ SVal(::SVal{V}) where {V} = SVal{V}()
 const SReal{V} = SVal{V,<:Real}
 
 const SBigFloat{V} = SVal{V,BigFloat}
- const SFloat16{V} = SVal{V,Float16}
- const SFloat32{V} = SVal{V,Float32}
- const SFloat64{V} = SVal{V,Float64}
-const StaticFloat{V} = Union{SFloat16{V},SFloat32{V},SFloat64{V},SBigFloat{V}}
+const SFloat16{V} = SVal{V,Float16}
+const SFloat32{V} = SVal{V,Float32}
+const SFloat64{V} = SVal{V,Float64}
+const SFloat{V} = SVal{V,<:AbstractFloat}
 
 const SBigInt{V} = SVal{V,BigInt}
 const SInt128{V} = SVal{V,Int128}
- const SInt16{V} = SVal{V,Int16}
- const SInt32{V} = SVal{V,Int32}
- const SInt64{V} = SVal{V,Int64}
-  const SInt8{V} = SVal{V,Int8}
-const StaticSigned{V} = Union{<:SInt8{V},<:SInt16{V},<:SInt32{V},<:SInt64{V},<:SInt128{V},<:SBigInt{V}}
+const SInt16{V} = SVal{V,Int16}
+const SInt32{V} = SVal{V,Int32}
+const SInt64{V} = SVal{V,Int64}
+const SInt8{V} = SVal{V,Int8}
+const SSigned{V} = SVal{V,<:Signed}
 
 const SUInt128{V} = SVal{V,UInt128}
- const SUInt64{V} = SVal{V,UInt64}
- const SUInt32{V} = SVal{V,UInt32}
- const SUInt16{V} = SVal{V,UInt16}
-  const SUInt8{V} = SVal{V,UInt8}
-const StaticUnsigned{V} = Union{<:SUInt8{V},<:SUInt16{V},<:SUInt32{V},<:SUInt64{V},<:SUInt128{V}}
+const SUInt64{V} = SVal{V,UInt64}
+const SUInt32{V} = SVal{V,UInt32}
+const SUInt16{V} = SVal{V,UInt16}
+const SUInt8{V} = SVal{V,UInt8}
+const SUnsigned{V} = SVal{V,<:Unsigned}
 
 const SBool{V} = SVal{V,Bool}
 
-const SInteger{V} = Union{<:StaticUnsigned{V},<:StaticSigned{V},<:SBool{V}}
+const SInteger{V} = SVal{V,<:Integer}
 
 const SNothing = SVal{nothing,Nothing}
 
@@ -151,9 +151,16 @@ Base.ceil(::Type{T}, ::SVal{V}) where {V,T} = SVal{ceil(T, V)}()
 
 const BASE2 = log(2)
 const BASE10 = log(10)
-Base.log(::SVal{V,T}) where {V,T} = SVal{log(V)}()
+@generated function Base.log(::SVal{V,T}) where {V,T}
+    x = log(V)
+    :(SVal{$x}())
+end
+
 # version from base erros on @code_inference
-Base.log2(::SVal{V,T}) where {V,T} = SVal{log(V) / BASE2}()
+@generated function Base.log2(::SVal{V,T}) where {V,T}
+    x = log2(V)
+    :(SVal{$x}())
+end
 Base.log10(::SVal{V,T}) where {V,T} = SVal{log(V) / BASE10}()
 Base.log1p(::SVal{V,T}) where {V,T} = SVal{logp(V)}()
 
@@ -227,6 +234,15 @@ function Base.cld(x::SVal{X,T}, y::SVal{Y,T}) where {X,Y,T<:Integer}
     d = div(x, y)
     return d + (((x > 0) == (y > 0)) & (d * y != x))
 end
+
+#=
+
+x = SVal(3)
+y = SVal(4)
+z = SVal(1)
+@inferred(fma(x,y,z))
+=#
+Base.fma(::SVal{x}, ::SVal{y}, ::SVal{z}) where {x,y,z} = SVal{fma(x, y,z)}()
 
 Base.precision(x::SVal{X,T}) where {X,T<:AbstractFloat} = SVal{precision(T)}()
 

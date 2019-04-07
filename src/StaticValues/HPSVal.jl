@@ -139,9 +139,6 @@ HPSVal{T}(::Tuple{SVal{N,<:Integer},SVal{D,<:Integer}}) where {N,D,T<:Union{Floa
 HPSVal{T}(::Tuple{SVal{N,<:Any},SVal{D,<:Any}}) where {N,D,T} = HPSVal{T}(SVal{N}()) / D
 
 
-
-
-
 (::Type{SVal{<:Any,T}})(x::HPSVal{Th,H,L}) where {T,Th,H,L} = SVal{T(H + L),T}()
 
 
@@ -281,7 +278,6 @@ function nbitslen(l::SVal{L}, f::SVal{F}) where {L,F}
         return ceil(Int, log2(max(f-SVal{1}(), l-f))) + SVal{1,Int64}()
     end
 end
-
 
 function _rat(x::Val{X}, ::Val{y}, ::Val{m}, ::Val{a}, ::Val{b}, ::Val{c}, ::Val{d}) where {X,y,m,a,b,c,d}
     f = trunc(Int, y)

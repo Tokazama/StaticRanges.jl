@@ -17,10 +17,10 @@ function floatrange(
 end
 
 function floatrange(
-    b::StaticFloat{B},
-    s::StaticFloat{S},
+    b::SFloat{B},
+    s::SFloat{S},
     l::SVal{L,<:Real},
-    d::StaticFloat{D}
+    d::SFloat{D}
     ) where {B,S,L,D}
     T = promote_type(typeof(B), typeof(S), typeof(D))
     m = maxintfloat(T, Int)

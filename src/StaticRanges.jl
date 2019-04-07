@@ -12,8 +12,8 @@ import Base.Checked: checked_sub, checked_add
 
 export StaticRange, OneToSRange, srange, SVal, HPSVal
 
-include("SVal.jl")
-include("HPSVal.jl")
+include("StaticValues/StaticValues.jl")
+using .StaticValues
 
 abstract type StaticRange{T,B,S,E,L,F} <: AbstractRange{T} end
 
