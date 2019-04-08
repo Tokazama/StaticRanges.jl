@@ -215,6 +215,33 @@ function Base.gcd(a::SVal{A,T}, b::SVal{B,T}) where {A,B,T<:Integer}
     end
 end
 
+@inline function Base.gcdx(a::SVal{A,T}, b::SVal{B,T}) where {T<:Integer,A,B}
+    # a0, b0 = a, b
+    s0, s1 = oneunit(a), zero(a)
+    t0, t1 = s1, s0
+    _gcdx(a, b, s0, s1, t0, t1)
+end
+
+Base.gcdx(a::SInteger, b::SInteger) = gcdx(promote(a, b)...)
+
+@inline function _gcdx(
+    a::SVal{A,T}, b::SVal{B,T},
+    s0::SVal{S0,T}, s1::SVal{S1,T},
+    x0::SVal{X0,T}, x1::SVal{X1,T}
+    ) where {A,B,S0,S1,X0,X1,T}
+    z = SVal{T(0),T}()
+    q = div(a, b)
+    anew, bnew = b, rem(a, b)
+    s0new, s1new = s1, s0 - q*s1
+    x0new, x1new = x1, x0 - q*x1
+    if bnew == z
+        return a < z ? (-anew, -s0new, -x0new) : (anew, s0new, x0new)
+    else
+        _gcdx(anew, bnew, s0new, s1new, x0new, x1new)
+    end
+end
+
+
 Base.lcm(a::SVal{A,<:Integer}, b::SVal{B,<:Integer}) where {A,B} = lcm(promote(a,b)...)
 function Base.lcm(a::SVal{A,T}, b::SVal{B,T}) where {A,B,T<:Integer}
     # explicit a==0 test is to handle case of lcm(0,0) correctly

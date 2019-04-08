@@ -70,12 +70,12 @@ function intersect(r::StaticRange, s::StepRange)
         return reverse(intersect(reverse(r), s))
     end
 
-    start1 = first(r)
-    step1 = step(r)
-    stop1 = last(r)
-    start2 = first(s)
-    step2 = step(s)
-    stop2 = last(s)
+    start1 = first(r1)
+    step1 = step(r1)
+    stop1 = last(r1)
+    start2 = first(r2)
+    step2 = step(r2)
+    stop2 = last(r2)
     a = lcm(step1, step2)
 
     # if a == 0
@@ -93,7 +93,7 @@ function intersect(r::StaticRange, s::StepRange)
 
     if rem(start1 - start2, g) != 0
         # Unaligned, no overlap possible.
-        return range(start1, step=a, length=0)
+        return srange(start1, step=a, length=0)
     end
 
     z = div(start1 - start2, g)
@@ -103,7 +103,7 @@ function intersect(r::StaticRange, s::StepRange)
     # Determine where in the sequence to start and stop.
     m = max(start1 + mod(b - start1, a), start2 + mod(b - start2, a))
     n = min(stop1 - mod(stop1 - b, a), stop2 - mod(stop2 - b, a))
-    m:a:n
+    srange(m, step=a, stop=n)
 end
 
 function Base.intersect(
@@ -127,38 +127,39 @@ function Base.intersect(
    oftype(r1, _sr(SVal{T1(B1)}(), SVal{T1(S1)}(), SNothing(), SVal{0}()))
 end
 
-function Base.intersect(
+@inline function Base.intersect(
     r1::StaticRange{T1,SVal{B1,T1},SVal{S1,T1},E1,L1,F1},
     r2::StaticRange{T2,SVal{B2,T2},SVal{S2,T2},E2,L2,F2}
     ) where {T1,B1,E1,S1,F2,L1,T2,B2,E2,S2,F1,L2}
-    if step(s) < 0
+    if S2 < 0
         return intersect(r, reverse(s))
-    elseif step(r) < 0
-        return reverse(intersect(reverse(r), s))
+    elseif S1 < 0
+        return reverse(intersect(reverse(r1), r2))
     end
 
     # TODO finish modifying intersect function from here
-    start1 = first(r)
-    step1 = step(r)
-    stop1 = last(r)
-    start2 = first(s)
-    step2 = step(s)
-    stop2 = last(s)
-    a = lcm(step1, step2)
+    b1 = SVal{B1,T1}()
+    s1 = SVal{S1,T1}()
+    e1 = SVal{E1}()
+    b2 = SVal{B2,T2}()
+    s2 = SVal{S2,T2}()
+    e2 = SVal{E2}()
 
-    g, x, y = gcdx(step1, step2)
+    a = lcm(s1, s2)
 
-    if rem(start1 - start2, g) != 0
+    g, x, y = gcdx(s1, s2)
+
+    if rem(b1 - b2, g) != 0
         # Unaligned, no overlap possible.
-        return range(start1, step=a, length=0)
+        return range(B1, step=a, length=0)
     end
 
-    z = div(start1 - start2, g)
-    b = start1 - x * z * step1
+    z = div(b1 - b2, g)
+    b = b1 - x * z * s1 
     # Possible points of the intersection of r and s are
     # ..., b-2a, b-a, b, b+a, b+2a, ...
     # Determine where in the sequence to start and stop.
-    m = max(start1 + mod(b - start1, a), start2 + mod(b - start2, a))
-    n = min(stop1 - mod(stop1 - b, a), stop2 - mod(stop2 - b, a))
-    m:a:n
+    m = max(b1 + mod(b - b1, a), b2 + mod(b - b2, a))
+    n = min(e1 - mod(E1 - b, a), e2 - mod(e2 - b, a))
+    _sr(m, a, n, SNothing())
 end

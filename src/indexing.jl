@@ -1,3 +1,33 @@
+#=
+# may be good to provide streamlined boundschecking when 1 based indexing is known
+# This could make it easier for inlining entire getindex
+
+@inline function checkbounds()
+end
+
+@inline function checkbounds(::
+    r1::SRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
+    r2::StaticRange{T2,SVal{B,Tb2},SVal{S,Ts2},E2,L2,F2}
+    ) where {T,T2<:Integer,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F,B,Tb2,S,Ts2,E2,L2,F2}
+    (minimum(r2) < 1)
+end
+
+@inline function checkbounds(
+    r1::SRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
+    r2::SRange{T2,SVal{B,Tb2},SVal{S,Ts2},E2,L2,F2}
+    ) where {T,T2<:Integer,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F,B,Tb2,S,Ts2,E2,L2,F2}
+end
+
+@inline function checkbounds(
+    r1::SRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
+    r2::SRange{T2,HPSVal{Tb2,Hb2,Lb2},HPSVal{Ts2,Hs2,Ls2},E2,L2,F2}
+    ) where {T,T2<:Integer,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F,B,Tb2,Hb2,Lb2,Ts2,Hs2,Ls2,E2,L2,F2}
+end
+
+=#
+
+
+# general
 @inline checkbounds(r::AbstractArray, I::StaticRange) =
     (minimum(I) < firstindex(r) || maximum(I) > lastindex(r)) && throw(BoundsError(r, I))
 
@@ -35,21 +65,21 @@ end
 @pure function _unsafe_getindex(
     r::StaticRange{T,SVal{B,T},SVal{S,T},E,L,F},
     i::Int) where {T,B,S,E,L,F}
-    (B + (i - F) * S)::T
+    (B::T + (i - F::Int) * S::T)::T
 end
 
 @pure function _unsafe_getindex(
     r::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F},
      i::Int) where {T,B,Tb,S,Ts,E,L,F}
-    T(B + (i - F) * S)::T
+    T(B::Tb + (i - F::Int) * S::Ts)::T
 end
 
 @pure @inline function _unsafe_getindex(
     ::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
     i::Integer) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F}
-    u = i - F
-    shift_hi, shift_lo = u*Hs, u*Ls
-    x_hi, x_lo = add12(SVal{Hb}(), SVal{shift_hi}())
+    u = i - F::Int
+    shift_hi, shift_lo = u * Hs::Ts, u * Ls::Ts
+    x_hi, x_lo = add12(SVal{Hb,Tb}(), SVal{shift_hi}())
     return T(x_hi + (x_lo + (shift_lo + Lb)))
 end
 
@@ -61,17 +91,6 @@ end
     x_hi, x_lo = Base.add12(Hb, shift_hi)
     x_hi, x_lo = Base.add12(x_hi, x_lo + (shift_lo + Lb))
     TwicePrecision(x_hi, x_lo)
-end
-
-@inline function _unsafe_getindex(
-    r1::StaticRange{T1,SVal{B1,T1},SVal{S1,T1},E1,L1,F1},
-    r2::StaticRange{T2,SVal{B2,T2},SVal{S2,T2},E2,L2,F2}
-    ) where {T1,B1,E1,S1,F2,L1,T2,B2,E2,S2,F1,L2}
-    oftype(r1, SRange{T1,typeof(SVal{B1 + (B2 - F1) * S1}()),     # start
-                         typeof(SVal{S1*S2}()),                   # step
-                         (B1 + (B2 - F1) * S1) + (L2-1)*(S1*S2),  # stop
-                         L2,                                      # length
-                         1}())                                    # offset
 end
 
 @inline function _unsafe_getindex(
@@ -144,3 +163,45 @@ end
         steprangelen(HPSVal{Tb,Hb,Lb}() + (ioffset-F)*HPSVal{Ts,Hs,Ls}(), newstep, SVal{L2}(), max(SVal{1}(),soffset))
     end
 end
+#=
+function testfunc(
+    r::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
+    s::StaticRange{T2,SVal{B,Tb2},SVal{S,Ts2},E2,L2,F2}
+    ) where {T,T2<:Integer,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F,B,Tb2,S,Ts2,E2,L2,F2}
+    soffset = SVal{1 + round(Int, (F - T2(B))/T2(S))}()
+    soffset = clamp(soffset, SVal{1}(), SVal{L2}())
+    return soffset
+end
+ 122  soffset = SVal{1 + round(Int, (F - T2(B))/T2(S))}()
+>123  soffset = clamp(soffset, SVal{1}(), SVal{L2}())
+  | soffset::SVal{1,Int64} = SVal(1::Int64)
+  | T::DataType = Float64
+  | T2::DataType = Int64
+  | Tb::DataType = Float64
+  | Ts::DataType = Float64
+  | Hb::Float64 = 1.0
+  | Lb::Float64 = 0.0
+  | Hs::Float64 = 1.0
+  | Ls::Float64 = 0.0
+  | E::Float64 = 5.0
+  | L::Int64 = 5
+  | F::Int64 = 1
+  | B::Int64 = 1
+  | Tb2::DataType = Int64
+  | S::Int64 = 1
+  | Ts2::DataType = Int64
+  | E2::Int64 = 4
+  | L2::Int64 = 4
+  | F2::Int64 = 1
+=#
+@inline function _unsafe_getindex(
+    r1::StaticRange{T1,SVal{B1,T1},SVal{S1,T1},E1,L1,F1},
+    r2::StaticRange{T2,SVal{B2,T2},SVal{S2,T2},E2,L2,F2}
+    ) where {T1,B1,E1,S1,F2,L1,T2,B2,E2,S2,F1,L2}
+    oftype(r1, SRange{T1,typeof(SVal{B1 + (B2 - F1) * S1}()),     # start
+                         typeof(SVal{S1*S2}()),                   # step
+                         (B1 + (B2 - F1) * S1) + (L2-1)*(S1*S2),  # stop
+                         L2,                                      # length
+                         1}())                                    # offset
+end
+
