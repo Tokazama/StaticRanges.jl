@@ -1,12 +1,27 @@
-function steprangelen(b::SVal{B,Tb}, s::SVal{S,Ts}, l::SInteger{L}, f::SInteger{F}=SVal{1,Int}()) where {B,Tb,S,Ts,L,F}
+function steprangelen(
+    b::SVal{B,Tb},
+    s::SVal{S,Ts}, l::SInteger{L},
+    f::SInteger{F}=SVal{1,Int}()
+    ) where {B,Tb,S,Ts,L,F}
     steprangelen(typeof(B+0*S), b, s, l, f)
 end
 
-function steprangelen(b::HPSVal{T,Hb,Lb}, s::HPSVal{T,Hs,Ls}, l::SInteger{L}, f::SInteger{F}=SVal{1,Int}()) where {T,Hb,Lb,Hs,Ls,L,F}
+function steprangelen(
+    b::HPSVal{T,Hb,Lb},
+    s::HPSVal{T,Hs,Ls},
+    l::SInteger{L},
+    f::SInteger{F}=SVal{1,Int}()
+    ) where {T,Hb,Lb,Hs,Ls,L,F}
     steprangelen(T, HPSVal{T,Hb,Lb}(), HPSVal{T,Hs,Ls}(), l, f)
 end
 
-function steprangelen(::Type{T}, b::SVal{B,Tb}, s::SVal{S,Ts}, l::SInteger{L}, f::SInteger{F}=SVal{1,Int}()) where {T,B,Tb,S,Ts,L,F}
+function steprangelen(
+    ::Type{T},
+    b::SVal{B,Tb},
+    s::SVal{S,Ts},
+    l::SInteger{L},
+    f::SInteger{F}=SVal{1,Int}()
+    ) where {T,B,Tb,S,Ts,L,F}
     SRange{T,SVal{B,Tb},SVal{S,Ts},T(B + (L-F) * S),L,F}()
 end
 
@@ -21,33 +36,6 @@ function steprangelen(
     shift_hi, shift_lo = u*Hs, u*Ls
     x_hi, x_lo = Base.add12(Hb, shift_hi)
     SRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},T(x_hi + (x_lo + (shift_lo + Lb))),L,F}()
-end
-
-function *(x::Real, r::StaticRange{<:Real,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,F,L}) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,F,L}
-    oftype(r, steprangelen(x*HPSVal{Tb,Hb,Lb}(), twiceprecision(x*HPSVal{Ts,Hs,Ls}(), nbitslen(r)), SVal{L}(), SVal{F}()))
-end
-
-*(r::StaticRange{<:Real,<:HPSVal}, x::Real) = x*r
-
-function /(x::Real, r::StaticRange{<:Real,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,F,L}) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,F,L}
-    steprangelen(HPSVal{Tb,Hb,Lb}()/x, twiceprecision(HPSVal{Ts,Hs,Ls}()/x, nbitslen(r)), SVal{L}(), SVal{F}(0))
-end
-
-function sum(r::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,F,L}) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,F,L}
-    # Compute the contribution of step over all indices.
-    # Indexes on opposite side of r.offset contribute with opposite sign,
-    #    r.step * (sum(1:np) - sum(1:nn))
-    np, nn = L - F, F - 1  # positive, negative
-    # To prevent overflow in sum(1:n), multiply its factors by the step
-    sp, sn = sumpair(np), sumpair(nn)
-    tp = _tp_prod(SVal{Ts,Hs,Ls}(), sp[1], sp[2])
-    tn = _tp_prod(r.step, sn[1], sn[2])
-    s_hi, s_lo = add12(tp.hi, -tn.hi)
-    s_lo += tp.lo - tn.lo
-    # Add in contributions of ref
-    ref = r.ref * l
-    sm_hi, sm_lo = add12(s_hi, ref.hi)
-    add12(sm_hi, sm_lo + ref.lo)[1]
 end
 
 # sum(1:n) as a product of two integers
