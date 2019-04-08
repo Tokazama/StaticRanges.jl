@@ -48,16 +48,17 @@ const SNothing = SVal{nothing,Nothing}
 const SOne = SVal{1,Int}()
 SOne(::Type{T}) where T = SVal{T(1),T}()
 SOne(::SVal{V,T}) where {V,T} = SVal{T(1),T}()
+SOne(::Type{SVal{V,T}}) where {V,T} = SVal{T(1),T}()
 SOne(x::T) where T = SVal{T(1),T}()
 
 const SZero = SVal{0,Int}()
 SZero(::Type{T}) where T = SVal{T(0),T}()
 SZero(::SVal{V,T}) where {V,T} = SVal{T(0),T}()
+SZero(::Type{SVal{V,T}}) where {V,T} = SVal{T(0),T}()
 SZero(x::T) where T = SVal{T(0),T}()
 
 Base.big(::SVal{V,T}) where {V,T} = SVal{big(V)}()
 Base.float(::SVal{V,T}) where {V,T} = SVal{float(V)}()
-
 
 Base.oftype(x::T, ::SVal{V}) where {T,V} = SVal{T(V),T}()
 
@@ -283,4 +284,4 @@ Base.fma(::SVal{x}, ::SVal{y}, ::SVal{z}) where {x,y,z} = SVal{fma(x, y,z)}()
 
 Base.precision(x::SVal{X,T}) where {X,T<:AbstractFloat} = SVal{precision(T)}()
 
-
+Base.mod(::SVal{X,T}, ::SVal{Y,T}) where {X,Y,T} = SVal{mod(X,Y)}()

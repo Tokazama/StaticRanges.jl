@@ -1,8 +1,8 @@
-
 @inline first(::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F}) where {T,B,Tb,S,Ts,E,L,F} = T(B)::T
 @pure first(::StaticRange{T,SVal{B,T},SVal{S,Ts},E,L,F}) where {T,B,S,Ts,E,L,F} = B::T
 
-
+@pure static_first(::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F}) where {T,B,Tb,S,Ts,E,L,F} = SVal{B,Tb}()
+@pure static_first(::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F}) where {T,Tb,Hb,Lb,Ts,Hs,Ls,E,L,F} = HPSVal{Tb,Hb,Lb}()
 
 @pure function first(::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F}) where {T,Tb,Hb,Lb,Ts,Hs,Ls,E,L,F}
     x_hi, x_lo = add12(SVal{Hb}(), SVal{Tb(0)}())
@@ -11,37 +11,49 @@ end
 
 @inline step(::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F}) where {T,B,Tb,S,Ts,E,L,F} = T(S)::T
 @pure step(::StaticRange{T,SVal{B,Tb},SVal{S,T},E,L,F}) where {T,B,Tb,S,E,L,F} = S::T
-
-
 @pure function step(::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F}) where {T,Tb,Hb,Lb,Ts,Hs,Ls,E,L,F}
     T(Hs + Ls)::T
 end
 
-@pure last(::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F}) where {T,B,Tb,S,Ts,E,L,F} = E::T
-#=
-  u = i - r.offset
-    shift_hi, shift_lo = u*r.step.hi, u*r.step.lo
+@pure static_step(::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F}) where {T,B,Tb,S,Ts,E,L,F} = SVal{S,Ts}()
+@pure static_step(::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F}) where {T,Tb,Hb,Lb,Ts,Hs,Ls,E,L,F} = HPSVal{Ts,Hs,Ls}()
 
-    x_hi, x_lo = add12(r.ref.hi, shift_hi)
-    T(x_hi + (x_lo + (shift_lo + r.ref.lo)))
-=#
-@pure last(::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F}) where {T,Tb,Hb,Lb,Ts,Hs,Ls,E,L,F} = E::T
 
-@pure static_first(::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F}  = B
-@pure static_step(::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} = S
+@pure last(::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} = E::T
+@pure static_last(::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} = SVal{E,T}()
 
+#@pure last(::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F}) where {T,Tb,Hb,Lb,Ts,Hs,Ls,E,L,F} = E::T
 
 @pure firstindex(r::StaticRange{T,B,S,E,L,E}) where {T,B,S,E,L,F} = F::Int
 @pure lastindex(r::StaticRange{T,B,S,E,L,E}) where {T,B,S,E,L,F} = (L - F + 1)::Int
+
 @pure length(r::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} = L::Int
+@pure static_length(r::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} = SVal{L::Int,Int}()
 
-Base.minimum(r::StaticRange{T,B,S,E,0,E}) where {T,B,S,E,F} = throw(ArgumentError("range must be non-empty"))
-Base.maximum(r::StaticRange{T,B,S,E,0,E}) where {T,B,S,E,F} = throw(ArgumentError("range must be non-empty"))
+Base.minimum(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = throw(ArgumentError("range must be non-empty"))
+Base.maximum(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = throw(ArgumentError("range must be non-empty"))
 
-Base.minimum(r::StaticRange{T,B,S,E,L,E}) where {T,B,S,E,L,F} = min(first(r), last(r)) 
-Base.maximum(r::StaticRange{T,B,S,E,L,E}) where {T,B,S,E,L,F} = max(first(r), last(r)) 
+Base.minimum(r::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} = min(first(r), last(r)) 
+Base.maximum(r::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} = max(first(r), last(r)) 
 
 Base.extrema(r::StaticRange) = (minimum(r), maximum(r))
+
+@pure function Base.isequal(
+    ::StaticRange{T1,B1,E1,S1,F1,L1},
+    ::StaticRange{T2,B2,E2,S2,F2,L2}) where {T1,B1,E1,S1,F1,L1,T2,B2,E2,S2,F2,L2}
+    false
+end
+@pure function Base.isequal(::StaticRange{T,B,E,S,F,L},
+    ::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L}
+    true
+end
+==(sr1::StaticRange, sr2::StaticRange) = isequal(sr1, sr2)
+
+@pure Base.isempty(::StaticRange{T,B,S,E,0,F}) where {T,B,E,S,F} = true
+@inline Base.isempty(::StaticRange{T,SVal{B},SVal{S},E,L,F}) where {T,B,S,E,L,F} =
+    (B != E) & ((S > zero(S)) != (E > B))
+
+
 
 #=
 @pure Base.minimum(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = B::T

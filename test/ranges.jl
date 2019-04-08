@@ -91,13 +91,11 @@
         @test findfirst(==(10), srange(1:2:10)) == nothing
         @test findfirst(==(11), srange(1:2:10)) == nothing
     end
-    #=
     @testset "reverse" begin
-        @test reverse(reverse(1:10)) == 1:10
+        @test reverse(reverse(srange(1:10))) == srange(1:10)
         @test reverse(reverse(typemin(Int):typemax(Int))) == typemin(Int):typemax(Int)
         @test reverse(reverse(typemin(Int):2:typemax(Int))) == typemin(Int):2:typemax(Int)
     end
-    =#
     @testset "intersect" begin
         @test intersect(srange(1:5), srange(2:3)) == srange(2:3)
         @test intersect(srange(-3:5), srange(2:8)) == srange(2:5)
@@ -122,6 +120,7 @@
         @test isempty(intersect(srange(13:-2:1), srange(8:-2)))
         #@test intersect(5+0*(1:4), 2:8) == 5+0*(1:4)
         #@test isempty(intersect(5+0*(1:4), -7:3))
+        #=
         @test intersect(srange(0:3:24), srange(0:4:24)) == srange(0:12:24)
         @test intersect(srange(0:4:24), srange(0:3:24)) == srange(0:12:24)
         @test intersect(srange(0:3:24), srange(24:-4:0)) == srange(0:12:24)
@@ -148,6 +147,7 @@
 
         @test intersect(srange(1:3), 2) === intersect(2, srange(1:3)) === srange(2:2)
         @test intersect(srange(1.0:3.0), 2) == intersect(2, srange(1.0:3.0)) == [2.0]
+        =#
     end
     @testset "sort/sort!/partialsort" begin
         @test sort(srange(1,2)) == srange(1,2)

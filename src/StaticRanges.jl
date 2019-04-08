@@ -34,6 +34,7 @@ include("steprangelen.jl")
 include("srange.jl")
 include("rangemath.jl")
 include("indexing.jl")
+include("intersect.jl")
 
 
 #########
@@ -41,24 +42,21 @@ include("indexing.jl")
 #########
 
 
-@pure function Base.isequal(
-    ::StaticRange{T1,B1,E1,S1,F1,L1}, ::StaticRange{T2,B2,E2,S2,F2,L2}) where {T1,B1,E1,S1,F1,L1,T2,B2,E2,S2,F2,L2}
-    false
-end
-@pure function Base.isequal(::StaticRange{T,B,E,S,F,L}, ::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L}
-    true
+
+function Base.reverse(r::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F}) where {T,B,Tb,S,Ts,E,L,F}
+    oftype(r, _sr(SVal{Tb(E),Tb}(), SVal{-S,Ts}(), SVal{B,Tb}(), SNothing()))
 end
 
-Base.reverse(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = StaticRange{T,E,B,-S,F,L}()
+function Base.reverse(r::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F}) where {T,Tb,Hb,Lb,Ts,Hs,Ls,E,L,F}
+    offset = isempty(r) ? SVal{F::Int,Int}() : SVal{L-F+1,Int}()
+    oftype(r, steprangelen(HPSVal{Tb,Hb,Lb}(), HPSVal{Ts,-Hs,-Ls}(), HPSVal{E::Int,Int}(), offset))
+end
 
 
-Base.similar(::StaticRange{T,B,E,S,F,L}; t::Type=T, start::T=B, stop::T=E, step::T=S, offset::Int=F, length::Int=L) where {T,B,E,S,F,L} =
-    StaticRange{t,start,stop,step,offset,length}()
-
-==(sr1::StaticRange, sr2::StaticRange) = isequal(sr1, sr2)
-
-@pure Base.isempty(::StaticRange{T,B,E,S,F,0}) where {T,B,E,S,F} = true
-@pure Base.isempty(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = false
+function Base.similar(
+    r::StaticRange{T,B,E,S,F,L}; t::Type=T, start::T=B, stop::T=E, step::T=S, offset::Int=F, length::Int=L) where {T,B,E,S,F,L}
+    oftype(r, SRange{t,start,stop,step,offset,length}())
+end
 
 Base.copy(::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} = StaticRange{T,B,E,S,F,L}()
 
@@ -76,14 +74,6 @@ function showrange(io::IO, r::StaticRange)
     print(io, ":$(last(r)))")
 end
 
-function Base.intersect(r::StaticRange{T1,B1,E1,S1,F1,0}, s::StaticRange{T2,B2,E2,S2,F1,L2}) where {T1,B1,E1,S1,F1,T2,B2,E2,S2,F2,L2}
-    StaticRange{T1,B1,B1-1,S1,1,0}()
-end
-
-function Base.intersect(r::StaticRange{T1,B1,E1,S1,F1,L1}, s::StaticRange{T2,B2,E2,S2,F2,0}) where {T1,B1,E1,S1,F1,L1,T2,B2,E2,S2,F2}
-    StaticRange{T1,B1,B1-1,S1,1,0}()
-end
-
 Base.in(x, ::StaticRange{T,B,E,0,F,L}) where {T,B,E,F,L} = L == 0 && B == x
 Base.in(x::Integer, ::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} =
     x >= B && x <= E && (mod(convert(T, x), S) - mod(B, S) == 0)
@@ -96,36 +86,6 @@ function Base.sortperm(r::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L}
     issorted(r) ? StaticRange{Int,F,L-F+1,1,1,L}() : StaticRange{Int,L-F+1,F,-1,1,L}()
 end
 
-@inline function Base.intersect(
-    r::StaticRange{T1,B1,E1,S1,F1,L1},
-    s::StaticRange{T2,B2,E2,S2,F2,L2}
-    ) where {T1,B1,E1,S1,F1,L1,T2,B2,E2,S2,F2,L2}
-    if S1 < 0
-        return intersect(r, reverse(s))
-    elseif S2 < 0
-        return reverse(intersect(reverse(r), s))
-    end
-
-    a = lcm(S1, S2)
-    g, x, y = gcdx(S1, S2)
-
-    if rem(B1 - B2, g) != 0
-        # Unaligned, no overlap possible.
-        return srange(B1, step=a, length=0)
-    end
-
-    z = div(B1 - B2, g)
-    b = S1 - x * z * 1
-    # Possible points of the intersection of r and s are
-    # ..., b-2a, b-a, b, b+a, b+2a, ...
-    # Determine where in the sequence to start and stop.
-    m = max(B1 + mod(b - B1, a), B2 + mod(b - B2, a))
-    n = min(E1 - mod(E1 - b, a), E2 - mod(E2 - b, a))
-    return srange(m, step=a, stop=n)
-end
-
 Base.sum(r::StaticRange{T,B,E,S,F,L}) where {T,B,E,S,F,L} =
     L * B + (iseven(L) ? (S * (L-1)) * (L>>1) : (S * L) * ((L-1)>>1))
-
-
 end
