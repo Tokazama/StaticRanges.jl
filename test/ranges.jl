@@ -51,7 +51,7 @@
         @test srange(1:2:13)[2:3:7] === srange(3:6:13)
 
         #@test isempty(srange(1:4)[5:4])
-        @test_throws BoundsError srange(1:10)[8:-1:-2]          # TODO
+        @test_throws BoundsError srange(1:10)[8:-1:-2]
 
         let r = srange(typemax(Int)-5:typemax(Int)-1)
             @test_throws BoundsError r[7]

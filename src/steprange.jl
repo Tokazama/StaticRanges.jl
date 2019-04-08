@@ -4,30 +4,31 @@ end
 
 
 # srange(1:2:0)
-function steprange(::Type{T}, b::SVal{B,T}, s::SVal{S,Ts}, e::SVal{E,T}) where {T,Ts,B,S,E}
+function steprange(::Type{T}, b::SVal{B,Tb}, s::SVal{S,Ts}, e::SVal{E,Tb}) where {T,B,Tb,S,Ts,E}
     e = steprange_last(b, s, e)
-    SRange{T,SVal{B,T},SVal{S,Ts},get(e),steprange_length(T, b,s,e),1}()
+    SRange{T,SVal{B,Tb},SVal{S,Ts},get(e),steprange_length(b,s,e),1}()
 end
 
-function steprange_length(::Type{T}, b::SVal{B}, s::SVal{S}, e::SVal{E}) where {B,E,S,T}
+function steprange_length(b::SVal{B,T}, s::SVal{S}, e::SVal{E,T}) where {B,E,S,T<:Union{Int,UInt,Int64,UInt64,Int128,UInt128}}
     (B != E) & ((S > zero(S))) != (E > B) && return T(0)
     if S > 1
         return Base.Checked.checked_add(Int(div(unsigned(E - B), S)), one(B))
     elseif S < -1
         return Base.Checked.checked_add(Int(div(unsigned(B - E), -S)), one(B))
     elseif S > 0
-        return Base.Checked.checked_add(div(Base.Checked.checked_sub(E, B), S), one(B))
+        return Int(Base.Checked.checked_add(div(Base.Checked.checked_sub(E, B), S), one(B)))
     else
-        return Base.Checked.checked_add(div(Base.Checked.checked_sub(B, E), -S), one(B))
+        return Int(Base.Checked.checked_add(div(Base.Checked.checked_sub(B, E), -S), one(B)))
     end
 end
 
-function steprange_length(::Type{Char}, b::SVal{B,Char}, s::SVal{S,Char}, e::SVal{E,Char}) where {B,E,S}
-    n = Integer(div((e - b) + s, s))
-    (B != E) & ((S > zero(S))) != (E > B) ? SZero(n) : n
-    isempty(r) ? zero(n) : nend
+function steprange_length(b::SVal{B,T}, s::SVal{S}, e::SVal{E,T}) where {B,E,S,T}
+    n = Int(div((E - B) + S, S))
+    (B != E) & ((S > zero(S))) != (E > B) ? zero(n) : n
 end
 
+steprange_last(b::SVal{B,T}, s::SVal{S}, e::SVal{B,T}) where {B,S,T} = b
+#steprange_length(::Type{Rational{UInt64}}, ::SVal{0xffffffffffffffff//0x0000000000000001,Rational{UInt64}}, ::SVal{1,Int64}, ::SVal{0xfffffffffffffffe//0x0000000000000001,Rational{UInt64}})
 # stop == start
 function steprange_last(b::SVal{B}, s::SVal{S}, e::SVal{E}) where {B,S,E}
     z = zero(s)

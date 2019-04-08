@@ -136,7 +136,7 @@ Base.min(x1::SVal{V1,T1}, x2::SVal{V2,T2}) where {V1,T1,V2,T2} = V1 < V2 ? x1 : 
 
 -(x::SVal{V,T}) where {V,T} = SVal{-V,T}()
 
--(x::SVal, y::SVal) = x + (-y)
+-(x::SVal{V1,T1}, y::SVal{V2,T2}) where {V1,T1,V2,T2}= SVal{V1 - V2}()
 -(x::Number, y::SVal) = x + (-y)
 -(x::SVal, y::Number) = x + (-y)
 
