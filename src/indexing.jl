@@ -150,8 +150,8 @@ end
     s::StaticRange{T2,SVal{B,Tb2},SVal{S,Ts2},E2,L2,F2}
     ) where {T,T2<:Integer,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F,B,Tb2,S,Ts2,E2,L2,F2}
     soffset = SVal{1 + round(Int, (F - T2(B))/T2(S))}()
-    soffset = clamp(soffset, SVal{1}(), SVal{L2}())
-    ioffset = S + (soffset-1)*S
+    soffset = clamp(soffset, SOne, SVal{L2}())
+    ioffset = S + (soffset-SOne)*S
     if L2 == 1 || L2 < 2
         newstep = HPSVal{Ts,Hs,Ls}()
     else
@@ -163,37 +163,7 @@ end
         steprangelen(HPSVal{Tb,Hb,Lb}() + (ioffset-F)*HPSVal{Ts,Hs,Ls}(), newstep, SVal{L2}(), max(SVal{1}(),soffset))
     end
 end
-#=
-function testfunc(
-    r::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
-    s::StaticRange{T2,SVal{B,Tb2},SVal{S,Ts2},E2,L2,F2}
-    ) where {T,T2<:Integer,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F,B,Tb2,S,Ts2,E2,L2,F2}
-    soffset = SVal{1 + round(Int, (F - T2(B))/T2(S))}()
-    soffset = clamp(soffset, SVal{1}(), SVal{L2}())
-    return soffset
-end
- 122  soffset = SVal{1 + round(Int, (F - T2(B))/T2(S))}()
->123  soffset = clamp(soffset, SVal{1}(), SVal{L2}())
-  | soffset::SVal{1,Int64} = SVal(1::Int64)
-  | T::DataType = Float64
-  | T2::DataType = Int64
-  | Tb::DataType = Float64
-  | Ts::DataType = Float64
-  | Hb::Float64 = 1.0
-  | Lb::Float64 = 0.0
-  | Hs::Float64 = 1.0
-  | Ls::Float64 = 0.0
-  | E::Float64 = 5.0
-  | L::Int64 = 5
-  | F::Int64 = 1
-  | B::Int64 = 1
-  | Tb2::DataType = Int64
-  | S::Int64 = 1
-  | Ts2::DataType = Int64
-  | E2::Int64 = 4
-  | L2::Int64 = 4
-  | F2::Int64 = 1
-=#
+
 @inline function _unsafe_getindex(
     r1::StaticRange{T1,SVal{B1,T1},SVal{S1,T1},E1,L1,F1},
     r2::StaticRange{T2,SVal{B2,T2},SVal{S2,T2},E2,L2,F2}

@@ -1,4 +1,4 @@
-using StaticRanges: linspace, linspace1
+using StaticRanges: linspace, linspace1, linrange
 
 T = Int
 b = SVal(1)
@@ -39,3 +39,6 @@ b = SVal(1.0)
 e = SVal(1.0)
 l = SVal(1)
 @test @inferred(linspace1(T, b, e, l)) == StaticRanges.SRange{Float16,SVal{1.0,Float64},SVal{0.0,Float64},Float16(1.0),1,1}()
+
+# src/linspace.jl line 159
+@test @inferred(linrange(T,b,e,l)) == StaticRanges.SRange{Float16,SVal{1.0,Float64},SVal{0.0,Float64},Float16(1.0),1,1}()

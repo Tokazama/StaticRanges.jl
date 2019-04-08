@@ -155,3 +155,20 @@ function linspace1(
     end
     throw(ArgumentError("should only be called for len < 2, got $L"))
 end
+
+function linrange(
+    ::Type{T},
+    b::SVal{B,Tb},
+    e::SVal{E,Te},
+    l::SInteger{L}
+    ) where {T,B,Tb,E,Te,L}
+    SRange{T,SVal{B,Tb},typeof(SVal{(E-B)/max(L - 1, 1)}()),T(E),L,1}()
+end
+
+function linrange(
+    b::SVal{B},
+    e::SVal{E},
+    l::SVal{L}
+    ) where {B,E,L} 
+    linrange(typeof((stop-start)/len), b, e, l)
+end
