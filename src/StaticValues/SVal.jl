@@ -1,4 +1,4 @@
-struct SVal{V,T<:Union{Number,Nothing}}
+struct SVal{V,T}
     function SVal{V,T}() where {V,T}
         !(typeof(V) === T) && throw(ArgumentError("val must be of type T"))
         new{V,T}()
@@ -46,7 +46,14 @@ const SInteger{V} = SVal{V,<:Integer}
 const SNothing = SVal{nothing,Nothing}
 
 const SOne = SVal{1,Int}()
+SOne(::Type{T}) where T = SVal{T(1),T}()
+SOne(::SVal{V,T}) where {V,T} = SVal{T(1),T}()
+SOne(x::T) where T = SVal{T(1),T}()
+
 const SZero = SVal{0,Int}()
+SZero(::Type{T}) where T = SVal{T(0),T}()
+SZero(::SVal{V,T}) where {V,T} = SVal{T(0),T}()
+SZero(x::T) where T = SVal{T(0),T}()
 
 Base.big(::SVal{V,T}) where {V,T} = SVal{big(V)}()
 Base.float(::SVal{V,T}) where {V,T} = SVal{float(V)}()

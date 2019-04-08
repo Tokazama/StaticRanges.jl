@@ -2,12 +2,15 @@ function steprange(b::SVal{B,T}, s::SVal{S,Ts}, e::SVal{E,T}) where {T,Ts,B,S,E}
     steprange(T, b, s, steprange_last(b, s, e))
 end
 
+
+# srange(1:2:0)
 function steprange(::Type{T}, b::SVal{B,T}, s::SVal{S,Ts}, e::SVal{E,T}) where {T,Ts,B,S,E}
-    SRange{T,SVal{B,T},SVal{S,Ts},E,steprange_length(b,s,e),1}()
+    e = steprange_last(b, s, e)
+    SRange{T,SVal{B,T},SVal{S,Ts},get(e),steprange_length(T, b,s,e),1}()
 end
 
-
-function steprange_length(b::SVal{B}, s::SVal{S},e::SVal{E}) where {B,E,S}
+function steprange_length(::Type{T}, b::SVal{B}, s::SVal{S}, e::SVal{E}) where {B,E,S,T}
+    (B != E) & ((S > zero(S))) != (E > B) && return T(0)
     if S > 1
         return Base.Checked.checked_add(Int(div(unsigned(E - B), S)), one(B))
     elseif S < -1
@@ -19,10 +22,13 @@ function steprange_length(b::SVal{B}, s::SVal{S},e::SVal{E}) where {B,E,S}
     end
 end
 
+function steprange_length(::Type{Char}, b::SVal{B,Char}, s::SVal{S,Char}, e::SVal{E,Char}) where {B,E,S}
+    n = Integer(div((e - b) + s, s))
+    (B != E) & ((S > zero(S))) != (E > B) ? SZero(n) : n
+    isempty(r) ? zero(n) : nend
+end
 
 # stop == start
-steprange_last(b::SVal{B}, s::SVal{S}, e::SVal{B}) where {B,S} = SVal{B}()
-
 function steprange_last(b::SVal{B}, s::SVal{S}, e::SVal{E}) where {B,S,E}
     z = zero(s)
     s == z && throw(ArgumentError("step cannot be zero"))

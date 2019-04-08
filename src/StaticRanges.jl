@@ -10,7 +10,7 @@ import Base: first, last, firstindex, lastindex, step, length
 
 import Base.Checked: checked_sub, checked_add
 
-export StaticRange, OneToSRange, srange, SVal, HPSVal
+export StaticRange, OneToSRange, srange, SVal, HPSVal, SOne, SZero
 
 include("StaticValues/StaticValues.jl")
 using .StaticValues

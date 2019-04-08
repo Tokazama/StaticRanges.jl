@@ -109,7 +109,7 @@ end
     s::StepRange{<:Integer}) where {T,B,Tb,S,Ts,E,L,F}
     oftype(r, SRange{T,
               SVal{T(B + (s.start-1) * S),T},  # start
-              SVal{T(step(s)*S),T},      # step
+              SVal{T(step(s)*S),T},            # step
               T(B + (last(s) - F) * S),  # stop
               length(s),                 # length
               1}())                      # offset
