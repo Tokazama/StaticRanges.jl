@@ -45,6 +45,9 @@ const SInteger{V} = SVal{V,<:Integer}
 
 const SNothing = SVal{nothing,Nothing}
 
+const SOne = SVal{1,Int}()
+const SZero = SVal{0,Int}()
+
 Base.big(::SVal{V,T}) where {V,T} = SVal{big(V)}()
 Base.float(::SVal{V,T}) where {V,T} = SVal{float(V)}()
 

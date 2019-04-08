@@ -8,7 +8,7 @@ import Base: ==, +, -, *, /, ^, <, ~, abs, abs2, isless, max, min, div, eltype, 
 export SVal, HPSVal, div12, mul12, add12, splitprec, canonicalize2, rat, twiceprecision,
        SReal, SBigFloat, SFloat16, SFloat32, SFloat64, SBigInt, SInt128, SInt16,
        SInt32, SInt64, SInt8, SInteger, SUInt128, SUInt64, SUInt32, SUInt16, SUInt8,
-       SFloat, SSigned, SUnsigned, SBool, SNothing, nbitslen
+       SFloat, SSigned, SUnsigned, SBool, SNothing, SZero, SOne, nbitslen
 
 include("SVal.jl")
 include("HPSVal.jl")
