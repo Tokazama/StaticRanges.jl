@@ -230,8 +230,8 @@ end
 
 function *(x::HPSVal{<:Union{Float16, Float32, Float64},H,L}, s::SInteger{V}) where {H,L,V}
     V == 0 && return HPSVal(SVal{H*V}(), SVal{L*V}())
-    nb = ceil(Int, log2(abs(V)))
-    u = Base.truncbits(H, nb)
+    nb = ceil(Int, log2(abs(s)))
+    u = Base.truncbits(H, get(nb))
     HPSVal(canonicalize2(SVal{u*V}(), SVal{((H-u) + L)*V}())...)
 end
 

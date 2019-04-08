@@ -145,6 +145,7 @@ function _unsafe_getindex(
     end
 end
 
+#=
 @inline function _unsafe_getindex(
     r::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
     s::StaticRange{T2,SVal{B,Tb2},SVal{S,Ts2},E2,L2,F2}
@@ -161,6 +162,26 @@ end
         steprangelen(HPSVal{Tb,Hb,Lb}(), newstep, SVal{L2}(), max(SVal{1}(),soffset))
     else
         steprangelen(HPSVal{Tb,Hb,Lb}() + (ioffset-F)*HPSVal{Ts,Hs,Ls}(), newstep, SVal{L2}(), max(SVal{1}(),soffset))
+    end
+end
+=#
+@inline function _unsafe_getindex(
+    r::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
+    s::StaticRange{T2,SVal{B,Tb2},SVal{S,Ts2},E2,L2,F2}
+    ) where {T,T2<:Integer,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F,B,Tb2,S,Ts2,E2,L2,F2}
+    l2 = SVal{L2}()
+    soffset = SOne + round(Int, (F - T2(B))/SVal{T2(S)}())
+    soffset = clamp(soffset, SOne, SVal{L2}())
+    ioffset = S + (soffset-SOne)*S
+    if l2 == SOne || l2 < SVal{2,Int}()
+        newstep = HPSVal{Ts,Hs,Ls}()
+    else
+        newstep = twiceprecision(HPSVal{Ts,Hs,Ls}()*SVal{S,Ts2}(), nbitslen(T, l2, soffset))
+    end
+    if ioffset == F
+        steprangelen(HPSVal{Tb,Hb,Lb}(), newstep, l2, max(SOne,soffset))
+    else
+        steprangelen(HPSVal{Tb,Hb,Lb}() + (ioffset-F)*HPSVal{Ts,Hs,Ls}(), newstep, l2, max(SOne,soffset))
     end
 end
 
