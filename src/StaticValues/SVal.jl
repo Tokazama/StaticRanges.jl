@@ -57,6 +57,12 @@ SZero(::SVal{V,T}) where {V,T} = SVal{T(0),T}()
 SZero(::Type{SVal{V,T}}) where {V,T} = SVal{T(0),T}()
 SZero(x::T) where T = SVal{T(0),T}()
 
+Base.length(::SVal{V,T}) where {V,T} = length(V)
+
+Base.iterate(v::SVal) = (v, nothing)
+Base.iterate(v::SVal, ::Nothing) = nothing
+
+
 Base.big(::SVal{V,T}) where {V,T} = SVal{big(V)}()
 Base.float(::SVal{V,T}) where {V,T} = SVal{float(V)}()
 
@@ -80,6 +86,10 @@ end
 @pure Base.eltype(::Type{<:SVal{V,T}}) where {V,T} = T
 
 Base.convert(::Type{SVal{V,T}}, x) where {V,T} = SVal{oftype(V, x),T}()
+Base.convert(::Type{SVal{V,T}}, ::SVal{V2,T2}) where {V,T,V2,T2} = SVal{T(V2),T}()
+Base.convert(::Type{T}, x::SVal{V,T}) where {V,T} = V
+Base.convert(::Type{T1}, x::SVal{V,T2}) where {V,T1,T2} = T2(V)
+
 
 
 #=
@@ -104,7 +114,7 @@ end
 
 
 # bool
-for f in (:(==), :<, :isless, )
+for f in (:(==), :<, :isless)
     @eval begin
         @inline function $f(::SVal{V,T}, x::Real) where {V,T}
             $(f)(V, x)
@@ -158,6 +168,11 @@ abs2(::SVal{V,T}) where {V,T} = SVal{abs2(V),T}()
 
 Base.ceil(::SVal{V,T}) where {V,T} = SVal{ceil(V)}()
 Base.ceil(::Type{T}, ::SVal{V}) where {V,T} = SVal{ceil(T, V)}()
+
+Base.floor(::SVal{V,T}) where {V,T} = SVal{floor(V)}()
+Base.floor(::Type{T}, ::SVal{V}) where {V,T} = SVal{floor(T, V)}()
+
+
 
 
 const BASE2 = log(2)

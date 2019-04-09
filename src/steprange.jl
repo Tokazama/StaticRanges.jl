@@ -42,7 +42,7 @@ function steprange_last(b::SVal{B}, s::SVal{S}, e::SVal{E}) where {B,S,E}
         # Compute remainder as a nonnegative number:
         if typeof(B) <: Signed && absdiff < zero(absdiff)
             # handle signed overflow with unsigned rem
-            remain = typeof(B, unsigned(absdiff) % absstep)
+            remain = oftype(B, unsigned(absdiff) % absstep)
         else
             remain = absdiff % absstep
         end

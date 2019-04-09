@@ -307,6 +307,12 @@ function rat(::SVal{V,T}) where {V,T}
     _rat(Val{V}(), Val{V}(), Val{m}(), Val{a}(), Val{b}(), Val{c}(), Val{d}())
 end
 
+<(x::HPSVal, y::SVal) = <(x, HPSVal(y))
+<(x::SVal, y::HPSVal) = <(HPSVal(x), y)
+
+
+<(x::HPSVal{T,Hx,Lx}, y::HPSVal{T,Hy,Ly}) where {T,Hx,Lx,Hy,Ly} =
+    Hx < Hy || ((Hx == Hy) & (Lx < Ly))
 
 Base.show(io::IO, r::HPSVal) = showsval(io, r)
 Base.show(io::IO, ::MIME"text/plain", r::HPSVal) = showsval(io, r)

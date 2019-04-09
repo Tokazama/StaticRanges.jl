@@ -1,62 +1,5 @@
 @testset "ranges" begin
     @test size(10:1:0) == (0,)
-    @testset "colon" begin
-        #@inferred((:)(10, 1, 0))
-        @inferred(srange(Val(10), step=Val(1), stop=Val(0)))
-
-        #@inferred((:)(1, .2, 2))
-        @inferred(srange(Val(1), step=Val(.2), stop=Val(2)))
-
-        #@inferred((:)(1., .2, 2.))
-        @inferred(srange(Val(1.), step=Val(.2), stop=Val(2.)))
-
-        #@inferred((:)(2, -.2, 1))
-        @inferred(srange(Val(2), step=Val(-.2), stop=Val(1)))
-
-        #@inferred((:)(0.0, -0.5))
-        @inferred(srange(Val(0.0), Val(-0.5)))
-
-        #@inferred((:)(1, 0))
-        @inferred(srange(Val(1),Val(0)))
-    end
-
-    @testset "indexing" begin
-        L32 = @inferred(srange(Val(Int32(1)), stop=Val(Int32(4)), length=Val(4)))
-        L64 = @inferred(srange(Val(Int64(1)), stop=Val(Int64(4)), length=Val(4)))
-        @test @inferred(L32[1]) === 1.0 && @inferred(L64[1]) === 1.0
-        @test L32[2] == 2 && L64[2] == 2
-        @test L32[3] == 3 && L64[3] == 3
-        @test L32[4] == 4 && L64[4] == 4
-
-        @test @inferred(srange(Val(1.0), stop=Val(2.0), length=Val(2)))[1] === 1.0
-        @test @inferred(srange(Val(1.0f0), stop=Val(2.0f0), length=Val(2)))[1] === 1.0f0
-        @test @inferred(srange(Val(Float16(1.0)), stop=Val(Float16(2.0)), length=Val(2)))[1] === Float16(1.0)
-
-        let r = srange(5:-1:1)
-            @test r[1]==5
-            @test r[2]==4
-            @test r[3]==3
-            @test r[4]==2
-            @test r[5]==1
-        end
-        @test @inferred(srange(Val(0.1), step=Val(0.1), stop=Val(0.3))[2]) === 0.2
-        @test @inferred(srange(Val(0.1f0), step=Val(0.1f0), stop=Val(0.3f0))[2]) === 0.2f0
-
-        @test @inferred(srange(Val(1), stop=Val(5))[srange(Val(1), stop=Val(4))]) === srange(1:4)
-        @test @inferred(srange(Val(1.0), stop=Val(5))[srange(Val(1), stop=Val(4))]) === srange(1.0:4)
-        @test srange(2:6)[1:4] == srange(2:5)
-        @test srange(1:6)[2:5] === srange(2:5)
-        @test srange(1:6)[2:2:5] === srange(2:2:4)
-        @test srange(1:2:13)[2:6] === srange(3:2:11)
-        @test srange(1:2:13)[2:3:7] === srange(3:6:13)
-
-        #@test isempty(srange(1:4)[5:4])
-        @test_throws BoundsError srange(1:10)[8:-1:-2]
-
-        let r = srange(typemax(Int)-5:typemax(Int)-1)
-            @test_throws BoundsError r[7]
-        end
-    end
     @testset "length" begin
         @test length(srange(.1:.1:.3)) == 3
         @test length(srange(1.1:1.1:3.3)) == 3
@@ -95,59 +38,6 @@
         @test reverse(reverse(srange(1:10))) == srange(1:10)
         @test reverse(reverse(typemin(Int):typemax(Int))) == typemin(Int):typemax(Int)
         @test reverse(reverse(typemin(Int):2:typemax(Int))) == typemin(Int):2:typemax(Int)
-    end
-    @testset "intersect" begin
-        @test intersect(srange(1:5), srange(2:3)) == srange(2:3)
-        @test intersect(srange(-3:5), srange(2:8)) == srange(2:5)
-        @test intersect(srange(-8:-3), srange(-8:-3)) == srange(-8:-3)
-        @test intersect(srange(1:5), srange(5:13)) == srange(5:5)
-        @test isempty(intersect(srange(-8:-3), srange(-2:2)))
-        @test isempty(intersect(srange(-3:7), srange(2:1)))
-        @test intersect(srange(1:11), srange(-2:3:15)) == srange(1:3:10)
-        @test intersect(srange(1:11), srange(-2:2:15)) == srange(2:2:10)
-        @test intersect(srange(1:11), srange(-2:1:15)) == srange(1:11)
-        @test intersect(srange(1:11), srange(15:-1:-2)) == srange(1:11)
-        @test intersect(srange(1:11), srange(15:-4:-2)) == srange(3:4:11)
-        @test intersect(srange(-20:-5), srange(-10:3:-2)) == srange(-10:3:-7)
-        @test isempty(intersect(srange(-5:5), srange(-6:13:20)))
-        @test isempty(intersect(srange(1:11), srange(15:4:-2)))
-        @test isempty(intersect(srange(11:1), srange(15:-4:-2)))
-        #@test intersect(-5:5, 1+0*(1:3)) == 1:1
-        #@test isempty(intersect(-5:5, 6+0*(1:3)))
-        @test intersect(srange(-15:4:7), srange(-10:-2)) == srange(-7:4:-3)
-        @test intersect(srange(13:-2:1), srange(-2:8)) == srange(7:-2:1)
-        @test isempty(intersect(srange(13:2:1), srange(-2:8)))
-        @test isempty(intersect(srange(13:-2:1), srange(8:-2)))
-        #@test intersect(5+0*(1:4), 2:8) == 5+0*(1:4)
-        #@test isempty(intersect(5+0*(1:4), -7:3))
-        #=
-        @test intersect(srange(0:3:24), srange(0:4:24)) == srange(0:12:24)
-        @test intersect(srange(0:4:24), srange(0:3:24)) == srange(0:12:24)
-        @test intersect(srange(0:3:24), srange(24:-4:0)) == srange(0:12:24)
-        @test intersect(srange(24:-3:0), srange(0:4:24)) == srange(24:-12:0)
-        @test intersect(srange(24:-3:0), srange(24:-4:0)) == srange(24:-12:0)
-        @test intersect(srange(1:3:24), srange(0:4:24)) == srange(4:12:16)
-        @test intersect(srange(0:6:24), srange(0:4:24)) == srange(0:12:24)
-        @test isempty(intersect(1:6:2400, 0:4:2400))
-        @test intersect(srange(-51:5:100), srange(-33:7:125)) == srange(-26:35:79)
-        @test intersect(srange(-51:5:100), srange(-32:7:125)) == srange(-11:35:94)
-        #@test intersect(0:6:24, 6+0*(0:4:24)) == 6:6:6
-        #@test intersect(12+0*(0:6:24), 0:4:24) == AbstractRange(12, 0, 5)
-        #@test isempty(intersect(6+0*(0:6:24), 0:4:24))
-        @test intersect(srange(-10:3:24), srange(-10:3:24)) == srange(-10:3:23)
-        @test isempty(intersect(srange(-11:3:24), srange(-10:3:24)))
-        @test intersect(srange(typemin(Int):2:typemax(Int)), srange(1:10)) == srange(2:2:10)
-        @test intersect(srange(1:10), srange(typemin(Int):2:typemax(Int))) == srange(2:2:10)
-
-        @test intersect(reverse(srange(typemin(Int):2:typemax(Int))),srange(typemin(Int):2:typemax(Int))) == reverse(srange(typemin(Int):2:typemax(Int)))
-        @test intersect(srange(typemin(Int):2:typemax(Int)), reverse(srange(typemin(Int):2:typemax(Int)))) == srange(typemin(Int):2:typemax(Int))
-
-        @test intersect(srange(1,2),3) == srange(3,2)
-        @test intersect(srange(1,2), srange(1,5), srange(3,7), srange(4,6)) == srange(4,3)
-
-        @test intersect(srange(1:3), 2) === intersect(2, srange(1:3)) === srange(2:2)
-        @test intersect(srange(1.0:3.0), 2) == intersect(2, srange(1.0:3.0)) == [2.0]
-        =#
     end
     @testset "sort/sort!/partialsort" begin
         @test sort(srange(1,2)) == srange(1,2)

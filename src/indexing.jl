@@ -36,6 +36,10 @@ end
 
 @inline checkbounds(r::StaticRange, i::StaticRange) =
     (minimum(i) < firstindex(r) || maximum(i) > lastindex(r)) && throw(BoundsError(r, i))
+@inline checkbounds(r::StaticRange, i::SVal) = 
+    (i < firstindex(r) || i > lastindex(r)) && throw(BoundsError(r, i))
+
+
 
 Base.iterate(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = nothing
 @inline function Base.iterate(
@@ -46,6 +50,11 @@ Base.iterate(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = nothing
 end
 
 @inline function getindex(r::StaticRange, i::Int)
+    @boundscheck checkbounds(r, i)
+    @inbounds _unsafe_getindex(r, i)
+end
+
+@inline function getindex(r::StaticRange, i::SVal)
     @boundscheck checkbounds(r, i)
     @inbounds _unsafe_getindex(r, i)
 end
@@ -74,10 +83,26 @@ end
     T(B::Tb + (i - F::Int) * S::Ts)::T
 end
 
+@pure function _unsafe_getindex(
+    r::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F},
+     i::SInteger) where {T,B,Tb,S,Ts,E,L,F}
+    T(B::Tb + (i - F::Int) * S::Ts)::T
+end
+
+
 @pure @inline function _unsafe_getindex(
     ::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
     i::Integer) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F}
     u = i - F::Int
+    shift_hi, shift_lo = u * Hs::Ts, u * Ls::Ts
+    x_hi, x_lo = add12(SVal{Hb,Tb}(), SVal{shift_hi}())
+    return T(x_hi + (x_lo + (shift_lo + Lb)))
+end
+
+@pure @inline function _unsafe_getindex(
+    ::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
+    i::SInteger{I}) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F,I}
+    u = I - F::Int
     shift_hi, shift_lo = u * Hs::Ts, u * Ls::Ts
     x_hi, x_lo = add12(SVal{Hb,Tb}(), SVal{shift_hi}())
     return T(x_hi + (x_lo + (shift_lo + Lb)))
@@ -196,3 +221,13 @@ end
                          1}())                                    # offset
 end
 
+
+@inline function _unsafe_getindex(r::StaticRange{T,B,S,E,L,F}, inds::AbstractVector{Bool}) where {T,B,S,E,L,F}
+    out = T[]
+    for i in 1:L
+        if inds[i]
+            push!(out, r[i])
+        end
+    end
+    return out
+end
