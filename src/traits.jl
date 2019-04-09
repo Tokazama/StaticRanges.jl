@@ -24,11 +24,28 @@ end
 
 #@pure last(::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F}) where {T,Tb,Hb,Lb,Ts,Hs,Ls,E,L,F} = E::T
 
-@pure firstindex(r::StaticRange{T,B,S,E,L,E}) where {T,B,S,E,L,F} = F::Int
-@pure lastindex(r::StaticRange{T,B,S,E,L,E}) where {T,B,S,E,L,F} = (L - F + 1)::Int
+@pure firstindex(r::StaticRange{T,B,S,E,L,E}) where {T,B,S,E,L,F} = 1::Int
+@pure static_firstindex(r::StaticRange{T,B,S,E,L,E}) where {T,B,S,E,L,F} = SVal{1::Int,Int}()
+
+
+@pure lastindex(r::StaticRange{T,B,S,E,L,E}) where {T,B,S,E,L,F} = (L)::Int
+@pure static_lastindex(r::StaticRange{T,B,S,E,L,E}) where {T,B,S,E,L,F} = SVal{L::Int,Int}()
+
 
 @pure length(r::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} = L::Int
 @pure static_length(r::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} = SVal{L::Int,Int}()
+
+
+# compatability with other range types for indexing
+# overloading provides way for other packages to easily integrate with static indexing
+static_last(r::AbstractRange{T}) where T = SVal{last(r),T}()
+static_first(r::AbstractRange{T}) where T = SVal{first(r),T}()
+static_step(r::AbstractRange{T}) where T = SVal{step(r)}()
+static_lastindex(r::AbstractRange{T}) where T = SVal{lastindex(r)}()
+static_firstindex(r::AbstractRange{T}) where T = SVal{firstindex(r)}()
+
+
+
 
 Base.minimum(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = throw(ArgumentError("range must be non-empty"))
 Base.maximum(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = throw(ArgumentError("range must be non-empty"))

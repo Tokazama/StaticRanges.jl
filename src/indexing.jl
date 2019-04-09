@@ -27,20 +27,6 @@ end
 =#
 
 
-# general
-@inline checkbounds(r::AbstractArray, I::StaticRange) =
-    (minimum(I) < firstindex(r) || maximum(I) > lastindex(r)) && throw(BoundsError(r, I))
-
-@inline checkbounds(r::StaticRange, i::AbstractRange) =
-    (minimum(i) < firstindex(r) || maximum(i) > lastindex(r)) && throw(BoundsError(r, i))
-
-@inline checkbounds(r::StaticRange, i::StaticRange) =
-    (minimum(i) < firstindex(r) || maximum(i) > lastindex(r)) && throw(BoundsError(r, i))
-@inline checkbounds(r::StaticRange, i::SVal) = 
-    (i < firstindex(r) || i > lastindex(r)) && throw(BoundsError(r, i))
-
-
-
 Base.iterate(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = nothing
 @inline function Base.iterate(
     ::StaticRange{T,SVal{B},SVal{S},E,L,F},
@@ -63,6 +49,17 @@ end
     @boundscheck checkbounds(r, i)
     @inbounds _unsafe_getindex(r, i)
 end
+
+@inline getindex(r::StaticRange, i::AbstractRange) = r[srange(i)]
+
+@inline function getindex(r::StaticRange, i::StaticRange)
+    @boundscheck checkbounds(r, i)
+    @inbounds _unsafe_getindex(r, i)
+end
+
+
+
+
 
 #@inline function getindex(r::AbstractArray{T,N}, i::StaticRange) where {T,N}
 #    @boundscheck checkbounds(r, i)

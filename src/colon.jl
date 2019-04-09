@@ -37,7 +37,7 @@ function _scolon(b::SVal{B,T}, s, e::SVal{E,T}) where {B,E,T}
     steprange(convert(T′,b), s, convert(T′,e))
 end
 
-function (:)(b::SVal{B,T}, s::SVal{S,T}, e::SVal{E,T}, l::SNothing) where {T<:Union{Float16,Float32,Float64},B,S,E}
+function (:)(b::SVal{B,T}, s::SVal{S,T}, e::SVal{E,T}) where {T<:Union{Float16,Float32,Float64},B,S,E}
     S == 0 && throw(ArgumentError("range step cannot be zero"))
     # see if the inputs have exact rational approximations (and if so,
     # perform all computations in terms of the rationals)

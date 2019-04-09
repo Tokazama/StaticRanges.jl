@@ -34,6 +34,7 @@ include("steprangelen.jl")
 include("srange.jl")
 include("colon.jl")
 include("rangemath.jl")
+include("abstractarray.jl")
 include("indexing.jl")
 include("intersect.jl")
 
