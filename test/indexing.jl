@@ -34,4 +34,11 @@
     let r = srange(typemax(Int)-5:typemax(Int)-1)
         @test_throws BoundsError r[7]
     end
+    @testset "indexing range with empty range (#4309)" begin
+        @test srange(3:6)[5:4] == srange(7:6)
+        @test_throws BoundsError srange(3:6)[5:5]
+        @test_throws BoundsError srange(3:6)[5]
+        @test srange(0:2:10)[7:6] == srange(12:2:10)
+        @test_throws BoundsError srange(0:2:10)[7:7]
+    end
 end

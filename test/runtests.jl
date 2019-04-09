@@ -1,4 +1,5 @@
 using StaticRanges, Test
+using StaticRanges: StaticValues
 
 #=
 # indexing with negative ranges (#8351)
@@ -11,14 +12,16 @@ include("SVal.jl")
 include("HPSVal.jl")
 
 #include("traits.jl")
-#include("unitrange.jl")
+include("unitrange.jl")
 include("steprange.jl")
 include("floatrange.jl")
 include("srangehp.jl")
 include("linspace.jl")
 include("steprangelen.jl")
 include("colon.jl")
-include("srange.jl")
+#include("srange.jl")
 #include("rangemath.jl")
 include("indexing.jl")
 include("intersect.jl")
+include("length.jl")
+#include("in.jl") not implemented

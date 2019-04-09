@@ -145,6 +145,16 @@ Base.min(x1::SVal{V1,T1}, x2::SVal{V2,T2}) where {V1,T1,V2,T2} = V1 < V2 ? x1 : 
 +(x::SVal{V1,T}, y::SVal{V2,T}) where {V1,V2,T} = SVal{V1+V2}()
 +(x::SVal{V1,T1}, y::SVal{V2,T2}) where {V1,V2,T1,T2} = +(promote(x, y)...)
 
++(x::SVal{V1,Char}, y::SVal{V2,<:Number}) where {V1,V2} = SVal{V1+V2}()
++(y::SVal{V2,<:Number}, x::SVal{V1,Char}) where {V1,V2} = SVal{V1+V2}()
+
+
+# fallback
++(x::SVal{V,T}, y) where {V,T} = SVal{V + y}()
++(x, y::SVal{V,T}) where {V,T} = SVal{V + x}()
+
+
+
 -(x::SVal{V,T}) where {V,T} = SVal{-V,T}()
 
 -(x::SVal{V1,T1}, y::SVal{V2,T2}) where {V1,T1,V2,T2}= SVal{V1 - V2}()
