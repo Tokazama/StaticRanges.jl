@@ -10,7 +10,8 @@ import Base: first, last, firstindex, lastindex, step, length
 
 import Base.Checked: checked_sub, checked_add
 
-export StaticRange, UnitSRange, OneToSRange, srange, SVal, HPSVal, SOne, SZero
+export StaticRange, UnitSRange, OneToSRange, StaticIndices, LinearSIndices,
+       srange, SVal, HPSVal, SOne, SZero
 
 include("StaticValues/StaticValues.jl")
 using .StaticValues
@@ -37,6 +38,7 @@ include("rangemath.jl")
 include("abstractarray.jl")
 include("indexing.jl")
 include("intersect.jl")
+include("StaticIndices/StaticIndices.jl")
 
 function Base.reverse(r::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F}) where {T,B,Tb,S,Ts,E,L,F}
     oftype(r, _sr(SVal{Tb(E),Tb}(), SVal{-S,Ts}(), SVal{B,Tb}(), SNothing()))

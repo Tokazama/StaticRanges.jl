@@ -27,12 +27,13 @@ end
 =#
 
 
-Base.iterate(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = nothing
+Base.iterate(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = SNothing()
 @inline function Base.iterate(
-    ::StaticRange{T,SVal{B},SVal{S},E,L,F},
-     state::Int) where {T,B,S,E,L,F}
-    state === nothing && return nothing
-    (B + (state - F) * S, state + 1)::Tuple{T,Int}
+    r::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F},
+    ::SVal{I,Int}) where {T,B,Tb,S,Ts,E,L,F,I,Ti}
+    state = SVal{I::Int,Int}() + SOne
+    state === SNothing() | state > static_astindex(r) && return SNothing()
+    (@inbounds r[state], state)
 end
 
 @inline function getindex(r::StaticRange, i::Int)
