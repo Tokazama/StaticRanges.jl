@@ -13,9 +13,10 @@ for a variety of use cases (sliding windows, multidimensional filters, etc.).
 ```julia
 ]add https://github.com/Tokazama/StaticRanges.jl
 ```
-
+<!--
 ## Performance
 
 Note: time is in nanoseconds
 
 ![Indexing Benchmarks](benchmark/indexing.svg)
+-->
