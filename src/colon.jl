@@ -1,6 +1,6 @@
 (:)(a::SReal, b::SReal) = (:)(promote(a,b)...)
 
-(:)(start::SVal{B,T}, stop::SVal{E,T}) where {B,E,T<:Real} = unitrange(T, start, stop)
+(:)(start::SVal{B,T}, stop::SVal{E,T}) where {B,E,T<:Real} = UnitSRange{T}(start, stop)
 
 (:)(start::SVal{B,T}, stop::SVal{E,T}) where {B,E,T} = (:)(start, oftype(stop-start, 1), stop)
 
@@ -20,12 +20,13 @@
     _scolon(Base.OrderStyle(T), Base.ArithmeticStyle(T), b, s, e)
 (:)(b::SVal{B,T}, s::SVal{S,T}, e::SVal{E,T}) where {B,S,E,T<:Real} =
     _scolon(Base.OrderStyle(T), Base.ArithmeticStyle(T), b, s, e)
-_scolon(::Base.Ordered, ::Any, b::SVal{B,T}, s::SVal, e::SVal{B,E}) where {B,E,T} = steprange(b, s, e)
+
+_scolon(::Base.Ordered, ::Any, b::SVal{B,T}, s::SVal{S}, e::SVal{E,T}) where {B,E,S,T} = StepSRange(b, s, e)
 # for T<:Union{Float16,Float32,Float64} see twiceprecision.jl
 _scolon(::Base.Ordered, ::Base.ArithmeticRounds, b::SVal{B,T}, s::SVal, e::SVal{E,T}) where {B,E,T} =
-    steprangelen(b, s, floor(Int, (e-b)/s)+1)
-_scolon(::Any, ::Any, b::SVal{B,T}, s::SVal, e::SVal{E,T}) where {B,E,T} =
-    steprangelen(b, s, floor(Int, (e-b)/s)+1)
+    StepSRangeLen(b, s, floor(Int, (e-b)/s)+1)
+_scolon(::Any, ::Any, b::SVal{B,T}, s::SVal{S}, e::SVal{E,T}) where {B,E,S,T} =
+    StepSRangeLen(b, s, floor(Int, (e-b)/s)+1)
 
 
 (:)(b::SVal{B,T}, s, e::SVal{E,T}) where {B,E,T} = _scolon(b, s, e)
@@ -34,7 +35,7 @@ _scolon(::Any, ::Any, b::SVal{B,T}, s::SVal, e::SVal{E,T}) where {B,E,T} =
 # (:)(start::A, step, stop::C) where {A<:Real,C<:Real}
 function _scolon(b::SVal{B,T}, s, e::SVal{E,T}) where {B,E,T}
     T′ = typeof(b+zero(s))
-    steprange(convert(T′,b), s, convert(T′,e))
+    StepSRange(convert(T′,b), s, convert(T′,e))
 end
 
 function (:)(b::SVal{B,T}, s::SVal{S,T}, e::SVal{E,T}) where {T<:Union{Float16,Float32,Float64},B,S,E}

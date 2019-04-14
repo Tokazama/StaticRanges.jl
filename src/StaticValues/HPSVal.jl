@@ -206,9 +206,9 @@ end
 
 @inline function +(x::HPSVal{T,Hx,Lx}, y::HPSVal{T,Hy,Ly}) where {Hx,Lx,Hy,Ly,T}
     r = Hx + Hy
-    s = abs(Hx) > abs(Hy) ? (((x.hi - r) + Hy) + Ly) + Lx : (((Hy - r) + Hx) + Lx) + Ly
-    hnew, lnew = canonicalize2(r, s)
-    HPSVal(SVal{hnew}(),SVal{lnew}())
+    s = abs(Hx) > abs(Hy) ? (((Hx - r) + Hy) + Ly) + Lx : (((Hy - r) + Hx) + Lx) + Ly
+    hnew, lnew = canonicalize2(SVal{r}(), SVal{s}())
+    HPSVal(hnew,lnew)
 end
 +(x::HPSVal{Tx,Hx,Lx}, y::HPSVal{Ty,Hy,Ly}) where {Hx,Lx,Tx,Hy,Ly,Ty} = +(promote(x, y)...)
 
@@ -216,16 +216,18 @@ end
 -(x::Number, y::HPSVal{T,H,L}) where {H,L,T} = x + (-y)
 -(x::HPSVal{T,H,L}, y::Number) where {H,L,T} = x + (-y)
 
-function *(x::HPSVal{T,H,L}, v::Number) where {T,H,L}
-    v == 0 && return HPSVal{H*v, L*v}()
-    x * HPSVal{oftype(H*v, v)}()
+*(x::HPSVal, v::Number) = x * SVal{v}()
+
+function *(x::HPSVal{T,H,L}, v::SVal{V,Tv}) where {T,H,L,V,Tv<:Number}
+    V::Tv == 0 && return HPSVal{H::T*V::Tv, L::T*V::Tv}()
+    x * HPSVal{oftype(H::T*V::Tv, V::Tv)}()
 end
 
-function *(x::HPSVal{<:Union{Float16, Float32, Float64},H,L,}, v::Integer) where {H,L}
-    v == 0 && return HPSVal(SVal{H*v}(), SVal{L*v}())
-    nb = ceil(Int, log2(abs(v)))
-    u = Base.truncbits(H, nb)
-    HPSVal(canonicalize2(SVal{u*v}(), SVal{((H-u) + L)*v}())...)
+function *(x::HPSVal{T,H,L,}, v::SVal{V,Tv}) where {T<:Union{Float16, Float32, Float64},H,L,V,Tv}
+    V::Tv == 0 && return HPSVal(SVal{H::T*V::Tv}(), SVal{L::T*V::Tv}())
+    nb = ceil(Int, log2(abs(V::Tv)))
+    u = Base.truncbits(H::T, nb)
+    HPSVal(canonicalize2(SVal{u*V::Tv}(), SVal{((H::T-u) + L::T)*V::Tv}())...)
 end
 
 function *(x::HPSVal{<:Union{Float16, Float32, Float64},H,L}, s::SInteger{V}) where {H,L,V}

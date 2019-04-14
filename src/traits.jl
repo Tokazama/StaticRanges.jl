@@ -74,14 +74,6 @@ static_firstindex(r::AbstractRange{T}) where T = SVal{firstindex(r)}()
 
 
 
-Base.minimum(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = throw(ArgumentError("range must be non-empty"))
-Base.maximum(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = throw(ArgumentError("range must be non-empty"))
-
-Base.minimum(r::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} = min(first(r), last(r)) 
-Base.maximum(r::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} = max(first(r), last(r)) 
-
-Base.extrema(r::StaticRange) = (minimum(r), maximum(r))
-
 @pure function Base.isequal(
     ::StaticRange{T1,B1,E1,S1,F1,L1},
     ::StaticRange{T2,B2,E2,S2,F2,L2}) where {T1,B1,E1,S1,F1,L1,T2,B2,E2,S2,F2,L2}

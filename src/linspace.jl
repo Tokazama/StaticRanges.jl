@@ -3,20 +3,6 @@ function linspace(
     b::SInteger{B},
     e::SInteger{E},
     l::SInteger{L}
-    ) where {T,B,E,L}
-    snew = (E-B)/max(L-1, 1)
-    if isa(snew, Integer)
-        SRange{typeof(snew),SVal{oftype(snew, B)}(), SVal{oftype(snew, B)}(), SVal{snew}(), SVal{1}(),L}()
-    else
-        linspace(typeof(snew), b, e, l)
-    end
-end
-
-function linspace(
-    ::Type{T},
-    b::SInteger{B},
-    e::SInteger{E},
-    l::SInteger{L}
     ) where {B,E,L,T<:Union{Float16, Float32, Float64}}
     linspace(T, b, e, l, SVal{1}())
 end
@@ -148,27 +134,10 @@ function linspace1(
         # Ensure that first(r)==start and last(r)==stop even for len==0
         # The output type must be consistent with steprangelen_hp
         if T<:Union{Float32,Float16}
-            return steprangelen(T, SFloat64(b), SFloat64(b) - SFloat64(e), l, SOne)
+            return StepSRangeLen{T}(SFloat64(b), SFloat64(b) - SFloat64(e), l, SOne)
         else
-            return steprangelen(HPSVal(b, SVal{zero(T),T}()), HPSVal(b, -e), l, SOne)
+            return StepSRangeLen(HPSVal(b, SVal{zero(T),T}()), HPSVal(b, -e), l, SOne)
         end
     end
     throw(ArgumentError("should only be called for len < 2, got $L"))
-end
-
-function linrange(
-    ::Type{T},
-    b::SVal{B,Tb},
-    e::SVal{E,Te},
-    l::SInteger{L}
-    ) where {T,B,Tb,E,Te,L}
-    SRange{T,SVal{B,Tb},typeof(SVal{(E-B)/max(L - 1, 1)}()),T(E),L,1}()
-end
-
-function linrange(
-    b::SVal{B},
-    e::SVal{E},
-    l::SVal{L}
-    ) where {B,E,L} 
-    linrange(typeof((stop-start)/len), b, e, l)
 end

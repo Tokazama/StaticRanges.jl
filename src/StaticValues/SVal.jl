@@ -225,7 +225,7 @@ Base.iszero(::SVal{V,T}) where {V,T} = iszero(V)
 Base.show(io::IO, r::SVal) = showsval(io, r)
 Base.show(io::IO, ::MIME"text/plain", r::SVal) = showsval(io, r)
 
-showsval(io::IO, r::SVal{V,T}) where {V,T} = print(io, "SVal($(V)::$(T))")
+showsval(io::IO, r::SVal{V,T}) where {V,T} = print(io, "$V\t(static)")
 showsval(io::IO, r::SNothing) where {V,T} = print(io, "SVal(nothing)")
 
 

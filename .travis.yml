@@ -1,0 +1,15 @@
+language: julia
+
+os:
+    - osx
+    - linux
+
+julia:
+    - 1.1
+    - nightly
+
+notifications:
+    email: false
+
+after_success:
+    - julia -e 'cd(Pkg.dir("StaticRanges")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'

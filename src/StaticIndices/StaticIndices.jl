@@ -1,14 +1,6 @@
-abstract type StaticIndices{S,I,T,N,L} <: StaticArray{S,T,N} end
+abstract type StaticIndices{I,S,T,N,L} <: StaticArray{S,T,N} end
 
 include("traits.jl")
-
-struct LinearSIndices{S,I,N,L} <: StaticIndices{S,I,Int,N,L}
-    indices::I
-end
-
-function LinearSIndices{S}(inds::Tuple{Vararg{<:StaticRange,N}}) where {S,N}
-    LinearSIndices{S,typeof(inds),N,prod(map(length, inds))}(inds)
-end
 
 Base.show(io::IO, si::StaticIndices) = showindices(io, si)
 Base.show(io::IO, ::MIME"text/plain", si::StaticIndices) = showindices(io, si)
@@ -19,8 +11,9 @@ function showindices(io::IO, si::StaticIndices)
     end
 end
 
-function getindex()
+function _size()
 end
+
 
 #=
 function LinearSIndices{I,S}() where {I,S}

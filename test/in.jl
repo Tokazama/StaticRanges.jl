@@ -1,6 +1,6 @@
 @testset "in" begin
-    @test 0 in UInt(0):100:typemax(UInt)
-    @test last(UInt(0):100:typemax(UInt)) in UInt(0):100:typemax(UInt)
+    @test 0 in SVal(UInt(0)):SVal(100):SVal(typemax(UInt))
+    @test last(SVal(UInt(0)):SVal(100):SVal(typemax(UInt))) in SVal(UInt(0)):SVal(100):SVal(typemax(UInt))
     @test -9223372036854775790 in srange(-9223372036854775790:100:9223372036854775710)
     @test -9223372036854775690 in srange(-9223372036854775790:100:9223372036854775710)
     @test -90 in srange(-9223372036854775790:100:9223372036854775710)

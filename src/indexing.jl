@@ -1,66 +1,6 @@
-#=
-# may be good to provide streamlined boundschecking when 1 based indexing is known
-# This could make it easier for inlining entire getindex
+Base.iterate(r::AbstractSRange{T,0}) where T = SNothing()
 
-@inline function checkbounds()
-end
-
-@inline function checkbounds(::
-    r1::SRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
-    r2::StaticRange{T2,SVal{B,Tb2},SVal{S,Ts2},E2,L2,F2}
-    ) where {T,T2<:Integer,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F,B,Tb2,S,Ts2,E2,L2,F2}
-    (minimum(r2) < 1)
-end
-
-@inline function checkbounds(
-    r1::SRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
-    r2::SRange{T2,SVal{B,Tb2},SVal{S,Ts2},E2,L2,F2}
-    ) where {T,T2<:Integer,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F,B,Tb2,S,Ts2,E2,L2,F2}
-end
-
-@inline function checkbounds(
-    r1::SRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
-    r2::SRange{T2,HPSVal{Tb2,Hb2,Lb2},HPSVal{Ts2,Hs2,Ls2},E2,L2,F2}
-    ) where {T,T2<:Integer,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F,B,Tb2,Hb2,Lb2,Ts2,Hs2,Ls2,E2,L2,F2}
-end
-
-=#
-
-
-Base.iterate(r::StaticRange{T,B,S,E,0,F}) where {T,B,S,E,F} = SNothing()
-@inline function Base.iterate(
-    r::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F},
-    ::SVal{I,Int}) where {T,B,Tb,S,Ts,E,L,F,I,Ti}
-    state = SVal{I::Int,Int}() + SOne
-    state === SNothing() | state > static_astindex(r) && return SNothing()
-    (@inbounds r[state], state)
-end
-
-@inline function getindex(r::StaticRange, i::Int)
-    @boundscheck checkbounds(r, i)
-    @inbounds _unsafe_getindex(r, i)
-end
-
-@inline function getindex(r::StaticRange, i::SVal)
-    @boundscheck checkbounds(r, i)
-    @inbounds _unsafe_getindex(r, i)
-end
-
-@inline function getindex(r::StaticRange, i::AbstractArray)
-    @boundscheck checkbounds(r, i)
-    @inbounds _unsafe_getindex(r, i)
-end
-
-@inline getindex(r::StaticRange, i::AbstractRange) = r[srange(i)]
-
-@inline function getindex(r::StaticRange, i::StaticRange)
-    @boundscheck checkbounds(r, i)
-    @inbounds _unsafe_getindex(r, i)
-end
-
-
-
-
+@inline getindex(r::AbstractSRange, i::Int) = getindex(r, SVal{i,Int}())
 
 #@inline function getindex(r::AbstractArray{T,N}, i::StaticRange) where {T,N}
 #    @boundscheck checkbounds(r, i)
@@ -68,53 +8,6 @@ end
 #end
 
 @pure Base.to_index(A::Array, r::StaticRange) = r
-
-@pure function _unsafe_getindex(
-    r::StaticRange{T,SVal{B,T},SVal{S,T},E,L,F},
-    i::Int) where {T,B,S,E,L,F}
-    (B::T + (i - F::Int) * S::T)::T
-end
-
-@pure function _unsafe_getindex(
-    r::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F},
-     i::Int) where {T,B,Tb,S,Ts,E,L,F}
-    T(B::Tb + (i - F::Int) * S::Ts)::T
-end
-
-@pure function _unsafe_getindex(
-    r::StaticRange{T,SVal{B,Tb},SVal{S,Ts},E,L,F},
-     i::SInteger) where {T,B,Tb,S,Ts,E,L,F}
-    T(B::Tb + (i - F::Int) * S::Ts)::T
-end
-
-
-@pure @inline function _unsafe_getindex(
-    ::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
-    i::Integer) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F}
-    u = i - F::Int
-    shift_hi, shift_lo = u * Hs::Ts, u * Ls::Ts
-    x_hi, x_lo = add12(SVal{Hb,Tb}(), SVal{shift_hi}())
-    return T(x_hi + (x_lo + (shift_lo + Lb)))
-end
-
-@pure @inline function _unsafe_getindex(
-    ::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,L,F},
-    i::SInteger{I}) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,L,F,I}
-    u = I - F::Int
-    shift_hi, shift_lo = u * Hs::Ts, u * Ls::Ts
-    x_hi, x_lo = add12(SVal{Hb,Tb}(), SVal{shift_hi}())
-    return T(x_hi + (x_lo + (shift_lo + Lb)))
-end
-
-@inline function _getindex_hprec(
-    ::StaticRange{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,F,L},
-    i::Integer) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,F,L}
-    u = i - F
-    shift_hi, shift_lo = u*Hs, u*Ls
-    x_hi, x_lo = Base.add12(Hb, shift_hi)
-    x_hi, x_lo = Base.add12(x_hi, x_lo + (shift_lo + Lb))
-    TwicePrecision(x_hi, x_lo)
-end
 
 @inline function _unsafe_getindex(
     r::StaticRange{T,SVal{B},SVal{S},E,L,F},

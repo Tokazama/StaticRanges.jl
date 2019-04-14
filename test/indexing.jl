@@ -24,7 +24,7 @@
     @test @inferred(srange(Val(1.0), stop=Val(5))[srange(Val(1), stop=Val(4))]) === srange(1.0:4)
     @test srange(2:6)[1:4] == srange(2:5)
     @test srange(1:6)[2:5] === srange(2:5)
-    @test srange(1:6)[2:2:5] === srange(2:2:4)
+    @test srange(1:6)[2:2:5] === srange(2:2:4)  # FIXME
     @test srange(1:2:13)[2:6] === srange(3:2:11)
     @test srange(1:2:13)[2:3:7] === srange(3:6:13)
 
