@@ -1,6 +1,7 @@
 # StaticRanges
 
-[![experimental](http://badges.github.io/stability-badges/dist/experimental.svg)](http://github.com/badges/stability-badges)
+[![Build Status](https://travis-ci.com/Tokazama/StaticRanges.jl.svg?branch=master)](https://travis-ci.com/Tokazama/StaticRanges.jl) ![Lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)
+
 
 ## Introduction
 
