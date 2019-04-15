@@ -37,5 +37,6 @@ UnitSRange{T,SVal{B,T},SVal{E,T}}() where {T<:Union{Int,Int64,Int128},B,E} =
     UnitSRange{T,SVal{B,T},SVal{E,T},SVal{Int(checked_add(checked_sub(E, B), one(T))),Int}}()
 UnitSRange{T,SVal{B,T},SVal{E,T}}() where {T<:Union{UInt,UInt64,UInt128},B,E} =
     UnitSRange{T,SVal{B,T},SVal{E,T},typeof(E < B ? SZero(T) : (E - B) + SOne(T))}()
+UnitSRange{T,SVal{B,T},SVal{E,T}}() where {T<:Real,B,E} =
+    UnitSRange{T,SVal{B,T},SVal{E,T},typeof(SVal{Integer(E::T - B::T + oneunit(T))}())}()
 
-UnitSRange{T,SVal{B,T},SVal{E,T}}() where {T<:Real,B,E} = UnitRange{T,SVal{B,T},SVal{E,T},unitrange_length(SVal{B,T}(),SVal{E,T}())}()

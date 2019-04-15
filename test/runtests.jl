@@ -1,5 +1,7 @@
-using StaticRanges, Test
+using Dates, Test
+using StaticRanges
 using StaticRanges: StaticValues
+
 
 #=
 # indexing with negative ranges (#8351)
@@ -25,4 +27,4 @@ include("indexing.jl")
 include("intersect.jl")
 include("sort.jl")
 include("length.jl")
-#include("in.jl") not implemented
+include("in.jl")

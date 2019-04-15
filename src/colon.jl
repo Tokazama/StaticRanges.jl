@@ -33,9 +33,9 @@ _scolon(::Any, ::Any, b::SVal{B,T}, s::SVal{S}, e::SVal{E,T}) where {B,E,S,T} =
 (:)(b::SVal{B,T}, s, e::SVal{E,T}) where {B,E,T<:Real} = _scolon(b, s, e)
 # without the second method above, the first method above is ambiguous with
 # (:)(start::A, step, stop::C) where {A<:Real,C<:Real}
-function _scolon(b::SVal{B,T}, s, e::SVal{E,T}) where {B,E,T}
-    T′ = typeof(b+zero(s))
-    StepSRange(convert(T′,b), s, convert(T′,e))
+function _scolon(b::SVal{B,T}, s::SVal{S,Ts}, e::SVal{E,T}) where {B,E,T,S,Ts}
+    T2 = typeof(B::T+zero(S::Ts))
+    StepSRange(SVal{convert(T2,B::T)::T2,T2}(), s, SVal{convert(T2,E::T)::T2,T2}())
 end
 
 function (:)(b::SVal{B,T}, s::SVal{S,T}, e::SVal{E,T}) where {T<:Union{Float16,Float32,Float64},B,S,E}

@@ -25,3 +25,15 @@ end
     ( B::T <= x) & (x <= E::T)
 end
 
+function in(x, r::AbstractSRange)
+    anymissing = false
+    for y in itr
+        v = (y == x)
+        if ismissing(v)
+            anymissing = true
+        elseif v
+            return true
+        end
+    end
+    return anymissing ? missing : false
+end

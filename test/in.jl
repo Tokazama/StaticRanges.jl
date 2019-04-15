@@ -45,9 +45,9 @@ end
     @test !(π in srange(1.0:3.0))
     @test !("a" in srange(1:3))
     @test !("a" in srange(1.0:3.0))
+    
     @test !(1 in srange(Date(2017, 01, 01):Dates.Day(1):Date(2017, 01, 05)))
     @test !(Complex(1, 0) in srange(Date(2017, 01, 01):Dates.Day(1):Date(2017, 01, 05)))
     @test !(π in srange(Date(2017, 01, 01):Dates.Day(1):Date(2017, 01, 05)))
     @test !("a" in srange(Date(2017, 01, 01):Dates.Day(1):Date(2017, 01, 05)))
-    end
 end

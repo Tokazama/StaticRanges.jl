@@ -200,9 +200,9 @@ end
 Base.log10(::SVal{V,T}) where {V,T} = SVal{log(V) / BASE10}()
 Base.log1p(::SVal{V,T}) where {V,T} = SVal{logp(V)}()
 
-Base.rem(::SVal{V1,T}, ::SVal{V2,<:Integer}) where {V1,V2,T} = SVal{rem(V1,V2)}()
-Base.rem(::SVal{V,T}, x::Integer) where {V,T} = SVal{rem(V,x)}()
-Base.rem(x::T, ::SVal{V,<:Integer}) where {V,T} = SVal{rem(x,V)}()
+Base.rem(::SVal{V1,T1}, ::SVal{V2,T2}) where {V1,T1,V2,T2} = SVal{rem(V1::T1,V2::T2)}()
+Base.rem(::SVal{V,T1}, x::T2) where {V,T1,T2} = SVal{rem(V::T1,x)}()
+Base.rem(x::T1, ::SVal{V,T2}) where {V,T1,T2} = SVal{rem(x,V::T2)}()
 
 function Base.clamp(::SVal{x,X}, ::SVal{lo,L}, ::SVal{hi,H}) where {x,X,lo,L,hi,H}
     if x > hi
@@ -297,6 +297,8 @@ function Base.cld(x::SVal{X,T}, y::SVal{Y,T}) where {X,Y,T<:Integer}
     d = div(x, y)
     return d + (((x > 0) == (y > 0)) & (d * y != x))
 end
+
+unsigned(::SVal{V,T}) where {V,T} = SVal{Base.unsigned(V::T)}()
 
 #=
 
