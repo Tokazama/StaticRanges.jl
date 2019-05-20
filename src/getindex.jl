@@ -1,13 +1,20 @@
-@inline function getindex(r::AbstractSRange, i::SVal)
+function Base.iterate(r::StaticStepRangeLen,
+    state::SInt64{I})
+    Base.@_inline_meta
+    length(r) < state && return nothing
+    unsafe_getindex(r, state), state + 1
+end
+
+@inline function getindex(r::StaticRange, i::SVal)
     @boundscheck checkbounds(r, i)
     @inbounds get(unsafe_getindex(r, i))
 end
 
-@inline getindex(r::AbstractSRange, i::Integer) = r[SVal{i}()]
+@inline getindex(r::StaticRange, i::Integer) = r[SVal{i}()]
 
-@inline getindex(r::AbstractSRange, i::AbstractRange) = r[srange(i)]
+@inline getindex(r::StaticRange, i::AbstractRange) = r[srange(i)]
 
-@inline function getindex(r::AbstractSRange, i::AbstractSRange)
+@inline function getindex(r::StaticRange, i::StaticRange)
     @boundscheck checkbounds(r, i)
     @inbounds unsafe_getindex(r, i)
 end
@@ -104,7 +111,7 @@ end
     StepSRange{T}(unsafe_getindex(r, sfirst(s)), sstep(r), unsafe_getindex(r, slast(s)))
 end
 
-@inline function unsafe_getindex(r::StepSRange, s::AbstractSRange{<:Integer})
+@inline function unsafe_getindex(r::StepSRange, s::StaticRange{<:Integer})
     _sr(unsafe_getindex(r, sfirst(s)), sstep(r)*sstep(s), SNothing(), slength(s))
 end
 

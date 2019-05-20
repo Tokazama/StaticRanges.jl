@@ -1,3 +1,13 @@
+
+abstract type AbstractIndices{TE,TI,N} <: AbstractArray{TE,N} end
+
+
+function getindex(a::AbstractIndices{TE,TI,N}, idx::Vararg{TI,N}) where {TE,TI,N}
+end
+
+
+
+
 Base.iterate(r::AbstractSRange{T,0}) where T = SNothing()
 
 @inline getindex(r::AbstractSRange, i::Int) = getindex(r, SVal{i,Int}())

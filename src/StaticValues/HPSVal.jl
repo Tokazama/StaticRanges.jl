@@ -1,4 +1,3 @@
-
 function splitprec(::Type{F}, ::SInteger{I}) where {F<:AbstractFloat,I}
     hi = Base.truncbits(F(I), cld(precision(F), 2))
     ihi = oftype(I, hi)

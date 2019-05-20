@@ -1,6 +1,6 @@
 module StaticRanges
 
-using StaticArrays
+using StaticArrays, StaticValues
 
 import StaticArrays: tuple_length, tuple_prod, tuple_minimum
 
@@ -11,14 +11,41 @@ import Base: first, last, firstindex, lastindex, step, length
 import Base.Checked: checked_sub, checked_add
 import StaticArrays: Dynamic
 
-export StepSRange, UnitSRange, OneToSRange, StepSRangeLen, LinSRange,
+export UnitSRange,
+       UnitMRange,
+#       OneToSRange,
+       StepSRangeLen,
+       StepSRange,
+       StepMRange,
+       LinSRange,
+       LinMRange,
        StaticIndices, LinearSIndices,
-       srange, SVal, HPSVal, SOne, SZero,
+       srange, SOne, SZero,
        sfirst, sstep, slast, sfirstindex, slastindex
 
+const BaseUnsigned = Union{UInt128,UInt16,UInt32, UInt64,UInt8}
+const BaseSigned = Union{BigInt,Int128,Int16,Int32,Int64,Int8}
+const BaseInteger = Union{UInt128,UInt16,UInt32,UInt64,UInt8,
+                          BigInt,Int128,Int16,Int32,Int64,Int8,Bool}
+const BaseFloat = Union{BigFloat,Float16,Float32,Float64}
+const BaseReal = Union{UInt128,UInt16,UInt32,UInt64,UInt8,
+                       BigInt,Int128,Int16,Int32,Int64,Int8,Bool,
+                       BigFloat,Float16,Float32,Float64,
+                       Rational,Irrational}
+const BaseNumber = Union{UInt128,UInt16,UInt32,UInt64,UInt8,
+                         BigInt,Int128,Int16,Int32,Int64,Int8,Bool,
+                         BigFloat,Float16,Float32,Float64,
+                         Rational,Irrational,Complex}
 
-include("StaticValues/StaticValues.jl")
-using .StaticValues
+int(x::SReal) = SInt64(x)
+int(x::Real) = Int64(x)
+
+int128(x::SReal) = SInt128(x)
+int128(x::Real) = Int128(x)
+
+
+
+const IEEESFloat = Union{Float16,Float32,Float64,SFloat16,SFloat32,SFloat64}
 
 #Base.oftype(::SRange, r::StaticRange{T,B,S,E,L,F}) where {T,B,S,E,L,F} =
 #    SRange{T,B,S,E,L,F}()
@@ -26,29 +53,28 @@ using .StaticValues
 
 
 include("abstractsrange.jl")
-include("UnitSRange.jl")
-include("LinSRange.jl")
-include("StepSRangeLen.jl")
-include("StepSRange.jl")
-include("floatrange.jl")
-include("srangehp.jl")
-include("linspace.jl")
-include("srange.jl")
-include("colon.jl")
-include("rangemath.jl")
-include("abstractarray.jl")
-include("checkbounds.jl")
-include("getindex.jl")
+include("staticunitrange.jl")
+include("staticsteprange.jl")
+#include("floatrange.jl")
+#include("srangehp.jl")
+#include("linspace.jl")
+#include("srange.jl")
+#include("colon.jl")
+#include("rangemath.jl")
+#include("abstractarray.jl")
+#include("checkbounds.jl")
+#include("getindex.jl")
 #include("indexing.jl")
-include("reverse.jl")
-include("intersect.jl")
-include("in.jl")
-include("sorting.jl")
-include("StaticIndices/StaticIndices.jl")
+#include("reverse.jl")
+#include("intersect.jl")
+#include("in.jl")
+#include("sorting.jl")
+#include("StaticIndices/StaticIndices.jl")
 
+
+#=
 ==(r::AbstractSRange, s::AbstractSRange) =
     (first(r) == first(s)) & (step(r) == step(s)) & (last(r) == last(s))
-#=
 ==(r::OrdinalSRange, s::OrdinalSRange) =
     (first(r) == first(s)) & (step(r) == step(s)) & (last(r) == last(s))
 ==(r::T, s::T) where {T<:Union{StepSRangeLen,LinSRange}} =

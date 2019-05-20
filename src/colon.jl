@@ -1,45 +1,57 @@
-(:)(a::SReal, b::SReal) = (:)(promote(a,b)...)
 
-(:)(start::SVal{B,T}, stop::SVal{E,T}) where {B,E,T<:Real} = UnitSRange{T}(start, stop)
+convert_static_val(::Type{$BT}, ::$ST2{V})
 
-(:)(start::SVal{B,T}, stop::SVal{E,T}) where {B,E,T} = (:)(start, oftype(stop-start, 1), stop)
+function (:)(start::SReal{B}, stop::SReal{E}) where {B,E}
+    if eltype(start) === eltype(stop)
+        (:)(promote(start, stop)...)
+    else
+        StaticUnitRange{eltype(start)}(promote(start, stop)...)
+    end
+end
+
+(:)(start::SVal{B}, stop::SVal{E}) where {B,E} = (:)(start, oftype(stop-start, 1), stop)
 
 # promote start and stop, leaving step alone
-(:)(b::SVal{B,Tb}, step, e::SVal{E,Te}) where {B,E,Tb<:Real,Te<:Real} =
-    (:)(SVal{convert(promote_type(Tb,Te), B)}(), step,
-        SVal{convert(promote_type(Tb,Te), E)}())
+function (:)(b::SReal{B}, step, e::SReal{E}) where {B,E}
+    (:)(SVal{convert(promote_type(Tb,Te), B)}(), step, SVal{convert(promote_type(Tb,Te), E)}())
+end
 
 # AbstractFloat specializations
-(:)(b::SVal{B,T}, e::SVal{E,T}) where {B,E,T<:AbstractFloat} = (:)(b, SVal{T(1)}(), e)
+(:)(start::SFloat, stop::SFloat) = (:)(promote(start, stop)...)
+(:)(start::SFloat16, stop::SFloat16) = (:)(start, SFloat16(1), stop)
+(:)(start::SFloat32, stop::SFloat32) = (:)(start, SFloat32(1), stop)
+(:)(start::SFloat64, stop::SFloat64) = (:)(start, SFloat64(1), stop)
 
-(:)(b::SVal{B,T}, s::SFloat{S}, e::SVal{E,T}) where {B,S,E,T<:Real} = (:)(promote(b,s,e)...)
-(:)(b::SVal{B,T}, s::SFloat{S}, e::SVal{E,T}) where {B,S,E,T<:AbstractFloat} = (:)(promote(b,s,e)...)
-(:)(b::SVal{B,T}, s::SReal{S}, e::SVal{E,T}) where {B,S,E,T<:AbstractFloat} = (:)(promote(b,s,e)...)
-
-(:)(b::SVal{B,T}, s::SVal{S,T}, e::SVal{E,T}) where {B,S,E,T<:AbstractFloat} =
-    _scolon(Base.OrderStyle(T), Base.ArithmeticStyle(T), b, s, e)
-(:)(b::SVal{B,T}, s::SVal{S,T}, e::SVal{E,T}) where {B,S,E,T<:Real} =
+(:)(start::SReal{B}, step::SReal{S}, stop::SReal{E}) where {B,S,E,T<:Real} =
     _scolon(Base.OrderStyle(T), Base.ArithmeticStyle(T), b, s, e)
 
-_scolon(::Base.Ordered, ::Any, b::SVal{B,T}, s::SVal{S}, e::SVal{E,T}) where {B,E,S,T} = StepSRange(b, s, e)
+_scolon(::Base.Ordered, ::Any, start::SVal{B}, step::SVal{S}, stop::SVal{E}) where {B,S,E} =
+    StaticStepRange(start, step, stop)
 # for T<:Union{Float16,Float32,Float64} see twiceprecision.jl
-_scolon(::Base.Ordered, ::Base.ArithmeticRounds, b::SVal{B,T}, s::SVal, e::SVal{E,T}) where {B,E,T} =
-    StepSRangeLen(b, s, floor(Int, (e-b)/s)+1)
-_scolon(::Any, ::Any, b::SVal{B,T}, s::SVal{S}, e::SVal{E,T}) where {B,E,S,T} =
-    StepSRangeLen(b, s, floor(Int, (e-b)/s)+1)
+_scolon(::Base.Ordered, ::Base.ArithmeticRounds, start::SVal{B}, step::SVal, stop::SVal{E}) where {B,E} =
+    StaticStepRangeLen(start, step, floor(Int, (stop-start)/step)+1)
+_scolon(::Any, ::Any, start::SVal{B}, step::SVal{S}, stop::SVal{E}) where {B,E,S} =
+    StaticStepRangeLen(start, step, floor(Int, (stop-stop)/step)+SOne)
 
 
-(:)(b::SVal{B,T}, s, e::SVal{E,T}) where {B,E,T} = _scolon(b, s, e)
+(:)(start::SVal{B,T}, s, e::SVal{E,T}) where {B,E,T} = _scolon(b, s, e)
 (:)(b::SVal{B,T}, s, e::SVal{E,T}) where {B,E,T<:Real} = _scolon(b, s, e)
 # without the second method above, the first method above is ambiguous with
 # (:)(start::A, step, stop::C) where {A<:Real,C<:Real}
 function _scolon(b::SVal{B,T}, s::SVal{S,Ts}, e::SVal{E,T}) where {B,E,T,S,Ts}
     T2 = typeof(B::T+zero(S::Ts))
-    StepSRange(SVal{convert(T2,B::T)::T2,T2}(), s, SVal{convert(T2,E::T)::T2,T2}())
+    StaticStepRange(SVal{convert(T2,B::T)::T2,T2}(), s, SVal{convert(T2,E::T)::T2,T2}())
 end
 
-function (:)(b::SVal{B,T}, s::SVal{S,T}, e::SVal{E,T}) where {T<:Union{Float16,Float32,Float64},B,S,E}
-    S == 0 && throw(ArgumentError("range step cannot be zero"))
+(:)(b::SVal{B,T}, s::SVal{S,T}, e::SVal{E,T}) where {T<:Union{Float16,Float32,Float64},B,S,E}
+
+
+(:)(start::SFloat16, step::SFloat16, stop::SFloat16) = sub_scolon(start, step, stop)
+(:)(start::SFloat32, step::SFloat32, stop::SFloat32) = sub_scolon(start, step, stop)
+(:)(start::SFloat64, step::SFloat64, stop::SFloat64) = sub_scolon(start, step, stop)
+
+function sub_colon(b::AbstractFloat, s::AbstractFloat, e::AbstractFloat)
+    s == 0 && throw(ArgumentError("range step cannot be zero"))
     # see if the inputs have exact rational approximations (and if so,
     # perform all computations in terms of the rationals)
     step_n, step_d = rat(s)
@@ -54,26 +66,26 @@ function (:)(b::SVal{B,T}, s::SVal{S,T}, e::SVal{E,T}) where {T<:Union{Float16,F
                     rem(den, start_d) == 0 && rem(den, step_d) == 0      # check lcm overflow
                 start_n = round(Int, b*den)
                 step_n = round(Int, b*den)
-                len = max(0, div(den*stop_n - stop_d*start_n + step_n*stop_d, step_n*stop_d))
+                len = max(SZero, div(den*stop_n - stop_d*start_n + step_n*stop_d, step_n*stop_d))
                 # Integer ops could overflow, so check that this makes sense
                 if Base.isbetween(B, B + (get(len)-1)*S, E + S/2) && !Base.isbetween(B, B + get(len)*S, E)
                     # Return a 2x precision range
-                    return floatrange(T, SVal{start_n}(), SVal{step_n}(), SVal{len}(), SVal{den}())
+                    return floatrange(T, start_n, step_n, len, den)
                 end
             end
         end
     end
     # Fallback, taking start and step literally
-    lf = (E-B)/S
+    lf = (e-b)/s
     if lf < 0
-        len = 0
+        len = SZero
     elseif lf == 0
-        len = 1
+        len = SOne
     else
-        len = round(Int, lf) + 1
-        stop′ = B + (len-1)*S
+        len = round(Int, lf) + SOne
+        stop′ = b + (len-SOne)*s
         # if we've overshot the end, subtract one:
-        len -= (B < E < stop′) + (B > E > stop′)
+        len -= (b < e < stop′) + (b > e > stop′)
     end
     srangehp(T, b, s, SVal{0}(), SVal{len}(), SVal{1}())
 end

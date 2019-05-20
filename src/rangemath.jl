@@ -1,15 +1,15 @@
-Base.minimum(r::AbstractSRange{T,SVal{0}}) where {T} = throw(ArgumentError("range must be non-empty"))
-Base.maximum(r::AbstractSRange{T,SVal{0}}) where {T} = throw(ArgumentError("range must be non-empty"))
+Base.minimum(r::StaticRange{T,SVal{0}}) where {T} = throw(ArgumentError("range must be non-empty"))
+Base.maximum(r::StaticRange{T,SVal{0}}) where {T} = throw(ArgumentError("range must be non-empty"))
 
-Base.minimum(r::AbstractSRange) = min(first(r), last(r)) 
-Base.maximum(r::AbstractSRange) = max(first(r), last(r)) 
+Base.minimum(r::StaticRange) = min(first(r), last(r)) 
+Base.maximum(r::StaticRange) = max(first(r), last(r)) 
 
-Base.extrema(r::AbstractSRange) = (minimum(r), maximum(r))
+Base.extrema(r::StaticRange) = (minimum(r), maximum(r))
 
 
 function +(
-    r1::AbstractSRange{T,L1},
-    r2::AbstractSRange{T,L2}) where {T,L1,L2}
+    r1::StaticRange{T,L1},
+    r2::StaticRange{T,L2}) where {T,L1,L2}
     throw(DimensionMismatch("argument dimensions must match"))
 end
 #=
@@ -21,7 +21,7 @@ end
     steprangelen(B1()+B2(), S1()+S2(), SVal{L}())
 end
 
--(r1::AbstractSRange, r2::AbstractSRange) = +(r1, -r2)
+-(r1::StaticRange, r2::StaticRange) = +(r1, -r2)
 
 +(::StaticRange{T,B1,E1,S1,F,L}, ::StaticRange{T,B2,E2,S2,F,L}) where {T,B1,E1,S1,B2,E2,S2,F,L} =
     StaticRange{T,B1+B2,E1+E2,S1+S2,F,L}()
@@ -39,7 +39,7 @@ function *(x::Real, r::StaticRange{<:Real,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,F,
     oftype(r, steprangelen(x*HPSVal{Tb,Hb,Lb}(), twiceprecision(x*HPSVal{Ts,Hs,Ls}(), nbitslen(r)), SVal{L}(), SVal{F}()))
 end
 
-*(r::AbstractSRange{<:Real,<:HPSVal}, x::Real) = x*r
+*(r::StaticRange{<:Real,<:HPSVal}, x::Real) = x*r
 
 function /(x::Real, r::StepSRangeLen{<:Real,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls},E,F,L}) where {T,Tb,Ts,Hb,Lb,Hs,Ls,E,F,L}
     StepSRangeLen(HPSVal{Tb,Hb,Lb}()/x, twiceprecision(HPSVal{Ts,Hs,Ls}()/x, nbitslen(r)), SVal{L}(), SVal{F}(0))
@@ -69,7 +69,7 @@ end
 =#
 
 #=
-function sum(r::AbstractSRange{<:Real})
+function sum(r::StaticRange{<:Real})
     l = slength(r)
     # note that a little care is required to avoid overflow in l*(l-1)/2
     return l * sfirst(r) + (iseven(l) ? (step(r) * (l-1)) * (l>>1)
