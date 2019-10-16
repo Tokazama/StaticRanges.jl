@@ -9,6 +9,8 @@ Base.:(-)(r1::StaticStepRangeLen, r2::StaticStepRangeLen) = +(r1, -r2)
 
 Base.first(r::StaticStepRangeLen) = unsafe_getindex(r, 1)
 
+Base.last(r::StaticStepRangeLen) = unsafe_getindex(r, length(r))
+
 function Base.unsafe_getindex(r::StaticStepRangeLen{T}, i::Integer) where T
     u = i - _offset(r)
     return T(_ref(r) + u * step(r))
@@ -70,14 +72,13 @@ struct StepSRangeLen{T,Tr,Ts,R,S,L,F} <: StaticStepRangeLen{T,R,S} end
 function StepSRangeLen{T,R,S}(ref::R, step::S, len::Integer, offset::Integer = 1) where {T,R,S}
     len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
     1 <= offset <= max(1,len) || throw(ArgumentError("StepRangeLen: offset must be in [1,$len], got $offset"))
-    StepSRangeLen{T,R,S,tp2val(ref),tp2val(ref)}()
+    StepSRangeLen{T,R,S,tp2val(ref),tp2val(ref),len,offset}()
 end
 
 # convert TPVal to TwicePrecision
 Base.step_hp(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts<:TwicePrecision,R,S} = convert(Ts, S)
 _ref(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr<:TwicePrecision,Ts,R,S,L,F} = convert(Tr, R)
 
-Base.step_hp(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts,R,S} = S
 Base.step(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = convert(T, S)
 Base.length(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = L
 _offset(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = F
@@ -203,6 +204,21 @@ for (F,f) in ((:M,:m), (:S,:s))
         end
 
         $(SR){T,R,S}(r::$(SR){T,R,S}) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision} = r
+        function $(SR)(ref::R, step::S, len::Integer, offset::Integer = 1) where {R,S}
+            return $(SR){typeof(ref+0*step),R,S}(ref, step, len, offset)
+        end
+        function $(SR){T}(ref::R, step::S, len::Integer, offset::Integer = 1) where {T,R,S}
+            return $(SR){T,R,S}(ref, step, len, offset)
+        end
+
+        function $(SR)(
+            ref::TwicePrecision{T},
+            step::TwicePrecision{T},
+            len::Integer,
+            offset::Integer=1
+           ) where {T}
+            return $(SR){T,TwicePrecision{T},TwicePrecision{T}}(ref, step, len, offset)
+        end
 
         function $(SR){T,R,S}(r::$(SR)) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision}
             return _convertSRL($(SR){T,R,S}, r)

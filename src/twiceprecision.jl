@@ -7,7 +7,7 @@ as a parametric storage type.
 """
 struct TPVal{T,H,L} end
 
-@inline gethi(::T) where {T<:TPVal} = getlo(T)
+@inline gethi(::T) where {T<:TPVal} = gethi(T)
 Base.@pure gethi(::Type{<:TPVal{T,H,L}}) where {T,H,L} = H::T
 
 @inline getlo(::T) where {T<:TPVal} = getlo(T)
@@ -26,9 +26,7 @@ function Base.convert(::Type{<:TPVal{T}}, x::TPVal) where {T}
     return TPVal{T,convert(T, gethi(x)), convert(T, getlo(x))}()
 end
 
-convert(::Type{T}, x::TPVal) where {T<:Number} = T(x)
-
-convert(::Type{TwicePrecision{T}}, x::Number) where {T} = TwicePrecision{T}(x)
+Base.convert(::Type{T}, x::TPVal) where {T<:Number} = T(x)
 
 function Base.convert(::Type{TwicePrecision{T}}, x::TPVal{T}) where {T}
     return TwicePrecision{T}(gethi(x), getlo(x))
