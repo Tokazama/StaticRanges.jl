@@ -24,6 +24,7 @@ Base.isempty(r::Union{StaticLinRange,StaticStepRangeLen}) = length(r) == 0
 ==(r::Union{StepRange{T},StepRangeLen{T,T}}, s::Union{StepRange{T},StepRangeLen{T,T}}) where {T} =
     (first(r) == first(s)) & (last(r) == last(s)) & (step(r) == step(s))
 =#
+
 function promote_rule(::Type{LinRange{L}}, b::Type{StepRangeLen{T,R,S}}) where {L,T,R,S}
     promote_rule(StepRangeLen{L,L,L}, b)
 end

@@ -28,17 +28,17 @@ function Base.unsafe_getindex(
     # Very similar to _getindex_hiprec, but optimized to avoid a 2nd call to add12
     Base.@_inline_meta
     u = i - _offset(r)
-    shift_hi, shift_lo = u * step(r).hi, u * step(r).lo
+    shift_hi, shift_lo = u * step_hp(r).hi, u * step_hp(r).lo
     x_hi, x_lo = add12(_ref(r).hi, shift_hi)
     return T(x_hi + (x_lo + (shift_lo + _ref(r).lo)))
 end
 
 function _getindex_hiprec(r::StaticStepRangeLen{<:Any,<:TwicePrecision,<:TwicePrecision}, i::Integer)
     u = i - _offset(r)
-    shift_hi, shift_lo = u * step(r).hi, u * step(r).lo
+    shift_hi, shift_lo = u * step(r).hi, u * step_hp(r).lo
     x_hi, x_lo = add12(_ref(r).hi, shift_hi)
     x_hi, x_lo = add12(x_hi, x_lo + (shift_lo + _ref(r).lo))
-    TwicePrecision(x_hi, x_lo)
+    return TwicePrecision(x_hi, x_lo)
 end
 
 function Base.sum(r::StaticStepRangeLen)
@@ -49,8 +49,8 @@ function Base.sum(r::StaticStepRangeLen)
     np, nn = l - _offset(r), _offset(r) - 1  # positive, negative
     # To prevent overflow in sum(1:n), multiply its factors by the step
     sp, sn = sumpair(np), sumpair(nn)
-    tp = _tp_prod(step(r), sp[1], sp[2])
-    tn = _tp_prod(step(r), sn[1], sn[2])
+    tp = Base._tp_prod(step_hp(r), sp[1], sp[2])
+    tn = Base._tp_prod(step_hp(r), sn[1], sn[2])
     s_hi, s_lo = add12(tp.hi, -tn.hi)
     s_lo += tp.lo - tn.lo
     # Add in contributions of ref
@@ -175,6 +175,14 @@ for (F,f) in ((:M,:m), (:S,:s))
             $(SR)(T(first(r)), T(step(r)), length(r))
         $(SR)(r::AbstractRange) = $(SR){eltype(r)}(r)
 
+        function $(SR)(
+            ref::TwicePrecision{T},
+            step::TwicePrecision{T},
+            len::Integer,
+            offset::Integer=1
+           ) where {T}
+            return $(SR){T,TwicePrecision{T},TwicePrecision{T}}(ref, step, len, offset)
+        end
         function Base.getindex(
             r::$(SR){T,<:TwicePrecision,<:TwicePrecision},
             s::OrdinalRange{<:Integer}
@@ -184,14 +192,14 @@ for (F,f) in ((:M,:m), (:S,:s))
             soffset = clamp(soffset, 1, length(s))
             ioffset = first(s) + (soffset-1)*step(s)
             if step(s) == 1 || length(s) < 2
-                newstep = step(r)
+                newstep = step_hp(r)
             else
-                newstep = Base.twiceprecision(step(r)*step(s), Base.nbitslen(T, length(s), soffset))
+                newstep = Base.twiceprecision(step_hp(r)*step(s), Base.nbitslen(T, length(s), soffset))
             end
             if ioffset == _offset(r)
-                $(SR)(_ref(r), newstep, length(s), max(1,soffset))
+                return $(SR)(_ref(r), newstep, length(s), max(1,soffset))
             else
-                $(SR)(_ref(r) + (ioffset-_offset(r))*step(r), newstep, length(s), max(1,soffset))
+                return $(SR)(_ref(r) + (ioffset-_offset(r))*step_hp(r), newstep, length(s), max(1,soffset))
             end
         end
 
@@ -209,15 +217,6 @@ for (F,f) in ((:M,:m), (:S,:s))
         end
         function $(SR){T}(ref::R, step::S, len::Integer, offset::Integer = 1) where {T,R,S}
             return $(SR){T,R,S}(ref, step, len, offset)
-        end
-
-        function $(SR)(
-            ref::TwicePrecision{T},
-            step::TwicePrecision{T},
-            len::Integer,
-            offset::Integer=1
-           ) where {T}
-            return $(SR){T,TwicePrecision{T},TwicePrecision{T}}(ref, step, len, offset)
         end
 
         function $(SR){T,R,S}(r::$(SR)) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision}

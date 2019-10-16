@@ -34,8 +34,13 @@ for (F,f) in ((:M,:m), (:S,:s))
         $(fcolon)(start::T, stop::T) where {T} = $(fcolon)(start, oftype(stop-start, 1), stop)
 
         # promote start and stop, leaving step alone
-        $(fcolon)(start::A, step, stop::C) where {A<:Real,C<:Real} =
-            $(fcolon)(convert(promote_type(A,C),start), step, convert(promote_type(A,C),stop))
+        function $(fcolon)(start::A, step, stop::C) where {A<:Real,C<:Real}
+            return $(_fcolon_colon)(convert(promote_type(A, C), start),
+                             step,
+                             convert(promote_type(A, C), stop)
+                            )
+        end
+
 
         function $(fcolon)(start::T, step::T, stop::T) where T<:Union{Float16,Float32,Float64}
             step == 0 && throw(ArgumentError("range step cannot be zero"))
@@ -80,12 +85,28 @@ for (F,f) in ((:M,:m), (:S,:s))
         # AbstractFloat specializations
         $(fcolon)(a::T, b::T) where {T<:AbstractFloat} = $(fcolon)(a, T(1), b)
 
-        $(fcolon)(a::T, b::AbstractFloat, c::T) where {T<:Real} = $(fcolon)(promote(a,b,c)...)
-        $(fcolon)(a::T, b::AbstractFloat, c::T) where {T<:AbstractFloat} = $(fcolon)(promote(a,b,c)...)
-        $(fcolon)(a::T, b::Real, c::T) where {T<:AbstractFloat} = $(fcolon)(promote(a,b,c)...)
 
-        $(fcolon)(start::T, step::T, stop::T) where {T<:AbstractFloat} =
-            $(_fcolon_colon)(Base.OrderStyle(T), Base.ArithmeticStyle(T), start, step, stop)
+        function $(fcolon)(start::T, step, stop::T) where {T}
+            return $(_fcolon_colon)(start, step, stop)
+        end
+        function $(fcolon)(a::T, b::AbstractFloat, c::T) where {T<:Real}
+            return $(fcolon)(promote(a,b,c)...)
+        end
+        function $(fcolon)(a::T, b::AbstractFloat, c::T) where {T<:AbstractFloat}
+            return $(fcolon)(promote(a,b,c)...)
+        end
+        function $(fcolon)(a::T, b::Real, c::T) where {T<:AbstractFloat}
+            return $(fcolon)(promote(a,b,c)...)
+        end
+
+        function $(_fcolon_colon)(start::T, step, stop::T) where {T}
+            T′ = typeof(start+zero(step))
+            return $(SR)(convert(T′,start), step, convert(T′,stop))
+        end
+
+        function $(fcolon)(start::T, step::T, stop::T) where {T<:AbstractFloat}
+            return $(_fcolon_colon)(Base.OrderStyle(T), Base.ArithmeticStyle(T), start, step, stop)
+        end
         $(fcolon)(start::T, step::T, stop::T) where {T<:Real} =
             $(_fcolon_colon)(Base.OrderStyle(T), Base.ArithmeticStyle(T), start, step, stop)
         $(_fcolon_colon)(::Base.Ordered, ::Any, start::T, step, stop::T) where {T} = $(SR)(start, step, stop)
@@ -115,17 +136,17 @@ for (F,f) in ((:M,:m), (:S,:s))
             return $(SRL){typeof(a+0*step),T,S}(a, step, len)
         end
 
-        function $(_frange)(start::T, ::Nothing, stop::T, len::Integer) where {T<:Base.IEEEFloat}
+        function $(_frange)(start::T, ::Nothing, stop::T, len::Integer) where {T<:IEEEFloat}
             len < 2 && return $(flinspace1)(T, start, stop, len)
             if start == stop
                 return $(stepfrangelen_hp)(T, start, zero(T), 0, len, 1)
             end
             # Attempt to find exact rational approximations
-            start_n, start_d = Base.rat(start)
-            stop_n, stop_d = Base.rat(stop)
+            start_n, start_d = rat(start)
+            stop_n, stop_d = rat(stop)
             if start_d != 0 && stop_d != 0
                 den = lcm(start_d, stop_d)
-                m = Base.maxintfloat(T, Int)
+                m = maxintfloat(T, Int)
                 if den != 0 && abs(den*start) <= m && abs(den*stop) <= m
                     start_n = round(Int, den*start)
                     stop_n = round(Int, den*stop)
@@ -221,6 +242,19 @@ for (F,f) in ((:M,:m), (:S,:s))
             $(SRL){T}(ref[1]/ref[2], step[1]/step[2], Int(len), offset)
         end
 
+        function $(stepfrangelen_hp)(::Type{Float64}, ref::Base.F_or_FF,
+                                 step::Base.F_or_FF, nb::Integer,
+                                 len::Integer, offset::Integer)
+            $(SRL)(Base._TP(ref),
+                         twiceprecision(Base._TP(step), nb), Int(len), offset)
+        end
+
+        function $(stepfrangelen_hp)(::Type{T}, ref::Base.F_or_FF,
+                                 step::Base.F_or_FF, nb::Integer,
+                                 len::Integer, offset::Integer) where {T<:IEEEFloat}
+            $(SRL){T}(Base.asF64(ref),
+                            Base.asF64(step), Int(len), offset)
+        end
         function $(floatfrange)(::Type{T}, start_n::Integer, step_n::Integer, len::Integer, den::Integer) where T
             if len < 2 || step_n == 0
                 return $(stepfrangelen_hp)(T, (start_n, den), (step_n, den), 0, Int(len), 1)

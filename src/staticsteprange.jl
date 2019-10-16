@@ -84,6 +84,44 @@ function Base.intersect(r::StaticStepRange{<:Integer}, s::AbstractUnitRange{<:In
     end
 end
 
+Base.intersect(r::StaticStepRange, s::StepRange) = _intersect(r, s)
+Base.intersect(r::StepRange, s::StaticStepRange) = _intersect(r, s)
+Base.intersect(r::StaticStepRange, s::StaticStepRange) = _intersect(r, s)
+
+function _intersect(r, s)
+    if isempty(r) || isempty(s)
+        return range(first(r), step=step(r), length=0)
+    elseif step(s) < zero(step(s))
+        return intersect(r, reverse(s))
+    elseif step(r) < zero(step(r))
+        return reverse(intersect(reverse(r), s))
+    end
+
+    start1 = first(r)
+    step1 = step(r)
+    stop1 = last(r)
+    start2 = first(s)
+    step2 = step(s)
+    stop2 = last(s)
+    a = lcm(step1, step2)
+
+    g, x, y = gcdx(step1, step2)
+
+    if !iszero(rem(start1 - start2, g))
+        # Unaligned, no overlap possible.
+        return range(start1, step=a, length=0)
+    end
+
+    z = div(start1 - start2, g)
+    b = start1 - x * z * step1
+    # Possible points of the intersection of r and s are
+    # ..., b-2a, b-a, b, b+a, b+2a, ...
+    # Determine where in the sequence to start and stop.
+    m = max(start1 + mod(b - start1, a), start2 + mod(b - start2, a))
+    n = min(stop1 - mod(stop1 - b, a), stop2 - mod(stop2 - b, a))
+    range(m, step=a, stop=n)
+end
+
 for (F,f) in ((:M,:m), (:S,:s))
     SR = Symbol(:Step, F, :Range)
     frange = Symbol(f, :range)
@@ -93,40 +131,6 @@ for (F,f) in ((:M,:m), (:S,:s))
             @boundscheck checkbounds(r, s)
             st = oftype(first(r), first(r) + (first(s)-1)*step(r))
             $(frange)(st, step=step(r)*step(s), length=length(s))
-        end
-
-        function Base.intersect(r::$(SR), s::$(SR))
-            if isempty(r) || isempty(s)
-                return $(frange)(first(r), step=step(r), length=0)
-            elseif step(s) < zero(step(s))
-                return intersect(r, reverse(s))
-            elseif step(r) < zero(step(r))
-                return reverse(intersect(reverse(r), s))
-            end
-
-            start1 = first(r)
-            step1 = step(r)
-            stop1 = last(r)
-            start2 = first(s)
-            step2 = step(s)
-            stop2 = last(s)
-            a = lcm(step1, step2)
-
-            g, x, y = gcdx(step1, step2)
-
-            if !iszero(rem(start1 - start2, g))
-                # Unaligned, no overlap possible.
-                return $(frange)(start1, step=a, length=0)
-            end
-
-            z = div(start1 - start2, g)
-            b = start1 - x * z * step1
-            # Possible points of the intersection of r and s are
-            # ..., b-2a, b-a, b, b+a, b+2a, ...
-            # Determine where in the sequence to start and stop.
-            m = max(start1 + mod(b - start1, a), start2 + mod(b - start2, a))
-            n = min(stop1 - mod(stop1 - b, a), stop2 - mod(stop2 - b, a))
-            $(frange)(m, step=a, stop=n)
         end
 
         $(SR)(r::AbstractUnitRange{T}) where {T} = $(SR){T,T}(first(r), step(r), last(r))

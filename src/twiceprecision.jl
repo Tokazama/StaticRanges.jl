@@ -37,3 +37,4 @@ end
 
 # hacky catch for converting TwicePrecision to TPVal for static parameters
 tp2val(x::TwicePrecision{T}) where {T} = TPVal{T,x.hi,x.lo}()
+tp2val(x) = x
