@@ -1,4 +1,3 @@
-
 """
     StaticStepRangeLen
 """
@@ -58,6 +57,11 @@ function Base.sum(r::StaticStepRangeLen)
     return add12(sm_hi, sm_lo + ref.lo)[1]
 end
 
+function Base.show(io::IO, r::StaticStepRangeLen)
+    print(io, typeof(r).name, "(", first(r), ":", step(r), ":", last(r), ")")
+end
+
+
 """
     StepSRangeLen
 """
@@ -69,7 +73,12 @@ function StepSRangeLen{T,R,S}(ref::R, step::S, len::Integer, offset::Integer = 1
     StepSRangeLen{T,R,S,tp2val(ref),tp2val(ref)}()
 end
 
-Base.step(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = S
+# convert TPVal to TwicePrecision
+Base.step_hp(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts<:TwicePrecision,R,S} = convert(Ts, S)
+_ref(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr<:TwicePrecision,Ts,R,S,L,F} = convert(Tr, R)
+
+Base.step_hp(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts,R,S} = S
+Base.step(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = convert(T, S)
 Base.length(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = L
 _offset(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = F
 _ref(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = R
@@ -92,15 +101,12 @@ mutable struct StepMRangeLen{T,R,S} <: StaticStepRangeLen{T,R,S}
     end
 end
 
-Base.step(r::StepMRangeLen) = getfield(r, :step)
+Base.step_hp(r::StepMRangeLen) = getfield(r, :step)
+Base.step(r::StepMRangeLen{T}) where {T} = T(step_hp(r))
 Base.length(r::StepMRangeLen) = getfield(r, :len)
 _offset(r::StepMRangeLen) = getfield(r, :offset)
 _ref(r::StepMRangeLen) = getfield(r, :ref)
 
-
-function Base.show(io::IO, r::StepSRangeLen)
-    print(io, "StepSRangeLen(", first(r), ":", step(r), ":", last(r), ")")
-end
 
 for (F,f) in ((:M,:m), (:S,:s))
     SR = Symbol(:Step, F, :RangeLen)
@@ -196,17 +202,16 @@ for (F,f) in ((:M,:m), (:S,:s))
             return $(SR)(_ref(r)/x, Base.twiceprecision(step(r)/x, Base.nbitslen(r)), length(r), _offset(r))
         end
 
-
         $(SR){T,R,S}(r::$(SR){T,R,S}) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision} = r
 
-        function $(SR){T,R,S}(r::$(SR)) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision} =
+        function $(SR){T,R,S}(r::$(SR)) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision}
             return _convertSRL($(SR){T,R,S}, r)
         end
 
-        function (::Type{<:$(SR){Float64}})(r::$(SR)) =
+        function (::Type{<:$(SR){Float64}})(r::$(SR))
             return _convertSRL($(SR){Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
         end
-        function $(SR){T}(r::$(SR)) where {T<:IEEEFloat} =
+        function $(SR){T}(r::$(SR)) where {T<:IEEEFloat}
             return _convertSRL($(SR){T,Float64,Float64}, r)
         end
 
@@ -252,10 +257,7 @@ for (F,f) in ((:M,:m), (:S,:s))
             return $(SR){T,R,S}(R(first(r)), S(step(r)), length(r))
         end
 
-        function Base.:(+)(
-            r1::{T,R},
-            r2::$(SR){T,R}
-           ) where T where R<:TwicePrecision
+        function Base.:(+)(r1::$(SR){T,R}, r2::$(SR){T,R}) where T where R<:TwicePrecision
             len = length(r1)
             (len == length(r2) ||
                 throw(DimensionMismatch("argument dimensions must match")))
@@ -272,9 +274,4 @@ for (F,f) in ((:M,:m), (:S,:s))
             return $(SR){T,typeof(ref),typeof(step)}(ref, step, len, imid)
         end
     end
-
-    function Base.show(io::IO, r::$(SR))
-        print(io, $(SR), "(", first(r), ":", step(r), ":", last(r), ")")
-    end
-
 end

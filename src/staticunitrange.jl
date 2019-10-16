@@ -6,6 +6,10 @@ Base.firstindex(::StaticUnitRange) = 1
 Base.lastindex(r::StaticUnitRange) = length(r)
 
 
+function Base.show(io::IO, r::StaticUnitRange)
+    print(io, typeof(r).name, "(", repr(first(r)), ':', repr(last(r)), ")")
+end
+
 
 
 _in_unit_range(v::StaticUnitRange, val, i::Integer) = i > 0 && val <= last(v) && val >= first(v)
@@ -34,16 +38,7 @@ end
 Base.first(::UnitSRange{T,F,L}) where {T,F,L} = F
 Base.last(::UnitSRange{T,F,L}) where {T,F,L} = L
 
-UnitSRange{T}(r::UnitSRange{T}) where {T<:Real} = r
-UnitSRange{T}(r::AbstractUnitRange) where {T<:Real} = UnitSRange{T}(first(r), last(r))
-UnitSRange(start::T, stop::T) where {T<:Real} = UnitSRange{T}(start, stop)
-UnitSRange(r::AbstractUnitRange) = UnitSRange(first(r), last(r))
-
 isstatic(::Type{X}) where {X<:UnitSRange} = true
-
-function Base.show(io::IO, r::UnitSRange)
-    print(io, "UnitSRange(", repr(first(r)), ':', repr(last(r)), ")")
-end
 
 mutable struct UnitMRange{T<:Real} <: StaticUnitRange{T}
     start::T
@@ -51,11 +46,6 @@ mutable struct UnitMRange{T<:Real} <: StaticUnitRange{T}
 
     UnitMRange{T}(start, stop) where {T<:Real} = new(start, Base.unitrange_last(start,stop))
 end
-
-UnitMRange{T}(r::UnitMRange{T}) where {T<:Real} = r
-UnitMRange(start::T, stop::T) where {T<:Real} = UnitMRange{T}(start, stop)
-UnitMRange{T}(r::AbstractUnitRange) where {T<:Real} = UnitMRange{T}(first(r), last(r))
-UnitMRange(r::AbstractUnitRange) = UnitMRange(first(r), last(r))
 
 Base.first(r::UnitMRange) = getfield(r, :start)
 
@@ -66,13 +56,6 @@ setlast!(r::UnitMRange, val) = setfield!(r, :stop, val)
 
 can_setfirst(::Type{T}) where {T<:UnitMRange} = true
 can_setlast(::Type{T}) where {T<:UnitMRange} = true
-
-function Base.show(io::IO, r::UnitMRange)
-    print(io, "UnitMRange(", repr(first(r)), ':', repr(last(r)), ")")
-end
-
-Base.AbstractUnitRange{T}(r::UnitMRange) where {T} = UnitMRange{T}(r)
-#AbstractUnitRange{T}(r::OneTo) where {T} = OneTo{T}(r)
 
 
 for (F,f) in ((:M,:m), (:S,:s))
@@ -97,5 +80,6 @@ for (F,f) in ((:M,:m), (:S,:s))
         end
         $(UR){T}(r::$(UR){T}) where {T<:Real} = r
         $(UR){T}(r::$(UR)) where {T<:Real} = $(UR){T}(first(r), last(r))
+
     end
 end

@@ -1,7 +1,7 @@
 module StaticRanges
 
 import Base: OneTo, TwicePrecision, el_same, unsafe_getindex, nbitslen, rat,
-             IEEEFloat, floatrange, sumpair, add12, twiceprecision
+             IEEEFloat, floatrange, sumpair, add12, twiceprecision, step_hp
 
 export
     StaticStepRangeLen,
@@ -22,6 +22,7 @@ export
     mrange,
     srange
 
+include("twiceprecision.jl")
 include("traits.jl")
 include("onetorange.jl")
 include("staticunitrange.jl")

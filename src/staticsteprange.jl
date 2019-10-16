@@ -10,10 +10,6 @@ function Base.isempty(r::StaticStepRange)
     (first(r) != last(r)) & ((step(r) > zero(step(r))) != (last(r) > first(r)))
 end
 
-function Base.isempty(r::StaticStepRange)
-    (first(r) != last(r)) & ((step(r) > zero(step(r))) != (last(r) > first(r)))
-end
-
 struct StepSRange{T,Ts,F,S,L} <: StaticStepRange{T,Ts}
 
     function StepSRange{T,Ts}(start::T, step::Ts, stop::T) where {T,Ts}
@@ -87,6 +83,7 @@ function Base.intersect(r::StaticStepRange{<:Integer}, s::AbstractUnitRange{<:In
         return intersect(s, r)
     end
 end
+
 for (F,f) in ((:M,:m), (:S,:s))
     SR = Symbol(:Step, F, :Range)
     frange = Symbol(f, :range)

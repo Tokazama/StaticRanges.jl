@@ -14,13 +14,6 @@ Base.length(r::OneToRange{T}) where {T<:Union{Int,Int64}} = T(last(r))
 
 Base.unsafe_length(r::OneToRange) = Integer(last(r) - zero(last(r)))
 
-function Base.getindex(v::OneToRange{T}, i::Integer) where T
-    Base.@_inline_meta
-    @boundscheck ((i > 0) & (i <= last(v))) || throw(BoundsError(v, i))
-    return convert(T, i)
-end
-
-
 Base.intersect(r::OneToRange, s::OneToRange) = OneTo(min(last(r),last(s)))
 Base.intersect(r::OneToRange, s::OneTo) = OneTo(min(last(r),last(s)))
 Base.intersect(r::OneTo, s::OneToRange) = OneTo(min(last(r),last(s)))
@@ -91,7 +84,7 @@ Base.show(io::IO, r::OneToMRange) = print(io, "OneToMRange(", last(r), ")")
 Base.show(io::IO, r::OneToSRange) = print(io, "OneToSRange(", last(r), ")")
 
 for (F,f) in ((:M,:m), (:S,:s))
-    OTR = Symbol(:OntTo, F, :Range)
+    OTR = Symbol(:OneTo, F, :Range)
     frange = Symbol(f, :range)
     @eval begin
         Base.AbstractUnitRange{T}(r::$(OTR)) where {T} = $(OTR){T}(r)
