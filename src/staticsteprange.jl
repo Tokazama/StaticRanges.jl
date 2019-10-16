@@ -1,88 +1,184 @@
-"""
-    StepSRange
 
-# Examples
+abstract type StaticStepRange{T,S} <: OrdinalRange{T,S} end
 
-```jldoctest
-julia> StepSRange(SInt(1), SInt(2), SInt(10))
-1:2:9  (static)
-```
-"""
-struct StepSRange{T,B,S,E,L} <: StaticStepRange{T,B,S,E,L} end
-
-StepSRange(start::B, step::S, stop::E) where {B,S,E} = StepSRange{eltype(start)}(start, step, stop)
-
-StepSRange{T,B,S,E}(start::B, step::S, stop::E, len::L) where {T,B,S,E,L} =
-    StepSRange{T,B,S,E,L}()
-
-#StepSRange{T}(start::B, step::S, stop::E) where {T,B,S,E} = StepSRange{T,B}(start, step, stop)
-
-
-function StepSRange{T}(b::SReal, s::SReal, e::SReal) where T
-    z = zero(s)
-    s == z && throw(ArgumentError("step cannot be zero"))
-
-    if (s > z) != (e > b)
-        if T<:Integer
-            if S::Ts > zero(Ts)
-                last = b - oneunit(e - b)
-            else
-                last = b + oneunit(e - b)
-            end
-        else
-            last = b - s
-        end
-    else
-        # Compute absolute value of difference between `B` and `E`
-        # (to simplify handling both signed and unsigned T and checking for signed overflow):
-        absdiff, absstep = e > b ? (e - b, s) : (b - e, -s)
-
-        # Compute remainder as a nonnegative number:
-        if T <: Signed && absdiff < szero(absdiff)
-            # handle signed overflow with unsigned rem
-            remain = oftype(b, unsigned(absdiff) % absstep)
-        else
-            remain = absdiff % absstep
-        end
-        # Move `E` closer to `B` if there is a remainder:
-        last = e > b ? e - remain : e + remain
-    end
-    return StepSRange{T,typeof(b),typeof(s),typeof(last)}(b, s, last)
+function Base.unsafe_length(r::StaticStepRange)
+    n = Integer(div((last(r0 - first(r)) + step(r), step(r))))
+    return isempty(r) ? zero(n) : n
 end
 
-function StepSRange{T,B,S,E}(b::B, s::S, e::E) where {B,E,S,T<:Union{Int,UInt,Int64,UInt64,Int128,UInt128}}
-    (b != e) & ((s > 0)) != (e > b) && return StepSRange{T,B,S,E,typeof(szero)}(b,s,e, szero)
-    if s > 1
-        return StepSRange{T,B,S,E}(b, s, e, int(div(Base.unsigned(e - b), s)) + one(b))
-    elseif s < -1
-        return StepSRange{T,B,S,E}(b, s, e, int(div(Base.unsigned(e - b), -s)) + one(b))
-    elseif s > 0
-        return StepSRange{T,B,S,E}(b, s, e, int(div(e - b, s) + one(b)))
-    else
-        return StepSRange{T,B,S,E}(b, s, e, int(div(b - e, -s) + one(b)))
+function Base.isempty(r::StaticStepRange)
+    (first(r) != last(r)) & ((step(r) > zero(step(r))) != (last(r) > first(r)))
+end
+
+function Base.isempty(r::StaticStepRange)
+    (first(r) != last(r)) & ((step(r) > zero(step(r))) != (last(r) > first(r)))
+end
+
+struct StepSRange{T,Ts,F,S,L} <: StaticStepRange{T,Ts}
+
+    function StepSRange{T,Ts}(start::T, step::Ts, stop::T) where {T,Ts}
+        return new{T,Ts,start,step,Base.steprange_last(start, step, stop)}()
     end
 end
 
-function StepSRange{T,B,S,E}(b::B, s::S, e::E) where {B,E,S,T}
-    (b != e) &
-    ((s > zero(s))) !=
-    (e > b) ? StepSRange{T,B,S,E}(b, s, e, szero) :
-              StepSRange{T,B,S,E}(b, s, e, int(div(e - b + s, s)))
-end
 
+isstatic(::Type{X}) where {X<:StepSRange} = true
+
+Base.first(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = F
+
+Base.step(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = S
+
+Base.last(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = L
 
 """
     StepMRange
 """
-mutable struct StepMRange{T,B,S,E} <: StaticStepRange{T,B,S,E,Dynamic}
-    start::B
+mutable struct StepMRange{T,S} <: StaticStepRange{T,S}
+    start::T
     step::S
-    stop::E
+    stop::T
+
+    function StepMRange{T,S}(start::T, step::S, stop::T) where {T,S}
+        return new(start, step, Base.steprange_last(start,step,stop))
+    end
 end
 
-first(r::StepMRange{T,B,S,E}) where {T,B,S,E} = values(r.start::B)
-step(r::StepMRange{T,B,S,E}) where {T,B,S,E} = values(r.step::S)
-last(r::StepMRange{T,B,S,E}) where {T,B,S,E} = values(r.stop::E)
+Base.first(r::StepMRange) = getfield(r, :start)
 
+Base.step(r::StepMRange) = getfield(r, :step)
 
-showrange(io::IO, r::StaticStepRange) = print(io, "$(first(r)):$(step(r)):$(last(r)) \t (static)")
+Base.last(r::StepMRange) = getfield(r, :stop)
+
+setfirst!(r::StepMRange, val) = setfield!(r, :start, val)
+
+setlast!(r::StepMRange, val) = setfield!(r, :stop, val)
+
+can_growfirst(::Type{T}) where {T<:StepMRange} = true
+can_setstep(::Type{T}) where {T<:StepMRange} = true
+can_growlast(::Type{T}) where {T<:StepMRange} = true
+
+function Base.length(r::StaticStepRange{T}) where {T}
+    return start_step_stop_to_length(T, first(r), step(r), last(r))
+end
+
+function Base.intersect(r::AbstractUnitRange{<:Integer}, s::StaticStepRange{<:Integer})
+    if isempty(s)
+        range(first(r), length=0)
+    elseif step(s) == 0
+        intersect(first(s), r)
+    elseif step(s) < 0
+        intersect(r, reverse(s))
+    else
+        sta = first(s)
+        ste = step(s)
+        sto = last(s)
+        lo = first(r)
+        hi = last(r)
+        i0 = max(sta, lo + mod(sta - lo, ste))
+        i1 = min(sto, hi - mod(hi - sta, ste))
+        i0:ste:i1
+    end
+end
+
+function Base.intersect(r::StaticStepRange{<:Integer}, s::AbstractUnitRange{<:Integer})
+    if step(r) < 0
+        return reverse(intersect(s, reverse(r)))
+    else
+        return intersect(s, r)
+    end
+end
+for (F,f) in ((:M,:m), (:S,:s))
+    SR = Symbol(:Step, F, :Range)
+    frange = Symbol(f, :range)
+    @eval begin
+        function Base.getindex(r::$(SR), s::AbstractRange{<:Integer})
+            Base.@_inline_meta
+            @boundscheck checkbounds(r, s)
+            st = oftype(first(r), first(r) + (first(s)-1)*step(r))
+            $(frange)(st, step=step(r)*step(s), length=length(s))
+        end
+
+        function Base.intersect(r::$(SR), s::$(SR))
+            if isempty(r) || isempty(s)
+                return $(frange)(first(r), step=step(r), length=0)
+            elseif step(s) < zero(step(s))
+                return intersect(r, reverse(s))
+            elseif step(r) < zero(step(r))
+                return reverse(intersect(reverse(r), s))
+            end
+
+            start1 = first(r)
+            step1 = step(r)
+            stop1 = last(r)
+            start2 = first(s)
+            step2 = step(s)
+            stop2 = last(s)
+            a = lcm(step1, step2)
+
+            g, x, y = gcdx(step1, step2)
+
+            if !iszero(rem(start1 - start2, g))
+                # Unaligned, no overlap possible.
+                return $(frange)(start1, step=a, length=0)
+            end
+
+            z = div(start1 - start2, g)
+            b = start1 - x * z * step1
+            # Possible points of the intersection of r and s are
+            # ..., b-2a, b-a, b, b+a, b+2a, ...
+            # Determine where in the sequence to start and stop.
+            m = max(start1 + mod(b - start1, a), start2 + mod(b - start2, a))
+            n = min(stop1 - mod(stop1 - b, a), stop2 - mod(stop2 - b, a))
+            $(frange)(m, step=a, stop=n)
+        end
+
+        $(SR)(r::AbstractUnitRange{T}) where {T} = $(SR){T,T}(first(r), step(r), last(r))
+
+        $(SR)(start::T, step::S, stop::T) where {T,S} = $(SR){T,S}(start, step, stop)
+
+        $(SR){T1,T2}(r::$(SR){T1,T2}) where {T1,T2} = r
+        function $(SR){T1,T2}(r::AbstractRange) where {T1,T2}
+            return $(SR){T1,T2}(
+                convert(T1, first(r)),
+                convert(T2, step(r)),
+                convert(T1, last(r))
+               )
+        end
+
+        function (::Type{<:$(SR){T1,T2} where T1})(r::AbstractRange) where {T2}
+            return $(SR){eltype(r),T2}(r)
+        end
+
+        function Base.promote_rule(
+            a::Type{<:$(SR){T1a,T1b}},
+            ::Type{UR}
+           ) where {T1a,T1b,UR<:AbstractUnitRange}
+            return promote_rule(a, $(SR){eltype(UR), eltype(UR)})
+        end
+
+        function promote_rule(
+            ::Type{<:$(SR){T1a,T1b}},
+            ::Type{$(SR){T2a,T2b}}
+           ) where {T1a,T1b,T2a,T2b}
+            return Base.el_same(
+                promote_type(T1a,T2a),
+                # el_same only operates on array element type, so just promote
+                # second type parameter
+                $(SR){T1a, promote_type(T1b,T2b)},
+                $(SR){T2a, promote_type(T1b,T2b)}
+               )
+        end
+
+        function Base.:(-)(r::$(SR))
+            return $(frange)(-first(r), step=-step(r), length=length(r))
+        end
+    end
+end
+
+function Base.show(io::IO, r::StepMRange)
+    print(io, "StepMRange(", first(r), ":", step(r), ":", last(r), ")")
+end
+
+function Base.show(io::IO, r::StepSRange)
+    print(io, "StepSRange(", first(r), ":", step(r), ":", last(r), ")")
+end

@@ -1,118 +1,280 @@
 
+"""
+    StaticStepRangeLen
+"""
+abstract type StaticStepRangeLen{T,R,S} <: AbstractRange{T} end
+
+Base.:(-)(r1::StaticStepRangeLen, r2::AbstractRange) = +(r1, -r2)
+Base.:(-)(r1::AbstractRange, r2::StaticStepRangeLen) = +(r1, -r2)
+Base.:(-)(r1::StaticStepRangeLen, r2::StaticStepRangeLen) = +(r1, -r2)
+
+Base.first(r::StaticStepRangeLen) = unsafe_getindex(r, 1)
+
+function Base.unsafe_getindex(r::StaticStepRangeLen{T}, i::Integer) where T
+    u = i - _offset(r)
+    return T(_ref(r) + u * step(r))
+end
+
+function _getindex_hiprec(r::StaticStepRangeLen, i::Integer)  # without rounding by T
+    u = i - _offset(r)
+    return _ref(r) + u * step(r)
+end
+
+function Base.unsafe_getindex(
+    r::StaticStepRangeLen{T,<:TwicePrecision,<:TwicePrecision},
+    i::Integer
+   ) where T
+    # Very similar to _getindex_hiprec, but optimized to avoid a 2nd call to add12
+    Base.@_inline_meta
+    u = i - _offset(r)
+    shift_hi, shift_lo = u * step(r).hi, u * step(r).lo
+    x_hi, x_lo = add12(_ref(r).hi, shift_hi)
+    return T(x_hi + (x_lo + (shift_lo + _ref(r).lo)))
+end
+
+function _getindex_hiprec(r::StaticStepRangeLen{<:Any,<:TwicePrecision,<:TwicePrecision}, i::Integer)
+    u = i - _offset(r)
+    shift_hi, shift_lo = u * step(r).hi, u * step(r).lo
+    x_hi, x_lo = add12(_ref(r).hi, shift_hi)
+    x_hi, x_lo = add12(x_hi, x_lo + (shift_lo + _ref(r).lo))
+    TwicePrecision(x_hi, x_lo)
+end
+
+function Base.sum(r::StaticStepRangeLen)
+    l = length(r)
+    # Compute the contribution of step over all indices.
+    # Indexes on opposite side of r.offset contribute with opposite sign,
+    #    r.step * (sum(1:np) - sum(1:nn))
+    np, nn = l - _offset(r), _offset(r) - 1  # positive, negative
+    # To prevent overflow in sum(1:n), multiply its factors by the step
+    sp, sn = sumpair(np), sumpair(nn)
+    tp = _tp_prod(step(r), sp[1], sp[2])
+    tn = _tp_prod(step(r), sn[1], sn[2])
+    s_hi, s_lo = add12(tp.hi, -tn.hi)
+    s_lo += tp.lo - tn.lo
+    # Add in contributions of ref
+    ref = _ref(r) * l
+    sm_hi, sm_lo = add12(s_hi, ref.hi)
+    return add12(sm_hi, sm_lo + ref.lo)[1]
+end
 
 """
-    StepSRangeLen{T,B,S,E,L,F}
+    StepSRangeLen
 """
-struct StepSRangeLen{T,B,S,E,L,F} <: StaticStepRangeLen{T,B,S,E,L,F}
-    # reference value (might be smallest-magnitude value in the range)
-    # step value
-    # length of the range
-    # the index of ref
+struct StepSRangeLen{T,Tr,Ts,R,S,L,F} <: StaticStepRangeLen{T,R,S} end
 
-    function StepSRangeLen{T,SVal{B,Tb},SVal{S,Ts}}(len::SInteger{L}, offset::SInteger{F} = SOne) where {T,B,Tb,S,Ts,L,F}
-        len >= SZero || throw(ArgumentError("length cannot be negative, got $L"))
-        SOne <= offset <= max(SOne, len) || throw(ArgumentError("StepRangeLen: offset must be in [1,$L], got $F"))
-        new{T,                              # eltype
-            SVal{B,Tb},                     # ref
-            SVal{S,Ts},                     # step
-            SVal{T(B + (L-F) * S)::T,T},    # last
-            SVal{Int(L),Int},               # length
-            SVal{Int(F),Int}}()             # offset
-    end
+function StepSRangeLen{T,R,S}(ref::R, step::S, len::Integer, offset::Integer = 1) where {T,R,S}
+    len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
+    1 <= offset <= max(1,len) || throw(ArgumentError("StepRangeLen: offset must be in [1,$len], got $offset"))
+    StepSRangeLen{T,R,S,tp2val(ref),tp2val(ref)}()
+end
 
-    function StepSRangeLen{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls}}(len::SInt64{L}, offset::SInt64{F} = SOne) where {T,Tb,Hb,Lb,Ts,Hs,Ls,L,F}
-        len >= SZero || throw(ArgumentError("length cannot be negative, got $L"))
-        SOne <= offset <= max(SOne, len) || throw(ArgumentError("StepRangeLen: offset must be in [1,$L], got $F"))
-        u = L - F
-        shift_hi, shift_lo = u*Hs, u*Ls
-        x_hi, x_lo = Base.add12(Hb, shift_hi)
-        new{T,                                              # eltype
-            HPSVal{Tb,Hb,Lb},                               # ref
-            HPSVal{Ts,Hs,Ls},                               # step
-            SVal{T(x_hi + (x_lo + (shift_lo + Lb)))::T,T},  # last
-            SInt64{L},                                      # length
-            SInt64{F}}()                                    # offset
+Base.step(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = S
+Base.length(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = L
+_offset(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = F
+_ref(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = R
+
+isstatic(::Type{X}) where {X<:StepSRangeLen} = true
+
+"""
+    StepMRangeLen
+"""
+mutable struct StepMRangeLen{T,R,S} <: StaticStepRangeLen{T,R,S}
+    ref::R
+    step::S
+    len::Int
+    offset::Int
+
+    function StepMRangeLen{T,R,S}(ref::R, step::S, len::Integer, offset::Integer = 1) where {T,R,S}
+        len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
+        1 <= offset <= max(1,len) || throw(ArgumentError("StepRangeLen: offset must be in [1,$len], got $offset"))
+        new(ref, step, len, offset)
     end
 end
 
-StepSRangeLen(ref::SVal{B,Tb}, step::SVal{S,Ts}, len::SInteger{L}, offset::SInteger{F} = SOne) where {B,Tb,S,Ts,L,F} =
-    StepSRangeLen{eltype(ref+SZero*step),SVal{B,Tb},SVal{S,Ts}}(len, offset)
-
-StepSRangeLen(ref::HPSVal{Tb,Hb,Lb}, step::HPSVal{Ts,Hs,Ls}, len::SInteger{L}, offset::SInteger{F} = SOne) where {Tb,Hb,Lb,Ts,Hs,Ls,L,F} =
-    StepSRangeLen{eltype(ref+0*step),HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls}}(len, offset)
-
-StepSRangeLen{T}(ref::SVal{B,Tb}, step::SVal{S,Ts}, len::SInteger{L}, offset::SInteger{F} = SOne) where {T,B,Tb,S,Ts,L,F} =
-    StepSRangeLen{T,SVal{B,Tb},SVal{S,Ts}}(len, offset)
-
-StepSRangeLen{T}(ref::HPSVal{Tb,Hb,Lb}, step::HPSVal{Ts,Hs,Ls}, len::SInteger{L}, offset::SInteger{F} = SOne) where {T,Tb,Hb,Lb,Ts,Hs,Ls,L,F} =
-    StepSRangeLen{eltype(ref+0*step),HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls}}(len, offset)
+Base.step(r::StepMRangeLen) = getfield(r, :step)
+Base.length(r::StepMRangeLen) = getfield(r, :len)
+_offset(r::StepMRangeLen) = getfield(r, :offset)
+_ref(r::StepMRangeLen) = getfield(r, :ref)
 
 
-"""
-    StepMRangeLen{T,B,S,E,F}
-"""
-
-struct StepMRangeLen{T,B,S,E,F} <: StaticStepRangeLen{T,B,S,E,Dynamic,F}
-    start::B       # reference value (might be smallest-magnitude value in the range)
-    step::S      # step value
-    stop::E     # length of the range
-    offset::F  # the index of ref
-end
-"""
-    StepSRangeLen{T,B,S,E,L,F}
-"""
-struct StepSRangeLen{T,B,S,E,L,F} <: StaticStepRangeLen{T,B,S,E,L,F}
-    # reference value (might be smallest-magnitude value in the range)
-    # step value
-    # length of the range
-    # the index of ref
-
-    function StepSRangeLen{T,SVal{B,Tb},SVal{S,Ts}}(len::SInteger{L}, offset::SInteger{F} = SOne) where {T,B,Tb,S,Ts,L,F}
-        len >= SZero || throw(ArgumentError("length cannot be negative, got $L"))
-        SOne <= offset <= max(SOne, len) || throw(ArgumentError("StepRangeLen: offset must be in [1,$L], got $F"))
-        new{T,                              # eltype
-            SVal{B,Tb},                     # ref
-            SVal{S,Ts},                     # step
-            SVal{T(B + (L-F) * S)::T,T},    # last
-            SVal{Int(L),Int},               # length
-            SVal{Int(F),Int}}()             # offset
-    end
-
-    function StepSRangeLen{T,HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls}}(len::SInt64{L}, offset::SInt64{F} = SOne) where {T,Tb,Hb,Lb,Ts,Hs,Ls,L,F}
-        len >= SZero || throw(ArgumentError("length cannot be negative, got $L"))
-        SOne <= offset <= max(SOne, len) || throw(ArgumentError("StepRangeLen: offset must be in [1,$L], got $F"))
-        u = L - F
-        shift_hi, shift_lo = u*Hs, u*Ls
-        x_hi, x_lo = Base.add12(Hb, shift_hi)
-        new{T,                                              # eltype
-            HPSVal{Tb,Hb,Lb},                               # ref
-            HPSVal{Ts,Hs,Ls},                               # step
-            SVal{T(x_hi + (x_lo + (shift_lo + Lb)))::T,T},  # last
-            SInt64{L},                                      # length
-            SInt64{F}}()                                    # offset
-    end
+function Base.show(io::IO, r::StepSRangeLen)
+    print(io, "StepSRangeLen(", first(r), ":", step(r), ":", last(r), ")")
 end
 
-StepSRangeLen(ref::SVal{B,Tb}, step::SVal{S,Ts}, len::SInteger{L}, offset::SInteger{F} = SOne) where {B,Tb,S,Ts,L,F} =
-    StepSRangeLen{eltype(ref+SZero*step),SVal{B,Tb},SVal{S,Ts}}(len, offset)
+for (F,f) in ((:M,:m), (:S,:s))
+    SR = Symbol(:Step, F, :RangeLen)
+    frange = Symbol(f, :range)
 
-StepSRangeLen(ref::HPSVal{Tb,Hb,Lb}, step::HPSVal{Ts,Hs,Ls}, len::SInteger{L}, offset::SInteger{F} = SOne) where {Tb,Hb,Lb,Ts,Hs,Ls,L,F} =
-    StepSRangeLen{eltype(ref+0*step),HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls}}(len, offset)
+    @eval begin
+        function Base.:(-)(r::$(SR){T,R,S}) where {T,R,S}
+            return $(SR){T,R,S}(-_ref(r), -step(r), length(r), _offset(r))
+        end
 
-StepSRangeLen{T}(ref::SVal{B,Tb}, step::SVal{S,Ts}, len::SInteger{L}, offset::SInteger{F} = SOne) where {T,B,Tb,S,Ts,L,F} =
-    StepSRangeLen{T,SVal{B,Tb},SVal{S,Ts}}(len, offset)
+        function Base.:(+)(r1::$(SR){T,S}, r2::$(SR){T,S}) where {T,S}
+            len = length(r1)
+            (len == length(r2) ||
+                throw(DimensionMismatch("argument dimensions must match")))
+            $(SR)(first(r1)+first(r2), step(r1)+step(r2), len)
+        end
 
-StepSRangeLen{T}(ref::HPSVal{Tb,Hb,Lb}, step::HPSVal{Ts,Hs,Ls}, len::SInteger{L}, offset::SInteger{F} = SOne) where {T,Tb,Hb,Lb,Ts,Hs,Ls,L,F} =
-    StepSRangeLen{eltype(ref+0*step),HPSVal{Tb,Hb,Lb},HPSVal{Ts,Hs,Ls}}(len, offset)
+        function Base.reverse(r::$(SR))
+            # If `r` is empty, `length(r) - r.offset + 1 will be nonpositive hence
+            # invalid. As `reverse(r)` is also empty, any offset would work so we keep
+            # `r.offset`
+            offset = isempty(r) ? _offset(r) : length(r) - _offset(r) + 1
+            $(SR)(_ref(r), -step(r), length(r), offset)
+        end
+
+        function Base.promote_rule(
+            ::Type{<:$(SR){T1,R1,S1}},
+            ::Type{<:$(SR){T2,R2,S2}}
+           ) where {T1,T2,R1,R2,S1,S2}
+            return el_same(
+                promote_type(T1,T2),
+                $(SR){T1,promote_type(R1,R2),promote_type(S1,S2)},
+                $(SR){T2,promote_type(R1,R2),promote_type(S1,S2)}
+               )
+        end
+
+        $(SR){T,R,S}(r::$(SR){T,R,S}) where {T,R,S} = r
+        function $(SR){T,R,S}(r::$(SR)) where {T,R,S}
+            return $(SR){T,R,S}(
+                convert(R, _ref(r)),
+                convert(S, step(r)),
+                length(r),
+                _offset(r)
+               )
+        end
+        function $(SR){T}(r::StepRangeLen) where {T}
+            return $(SR)(
+                convert(T, _ref(r)),
+                convert(T, step(r)),
+                length(r),
+                _offset(r)
+               )
+        end
+
+        function Base.promote_rule(
+            a::Type{<:$(SR){T,R,S}},
+            ::Type{OR}
+           ) where {T,R,S,OR<:AbstractRange}
+            return promote_rule(a, $(SR){eltype(OR), eltype(OR), eltype(OR)})
+        end
+
+        $(SR){T,R,S}(r::AbstractRange) where {T,R,S} =
+            $(SR){T,R,S}(R(first(r)), S(step(r)), length(r))
+        $(SR){T}(r::AbstractRange) where {T} =
+            $(SR)(T(first(r)), T(step(r)), length(r))
+        $(SR)(r::AbstractRange) = $(SR){eltype(r)}(r)
+
+        function Base.getindex(
+            r::$(SR){T,<:TwicePrecision,<:TwicePrecision},
+            s::OrdinalRange{<:Integer}
+           ) where T
+            @boundscheck checkbounds(r, s)
+            soffset = 1 + round(Int, (_offset(r) - first(s))/step(s))
+            soffset = clamp(soffset, 1, length(s))
+            ioffset = first(s) + (soffset-1)*step(s)
+            if step(s) == 1 || length(s) < 2
+                newstep = step(r)
+            else
+                newstep = Base.twiceprecision(step(r)*step(s), Base.nbitslen(T, length(s), soffset))
+            end
+            if ioffset == _offset(r)
+                $(SR)(_ref(r), newstep, length(s), max(1,soffset))
+            else
+                $(SR)(_ref(r) + (ioffset-_offset(r))*step(r), newstep, length(s), max(1,soffset))
+            end
+        end
+
+        function Base.:(*)(x::Real, r::$(SR){<:Real,<:TwicePrecision})
+            return $(SR)(x * _ref(r), Base.twiceprecision(x * step(r), Base.nbitslen(r)), length(r), _offset(r))
+        end
+        Base.:(*)(r::$(SR){<:Real,<:TwicePrecision}, x::Real) = x*r
+        function Base.:(/)(r::$(SR){<:Real,<:TwicePrecision}, x::Real)
+            return $(SR)(_ref(r)/x, Base.twiceprecision(step(r)/x, Base.nbitslen(r)), length(r), _offset(r))
+        end
 
 
-"""
-    StepMRangeLen{T,B,S,E,F}
-"""
+        $(SR){T,R,S}(r::$(SR){T,R,S}) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision} = r
 
-struct StepMRangeLen{T,B,S,E,F} <: StaticStepRangeLen{T,B,S,E,Dynamic,F}
-    start::B       # reference value (might be smallest-magnitude value in the range)
-    step::S      # step value
-    stop::E     # length of the range
-    offset::F  # the index of ref
+        function $(SR){T,R,S}(r::$(SR)) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision} =
+            return _convertSRL($(SR){T,R,S}, r)
+        end
+
+        function (::Type{<:$(SR){Float64}})(r::$(SR)) =
+            return _convertSRL($(SR){Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
+        end
+        function $(SR){T}(r::$(SR)) where {T<:IEEEFloat} =
+            return _convertSRL($(SR){T,Float64,Float64}, r)
+        end
+
+        function (::Type{<:$(SR){Float64}})(r::AbstractRange)
+            return _convertSRL($(SR){Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
+        end
+        function $(SR){T}(r::AbstractRange) where {T<:IEEEFloat}
+            return _convertSRL($(SR){T,Float64,Float64}, r)
+        end
+
+        function _convertSRL(::Type{<:$(SR){T,R,S}}, r::$(SR){<:Integer}) where {T,R,S}
+            return $(SR){T,R,S}(R(_ref(r)), S(step(r)), length(r), _offset(r))
+        end
+
+        function _convertSRL(::Type{<:$(SR){T,R,S}}, r::AbstractRange{<:Integer}) where {T,R,S}
+            return $(SR){T,R,S}(R(first(r)), S(step(r)), length(r))
+        end
+
+        function _convertSRL(::Type{<:$(SR){T,R,S}}, r::AbstractRange{U}) where {T,R,S,U}
+            # if start and step have a rational approximation in the old type,
+            # then we transfer that rational approximation to the new type
+            f, s = first(r), step(r)
+            start_n, start_d = rat(f)
+            step_n, step_d = rat(s)
+            if start_d != 0 && step_d != 0 &&
+                    U(start_n/start_d) == f && U(step_n/step_d) == s
+                den = lcm(start_d, step_d)
+                m = maxintfloat(T, Int)
+                if den != 0 && abs(f*den) <= m && abs(s*den) <= m &&
+                        rem(den, start_d) == 0 && rem(den, step_d) == 0
+                    start_n = round(Int, f*den)
+                    step_n = round(Int, s*den)
+                    return floatrange(T, start_n, step_n, length(r), den)
+                end
+            end
+            __convertSRL($(SR){T,R,S}, r)
+        end
+
+        function __convertSRL(::Type{<:$(SR){T,R,S}}, r::$(SR){U}) where {T,R,S,U}
+            return $(SR){T,R,S}(R(_ref(r)), S(step(r)), length(r), _offset(r))
+        end
+        function __convertSRL(::Type{<:$(SR){T,R,S}}, r::AbstractRange{U}) where {T,R,S,U}
+            return $(SR){T,R,S}(R(first(r)), S(step(r)), length(r))
+        end
+
+        function Base.:(+)(
+            r1::{T,R},
+            r2::$(SR){T,R}
+           ) where T where R<:TwicePrecision
+            len = length(r1)
+            (len == length(r2) ||
+                throw(DimensionMismatch("argument dimensions must match")))
+            if _offset(r1) == _offset(r2)
+                imid = _offset(r1)
+                ref = _ref(r1) + _ref(r2)
+            else
+                imid = round(Int, (_offset(r1)+_offset(r2))/2)
+                ref1mid = _getindex_hiprec(r1, imid)
+                ref2mid = _getindex_hiprec(r2, imid)
+                ref = ref1mid + ref2mid
+            end
+            step = twiceprecision(step(r1) + step(r2), nbitslen(T, len, imid))
+            return $(SR){T,typeof(ref),typeof(step)}(ref, step, len, imid)
+        end
+    end
+
+    function Base.show(io::IO, r::$(SR))
+        print(io, $(SR), "(", first(r), ":", step(r), ":", last(r), ")")
+    end
+
 end

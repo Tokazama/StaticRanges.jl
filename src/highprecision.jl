@@ -115,13 +115,13 @@ div12(x, y) = div12(promote(x, y)...)
 """
     HPSVal
 """
-struct HPSVal{H,L,T} end
+struct HPSVal{T,H,L} end
 
-@pure gethi(::HPSVal{T,H,L}) where {T,H,L} = H::T
-@pure gethi(::Type{<:HPSVal{T,H,L}}) where {T,H,L} = H::T
+@inline gethi(::T) where {T<:HPSVal} = getlo(T)
+Base.@pure gethi(::Type{<:HPSVal{T,H,L}}) where {T,H,L} = H::T
 
-@pure getlo(::HPSVal{T,H,L}) where {T,H,L} = L::T
-@pure getlo(::Type{<:HPSVal{T,H,L}}) where {T,H,L} = L::T
+@inline getlo(::T) where {T<:HPSVal} = getlo(T)
+Base.@pure getlo(::Type{<:HPSVal{T,H,L}}) where {T,H,L} = L::T
 
 Base.eltype(::HPSVal{T,H,L}) where {T,H,L} = T
 Base.eltype(::Type{<:HPSVal{T,H,L}}) where {T,H,L} = T
