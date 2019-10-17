@@ -1,65 +1,206 @@
 
-#broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::OrdinalRange) = r
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::StepRangeLen) = r
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::LinRange) = r
+Base.broadcasted(::Broadcast.DefaultArrayStyle{1}, ::typeof(+), r::Union{SRange{T},MRange{T}}) where {T} = r
+Base.broadcasted(::Broadcast.DefaultArrayStyle{1}, ::typeof(-), r::Union{SRange{T},MRange{T}}) where {T} = -r
 
-#broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::OrdinalRange) = range(-first(r), step=-step(r), length=length(r))
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StaticStepRangeLen) = -r
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StaticLinRange) = -r
+for (ftype,f) in ((:(typeof(+)), :(+)),
+                  (:(typeof(-)), :(-)),
+                  (:(typeof(*)), :(*)),
+                  (:(typeof(/)), :(/)))
+    for (T) in (:OneToSRange,:StepSRange,:LinSRange,:StepSRangeLen)
+        @eval begin
+            Base.broadcasted(::Broadcast.DefaultArrayStyle{1}, ::$ftype, r::$T, x::Number) = _broadcast(StaticTrait(x), $f, r, x)
+            Base.broadcasted(::Broadcast.DefaultArrayStyle{1}, ::$ftype, x::Number, r::$T) = _broadcast(StaticTrait(x), $f, x, r)
+        end
+    end
 
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Real, r::UnitMRange) = mrange(x + first(r), length=length(r))
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Real, r::UnitSRange) = srange(x + first(r), length=length(r))
-
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::UnitMRange, x::Real) = mrange(first(r) + x, length=length(r))
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::UnitSRange, x::Real) = srange(first(r) + x, length=length(r))
-
-# For #18336 we need to prevent promotion of the step type:
-#broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractRange, x::Number) = range(first(r) + x, step=step(r), length=length(r))
-#broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Number, r::AbstractRange) = range(x + first(r), step=step(r), length=length(r))
-function broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::StepMRangeLen{T}, x::Number) where T =
-    StepMRangeLen{typeof(T(r.ref)+x)}(r.ref + x, r.step, length(r), r.offset)
-end
-function broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::StepMRangeLen{T}, x::Number) where T =
-    StepMRangeLen{typeof(T(r.ref)+x)}(r.ref + x, r.step, length(r), r.offset)
+    @eval begin
+        Base.broadcasted(::Broadcast.DefaultArrayStyle{1}, ::$ftype, r::UnitSRange, x::Real) = _broadcast(StaticTrait(x), $f, r, x)
+        Base.broadcasted(::Broadcast.DefaultArrayStyle{1}, ::$ftype, x::Real, r::UnitSRange) = _broadcast(StaticTrait(x), $f, x, r)
+    end
 end
 
-broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Number, r::StepRangeLen{T}) where T =
-    StepRangeLen{typeof(x+T(r.ref))}(x + r.ref, r.step, length(r), r.offset)
-broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::LinRange, x::Number) = LinRange(r.start + x, r.stop + x, length(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Number, r::LinRange) = LinRange(x + r.start, x + r.stop, length(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r1::AbstractRange, r2::AbstractRange) = r1 + r2
+for (ftype,f) in ((:(typeof(+)), :(+)),
+                  (:(typeof(-)), :(-)),
+                  (:(typeof(*)), :(*)),
+                  (:(typeof(/)), :(/)))
 
-broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::AbstractUnitRange, x::Number) = range(first(r)-x, length=length(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::AbstractRange, x::Number) = range(first(r)-x, step=step(r), length=length(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::AbstractRange) = range(x-first(r), step=-step(r), length=length(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepRangeLen{T}, x::Number) where T =
-    StepRangeLen{typeof(T(r.ref)-x)}(r.ref - x, r.step, length(r), r.offset)
-broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::StepRangeLen{T}) where T =
-    StepRangeLen{typeof(x-T(r.ref))}(x - r.ref, -r.step, length(r), r.offset)
-broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinRange, x::Number) = LinRange(r.start - x, r.stop - x, length(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::LinRange) = LinRange(x - r.start, x - r.stop, length(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r1::AbstractRange, r2::AbstractRange) = r1 - r2
+    for (T) in (:OneToMRange,:StepMRange,:LinMRange,:StepMRangeLen)
+        @eval begin
+            Base.broadcasted(::Broadcast.DefaultArrayStyle{1}, ::$ftype, r::$T, x::Number) = _broadcast(IsNotStatic, $f, r, x)
+            Base.broadcasted(::Broadcast.DefaultArrayStyle{1}, ::$ftype, x::Number, r::$T) = _broadcast(IsNotStatic, $f, x, r)
+        end
+    end
 
-broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::AbstractRange) = range(x*first(r), step=x*step(r), length=length(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::StepRangeLen{T}) where {T} =
-    StepRangeLen{typeof(x*T(r.ref))}(x*r.ref, x*r.step, length(r), r.offset)
-broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::LinRange) = LinRange(x * r.start, x * r.stop, r.len)
-# separate in case of noncommutative multiplication
-broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::AbstractRange, x::Number) = range(first(r)*x, step=step(r)*x, length=length(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::StepRangeLen{T}, x::Number) where {T} =
-    StepRangeLen{typeof(T(r.ref)*x)}(r.ref*x, r.step*x, length(r), r.offset)
-broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::LinRange, x::Number) = LinRange(r.start * x, r.stop * x, r.len)
 
-broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::AbstractRange, x::Number) = range(first(r)/x, step=step(r)/x, length=length(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::StepRangeLen{T}, x::Number) where {T} =
-    StepRangeLen{typeof(T(r.ref)/x)}(r.ref/x, r.step/x, length(r), r.offset)
-broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::LinRange, x::Number) = LinRange(r.start / x, r.stop / x, r.len)
+    @eval begin
+        Base.broadcasted(::Broadcast.DefaultArrayStyle{1}, ::$ftype, r::UnitMRange, x::Real) = _broadcast(IsNotStatic, $f, r, x)
+        Base.broadcasted(::Broadcast.DefaultArrayStyle{1}, ::$ftype, x::Real, r::UnitMRange) = _broadcast(IsNotStatic, $f, x, r)
+    end
+end
 
-broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::AbstractRange) = range(x\first(r), step=x\step(r), length=length(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::StepRangeLen) = StepRangeLen(x\r.ref, x\r.step, length(r), r.offset)
-broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::LinRange) = LinRange(x \ r.start, x \ r.stop, r.len)
 
-broadcasted(::DefaultArrayStyle{1}, ::typeof(big), r::UnitRange) = big(r.start):big(last(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(big), r::StepRange) = big(r.start):big(r.step):big(last(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(big), r::StepRangeLen) = StepRangeLen(big(r.ref), big(r.step), length(r), r.offset)
-broadcasted(::DefaultArrayStyle{1}, ::typeof(big), r::LinRange) = LinRange(big(r.start), big(r.stop), length(r))
+###
+### StaticUnitRange
+###
+function _broadcast(::IsStaticTrait, ::typeof(+), x, r::Union{UnitSRange,OneToSRange})
+    return srange(+(x, first(r)), length=length(r))
+end
+function _broadcast(::IsNotStaticTrait, ::typeof(+), x, r::StaticUnitRange)
+    return mrange(+(x, first(r)), length=length(r))
+end
+# f(::StaticUnitRange, x)
+function _broadcast(::IsStaticTrait, ::typeof(+), r::Union{UnitSRange,OneToSRange}, x)
+    return srange(+(first(r), x), length=length(r))
+end
+function _broadcast(::IsNotStaticTrait, ::typeof(+), r::StaticUnitRange, x)
+    return mrange(+(first(r), x), length=length(r))
+end
+
+function _broadcast(::IsStaticTrait, f, x, r::Union{UnitSRange{T},OneToSRange{T}}) where {T}
+    return srange(f(x, first(r)), step=f(one(T)), length=length(r))
+end
+function _broadcast(::IsNotStaticTrait, f, x, r::StaticUnitRange{T}) where {T}
+    return mrange(f(x, first(r)), step=f(one(T)), length=length(r))
+end
+# f(::StaticUnitRange, x)
+function _broadcast(::IsStaticTrait, f, r::Union{UnitSRange,OneToSRange}, x)
+    return srange(f(first(r), x), length=length(r))
+end
+function _broadcast(::IsNotStaticTrait, f, r::StaticUnitRange, x)
+    return mrange(f(first(r), x), length=length(r))
+end
+
+###
+### AbstractStepRange
+###
+# f(x, ::AbstractStepRange)
+function _broadcast(::IsStaticTrait, f, x, r::StepSRange)
+    return srange(f(x, first(r)), step=step(r), length=length(r))
+end
+function _broadcast(::IsNotStaticTrait, f, x, r::AbstractStepRange)
+    return mrange(f(x, first(r)), step=step(r), length=length(r))
+end
+# f(::AbstractStepRange, x)
+function _broadcast(::IsStaticTrait, f, r::StepSRange, x)
+    return srange(f(first(r), x), step=step(r), length=length(r))
+end
+function _broadcast(::IsNotStaticTrait, f, r::AbstractStepRange, x)
+    return mrange(f(first(r), x), step=step(r), length=length(r))
+end
+
+###
+### StepRangeLen
+###
+# f(x, ::AbstractStepRangeLen)
+function _broadcast(::IsStaticTrait, f::Function, x, r::StepSRangeLen{T}) where {T}
+    return StepSRangeLen{typeof(f(x, T(r.ref)))}(f(x, r.ref), r.step, length(r), r.offset)
+end
+function _broadcast(::IsNotStaticTrait, f::Function, x, r::AbstractStepRangeLen{T}) where {T}
+    return StepMRangeLen{typeof(f(x, T(r.ref)))}(f(x, r.ref), r.step, length(r), r.offset)
+end
+# f(::AbstractStepRangeLen, x)
+function _broadcast(::IsStaticTrait, f::Function, r::StepSRangeLen, x)
+    return StepSRangeLen{typeof(f(T(r.ref), x))}(f(r.ref, x), r.step, length(r), r.offset)
+end
+function _broadcast(::IsNotStaticTrait, f::Function, r::AbstractStepRangeLen, x)
+    return StepMRangeLen{typeof(f(T(r.ref), x))}(f(r.ref, x), r.step, length(r), r.offset)
+end
+
+###
+### AbstractLinRange
+###
+# f(x, ::AbstractLinRange)
+function _broadcasted(::IsStaticTrait, f::Function, x, r::LinSRange)
+    return LinSRange(f(x, r.start), f(x, r.stop), length(r))
+end
+function _broadcasted(::IsNotStaticTrait, f::Function, x, r::AbstractLinRange)
+    return LinMRange(f(x, r.start), f(x, r.stop), length(r))
+end
+# f(::AbstractLinRange, x)
+function _broadcasted(::IsStaticTrait, f::Function, r::LinSRange, x)
+    return LinSRange(f(r.start, x), f(r.stop, x), length(r))
+end
+function _broadcasted(::IsNotStaticTrait, f::Function, r::AbstractLinRange, x)
+    return LinMRange(f(r.start, x), f(r.stop, x), length(r))
+end
+
+#=
+for (ftype,f) in ((:(typeof(+)), :+),
+                  (:(typeof(-)), :-),
+                  (:(typeof(*)), :*),
+                  (:(typeof(/)), :/))
+    @eval begin
+        ###
+        ### StaticUnitRange
+        ###
+        # f(x, ::StaticUnitRange)
+        function _broadcast(::IsStaticTrait, ::$(ftype), x, r::UnitSRange)
+            return srange($(f)(x, first(r)), length=length(r))
+        end
+        function _broadcast(::IsNotStaticTrait, ::$(ftype), x, r::StaticUnitRange)
+            return mrange($(f)($(f)(x, first(r))), length=length(r))
+        end
+        # f(::StaticUnitRange, x)
+        function _broadcast(::IsStaticTrait, ::$(ftype), r::UnitSRange, x)
+            return srange($(f)(first(r), x), length=length(r))
+        end
+        function _broadcast(::IsNotStaticTrait, ::$(ftype), r::StaticUnitRange, x)
+            return mrange($(f)(first(r), x), length=length(r))
+        end
+
+        ###
+        ### AbstractStepRange
+        ###
+        # f(x, ::AbstractStepRange)
+        function _broadcast(::IsStaticTrait, ::$(ftype), x, r::StepSRange)
+            return srange($(f)(x, first(r)), step=step(r), length=length(r))
+        end
+        function _broadcast(::IsNotStaticTrait, ::$(ftype), x, r::AbstractStepRange)
+            return mrange($(f)(x, first(r)), step=step(r), length=length(r))
+        end
+        # f(::AbstractStepRange, x)
+        function _broadcast(::IsStaticTrait, ::$(ftype), r::StepSRange, x)
+            return srange($(f)(first(r), x), step=step(r), length=length(r))
+        end
+        function _broadcast(::IsNotStaticTrait, ::$(ftype), r::AbstractStepRange, x)
+            return mrange($(f)(first(r), x), step=step(r), length=length(r))
+        end
+
+        ###
+        ### StepRangeLen
+        ###
+        # f(x, ::AbstractStepRangeLen)
+        function _broadcast(::IsStaticTrait, ::$(ftype), x, r::StepSRangeLen{T}) where {T}
+            return StepSRangeLen{typeof($(f)(x, T(r.ref)))}($(f)(x, r.ref), r.step, length(r), r.offset)
+        end
+        function _broadcast(::IsNotStaticTrait, ::$(ftype), x, r::AbstractStepRangeLen{T}) where {T}
+            return StepMRangeLen{typeof($(f)(x, T(r.ref)))}($(f)(x, r.ref), r.step, length(r), r.offset)
+        end
+        # f(::AbstractStepRangeLen, x)
+        function _broadcast(::IsStaticTrait, ::$(ftype), r::StepSRangeLen, x)
+            return StepSRangeLen{typeof($(f)(T(r.ref), x))}($(f)(r.ref, x), r.step, length(r), r.offset)
+        end
+        function _broadcast(::IsNotStaticTrait, ::$(ftype), r::AbstractStepRangeLen, x)
+            return StepMRangeLen{typeof($(f)(T(r.ref), x))}($(f)(r.ref, x), r.step, length(r), r.offset)
+        end
+
+        ###
+        ### AbstractLinRange
+        ###
+        # f(x, ::AbstractLinRange)
+        function _broadcasted(::IsStaticTrait, ::$(ftype), x, r::LinSRange)
+            return LinSRange($(f)(x, r.start), $(f)(x, r.stop), length(r))
+        end
+        function _broadcasted(::IsNotStaticTrait, ::$(ftype), x, r::AbstractLinRange)
+            return LinMRange($(f)(x, r.start), $(f)(x, r.stop), length(r))
+        end
+        # f(::AbstractLinRange, x)
+        function _broadcasted(::IsStaticTrait, ::$(ftype), r::LinSRange, x)
+            return LinSRange($(f)(r.start, x), $(f)(r.stop, x), length(r))
+        end
+        function _broadcasted(::IsNotStaticTrait, ::$(ftype), r::AbstractLinRange, x)
+            return LinMRange($(f)(r.start, x), $(f)(r.stop, x), length(r))
+        end
+    end
+end
+=#

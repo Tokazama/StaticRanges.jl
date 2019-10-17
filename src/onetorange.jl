@@ -9,14 +9,6 @@ Base.step(::OneToRange{T}) where {T} = one(T)
 
 Base.lastindex(r::OneToRange) = Int(last(r))
 
-function Base.getproperty(r::OneToRange, s::Symbol)
-    if s === :stop
-        return last(r)
-    else
-        error("type $(typeof(r)) has no property $s")
-    end
-end
-
 Base.length(r::OneToRange{T}) where {T<:Union{Int,Int64}} = T(last(r))
 
 Base.unsafe_length(r::OneToRange) = Integer(last(r) - zero(last(r)))
@@ -54,7 +46,14 @@ function OneToSRange{T}(stop::T) where {T<:Integer}
     OneToSRange{T,max(zero(T), stop)}()
 end
 
-isstatic(::Type{X}) where {X<:OneToSRange} = true
+function Base.getproperty(r::OneToSRange, s::Symbol)
+    if s === :stop
+        return last(r)
+    else
+        error("type $(typeof(r)) has no property $s")
+    end
+end
+
 
 Base.last(::OneToSRange{T,E}) where {T,E} = E
 

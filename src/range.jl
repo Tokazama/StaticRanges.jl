@@ -283,5 +283,46 @@ for (F,f) in ((:M,:m), (:S,:s))
             # but otherwise this is still high-precision)
             $(stepfrangelen_hp)(T, (a,divisor), (st,divisor), Base.nbitslen(T, len, 1), Int(len), 1)
         end
+        function $(flinspace)(start::T, stop::T, len::Integer) where {T<:IEEEFloat}
+            (isfinite(start) && isfinite(stop)) || throw(ArgumentError("start and stop must be finite, got $start and $stop"))
+            # Find the index that returns the smallest-magnitude element
+            Δ, Δfac = stop-start, 1
+            if !isfinite(Δ)   # handle overflow for large endpoints
+                Δ, Δfac = stop/len - start/len, Int(len)
+            end
+            tmin = -(start/Δ)/Δfac            # t such that (1-t)*start + t*stop == 0
+            imin = round(Int, tmin*(len-1)+1) # index approximately corresponding to t
+            if 1 < imin < len
+                # The smallest-magnitude element is in the interior
+                t = (imin-1)/(len-1)
+                ref = T((1-t)*start + t*stop)
+                step = imin-1 < len-imin ? (ref-start)/(imin-1) : (stop-ref)/(len-imin)
+            elseif imin <= 1
+                imin = 1
+                ref = start
+                step = (Δ/(len-1))*Δfac
+            else
+                imin = Int(len)
+                ref = stop
+                step = (Δ/(len-1))*Δfac
+            end
+            if len == 2 && !isfinite(step)
+                # For very large endpoints where step overflows, exploit the
+                # split-representation to handle the overflow
+                return $(stepfrangelen_hp)(T, start, (-start, stop), 0, 2, 1)
+            end
+            # 2x calculations to get high precision endpoint matching while also
+            # preventing overflow in ref_hi+(i-offset)*step_hi
+            m, k = prevfloat(floatmax(T)), max(imin-1, len-imin)
+            step_hi_pre = clamp(step, max(-(m+ref)/k, (-m+ref)/k), min((m-ref)/k, (m+ref)/k))
+            nb = nbitslen(T, len, imin)
+            step_hi = truncbits(step_hi_pre, nb)
+            x1_hi, x1_lo = add12((1-imin)*step_hi, ref)
+            x2_hi, x2_lo = add12((len-imin)*step_hi, ref)
+            a, b = (start - x1_hi) - x1_lo, (stop - x2_hi) - x2_lo
+            step_lo = (b - a)/(len - 1)
+            ref_lo = a - (1 - imin)*step_lo
+            $(stepfrangelen_hp)(T, (ref, ref_lo), (step_hi, step_lo), 0, Int(len), imin)
+        end
     end
 end

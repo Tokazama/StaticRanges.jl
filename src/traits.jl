@@ -1,6 +1,19 @@
 
+
+struct IsStaticTrait end
+const IsStatic = IsStaticTrait
+
+struct IsNotStaticTrait end
+const IsNotStatic = IsNotStaticTrait()
+
+StaticTrait(::T) where {T} = StaticTrait(T)
+StaticTrait(::Type{T}) where {T} = IsNotStatic
+StaticTrait(::Type{T}) where {T<:Val} = IsStatic
+
 """
     isstatic(x) -> Bool
+
+Returns `true` if `x` is static.
 """
 isstatic(::X) where {X} = isstatic(X)
 isstatic(::Type{X}) where {X} = false

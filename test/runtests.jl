@@ -1,20 +1,17 @@
-using Test, StaticRanges
+using Test, StaticRanges, Dates
 
-@testset "ranges" begin
-    for frange in (mrange, srange)
-    #=
-    @testset "colon" begin
-        @inferred(mrange(10, step=1, stop=0))
-        @inferred(mrange(1, step=.2, stop=2))
-        @inferred(mrange(1., step=.2, stop=2.))
-        @inferred(mrange(2, step=-.2, stop=1))
-        @inferred(mrange(1, 0))
-        @inferred(mrange(0.0, -0.5))
-    end
-    =#
-intersect(reverse(typemin(Int):2:typemax(Int)), frange(typemin(Int), step=2, stop=typemax(Int)))
-
-reverse(typemin(Int):2:typemax(Int))
+for frange in (mrange, srange)
+    @testset "$frange" begin
+        #= cannot infer a static parameter from construction
+        @testset "colon" begin
+            @inferred(frange(10, step=1, stop=0))
+            @inferred(frange(1, step=.2, stop=2))
+            @inferred(frange(1., step=.2, stop=2.))
+            @inferred(frange(2, step=-.2, stop=1))
+            @inferred(frange(1, 0))
+            @inferred(frange(0.0, -0.5))
+        end
+        =#
         @testset "indexing" begin
             L32 = frange(Int32(1), stop=Int32(4), length=4)
             L64 = frange(Int64(1), stop=Int64(4), length=4)
@@ -45,7 +42,7 @@ reverse(typemin(Int):2:typemax(Int))
             @test frange(1, step=2, stop=13)[2:3:7] == 3:6:13
 
             @test isempty(frange(1, 4)[5:4])
-            @test_throws BoundsError frange(1:10)[8:-1:-2]
+            #@test_throws BoundsError frange(1:10)[8:-1:-2]
         end
         @testset "length" begin
             @test length(frange(.1, step=.1, stop=.3)) == 3
@@ -164,41 +161,272 @@ reverse(typemin(Int):2:typemax(Int))
             @test intersect(reverse(typemin(Int):2:typemax(Int)), frange(typemin(Int), step=2, stop=typemax(Int))) == reverse(typemin(Int):2:typemax(Int))
             @test intersect(typemin(Int):2:typemax(Int), reverse(frange(typemin(Int), step=2, stop=typemax(Int)))) == typemin(Int):2:typemax(Int)
 
-            #=
-            @test intersect(UnitRange(1,2),3) == UnitRange(3,2)
-            @test intersect(UnitRange(1,2), UnitRange(1,5), UnitRange(3,7), UnitRange(4,6)) == UnitRange(4,3)
+#            @test intersect(UnitRange(1,2),3) == UnitRange(3,2)
+#            @test intersect(UnitRange(1,2), UnitRange(1,5), UnitRange(3,7), UnitRange(4,6)) == UnitRange(4,3)
 
-            @test intersect(1:3, 2) === intersect(2, 1:3) === 2:2
-            @test intersect(1.0:3.0, 2) == intersect(2, 1.0:3.0) == [2.0]
+            @test intersect(frange(1, 3), 2) == intersect(2, frange(1, 3)) == frange(2, 2)
+            @test intersect(frange(1.0, 3.0), 2) == intersect(2, frange(1.0, 3.0)) == [2.0]
 
             @testset "Support StepRange with a non-numeric step" begin
                 start = Date(1914, 7, 28)
                 stop = Date(1918, 11, 11)
 
-                @test intersect(start:Day(1):stop, start:Day(1):stop) == start:Day(1):stop
+                @test intersect(frange(start, step=Day(1), stop=stop), start:Day(1):stop) == start:Day(1):stop
                 @test intersect(start:Day(1):stop, start:Day(5):stop) == start:Day(5):stop
                 @test intersect(start-Day(10):Day(1):stop-Day(10), start:Day(5):stop) ==
-                    start:Day(5):stop-Day(10)-mod(stop-start, Day(5))
+                                start:Day(5):stop-Day(10)-mod(stop-start, Day(5))
+            end
         end
-        =#
+        @testset "issubset" begin
+            @test issubset(frange(1, 3), 1:typemax(Int)) #32461
+            @test issubset(frange(1, 3), 1:3)
+            @test issubset(frange(1, 3), 1:4)
+            @test issubset(frange(1, 3), 0:3)
+            @test issubset(frange(1, 3), 0:4)
+            @test !issubset(frange(1, 5), 2:5)
+            @test !issubset(frange(1, 5), 1:4)
+            @test !issubset(frange(1, 5), 2:4)
+#                @test issubset(Base.OneTo(5), Base.OneTo(10))
+#                @test !issubset(Base.OneTo(10), Base.OneTo(5))
+            @test issubset(frange(1, step=3, stop=10), 1:10)
+            @test !issubset(frange(1, 10), 1:3:10)
+
+            @test issubset(1:3, frange(1, typemax(Int))) #32461
+            @test issubset(1:3, frange(1, 3))
+            @test issubset(1:3, frange(1, 4))
+            @test issubset(1:3, frange(0, 3))
+            @test issubset(1:3, frange(0, 4))
+            @test !issubset(1:5, frange(2, 5))
+            @test !issubset(1:5, frange(1, 4))
+            @test !issubset(1:5, frange(2, 4))
+#                @test issubset(Base.OneTo(5), Base.OneTo(10))
+#                @test !issubset(Base.OneTo(10), Base.OneTo(5))
+            @test issubset(1:3:10, frange(1, 10))
+            @test !issubset(1:10, frange(1, step=3, stop=10))
         end
+
+        @testset "in" begin
+            @test 0 in frange(UInt(0), step=100, stop=typemax(UInt))
+            @test last(frange(UInt(0), step=100, stop=typemax(UInt))) in frange(UInt(0), step=100, stop=typemax(UInt))
+            @test -9223372036854775790 in frange(-9223372036854775790, step=100, stop=9223372036854775710)
+            @test -9223372036854775690 in frange(-9223372036854775790, step=100, stop=9223372036854775710)
+            @test -90 in frange(-9223372036854775790, step=100, stop=9223372036854775710)
+            @test 10 in frange(-9223372036854775790, step=100, stop=9223372036854775710)
+            @test 110 in frange(-9223372036854775790, step=100, stop=9223372036854775710)
+            @test 9223372036854775610 in frange(-9223372036854775790, step=100, stop=9223372036854775710)
+            @test 9223372036854775710 in frange(-9223372036854775790, step=100, stop=9223372036854775710)
+
+            @test !(3.5 in frange(1, 5))
+            @test (3 in frange(1, 5))
+            @test (3 in frange(5, step=-1, stop=1))
+            #@test (3 in 3+0*(1:5))
+            #@test !(4 in 3+0*(1:5))
+
+            let r = frange(0.0, step=0.01, stop=1.0)
+                @test (r[30] in r)
+            end
+            let r = frange((-4*Int64(maxintfloat(Int === Int32 ? Float32 : Float64))), 5)
+                @test (3 in r)
+                @test (3.0 in r)
+            end
+
+            @test !(1 in frange(1, 0))
+            @test !(1.0 in frange(1.0, 0.0))
+        end
+
+        @testset "in() works across types, including non-numeric types (#21728)" begin
+            @test 1//1 in frange(1, 3)
+            @test 1//1 in frange(1.0, 3.0)
+            @test !(5//1 in frange(1, 3))
+            @test !(5//1 in frange(1.0, 3.0))
+            @test Complex(1, 0) in frange(1, 3)
+            @test Complex(1, 0) in frange(1.0, 3.0)
+            @test Complex(1.0, 0.0) in frange(1, 3)
+            @test Complex(1.0, 0.0) in frange(1.0, 3.0)
+            @test !(Complex(1, 1) in frange(1, 3))
+            @test !(Complex(1, 1) in frange(1.0, 3.0))
+            @test !(Complex(1.0, 1.0) in frange(1, 3))
+            @test !(Complex(1.0, 1.0) in frange(1.0, 3.0))
+            @test !(π in frange(1, 3))
+            @test !(π in frange(1.0, 3.0))
+            @test !("a" in frange(1, 3))
+            @test !("a" in frange(1.0, 3.0))
+            @test !(1 in frange(Date(2017, 01, 01), step=Dates.Day(1), stop=Date(2017, 01, 05)))
+            @test !(Complex(1, 0) in frange(Date(2017, 01, 01), step=Dates.Day(1), stop=Date(2017, 01, 05)))
+            @test !(π in frange(Date(2017, 01, 01), step=Dates.Day(1), stop=Date(2017, 01, 05)))
+            @test !("a" in frange(Date(2017, 01, 01), step=Dates.Day(1), stop=Date(2017, 01, 05)))
+        end
+        @testset "sums of ranges" begin
+            @test sum(frange(1, 100)) == 5050
+            @test sum(frange(0, 100)) == 5050
+            @test sum(frange(-100, 100)) == 0
+            @test sum(frange(0, step=2, stop=100)) == 2550
+        end
+        @testset "Tricky sums of StepRangeLen #8272" begin
+            @test sum(frange(10000., step=-0.0001, stop=0)) == 5.00000005e11
+            @test sum(frange(0, step=0.001, stop=1)) == 500.5
+            @test sum(frange(0, step=0.000001, stop=1)) == 500000.5
+            @test sum(frange(0, step=0.1, stop=10)) == 505.
+        end
+        @testset "operations between ranges and arrays" begin
+            @test all(([frange(1, 5);] + (frange(5, step=-1, stop=1))) .== 6)
+            @test all(((frange(5, step=-1, stop=1)) + [frange(1, 5);]) .== 6)
+            @test all(([frange(1, 5);] - (frange(1, 5))) .== 0)
+            @test all((frange(1, 5) - [frange(1, 5);]) .== 0)
+        end
+
+        @testset "broadcasted operations with scalars" begin
+            @test broadcast(-, frange(1, 3)) == -1:-1:-3
+            @test broadcast(-, frange(1, 3), 2) == -1:1
+            @test broadcast(-, frange(1, 3), 0.25) == 1-0.25:3-0.25
+            @test broadcast(+, frange(1, 3)) == 1:3
+            @test broadcast(+, frange(1, 3), 2) == 3:5
+            @test broadcast(+, frange(1, 3), 0.25) == 1+0.25:3+0.25
+            @test broadcast(+, frange(1, step=2, stop=6), 1) == 2:2:6
+            @test broadcast(+, frange(1, step=2, stop=6), 0.3) == 1+0.3:2:5+0.3
+            @test broadcast(-, frange(1, step=2, stop=6), 1) == 0:2:4
+            @test broadcast(-, frange(1, step=2, stop=6), 0.3) == 1-0.3:2:5-0.3
+            @test broadcast(-, 2, frange(1, 3)) == 1:-1:-1
+        end
+
+        @testset "loops involving typemin/typemax" begin
+            n = 0
+            s = 0
+            # loops ending at typemax(Int)
+            for i = frange((typemax(Int)-1), typemax(Int))
+                s += 1
+                @test s <= 2
+            end
+            @test s == 2
+
+            s = 0
+            for i = frange((typemax(Int)-2), (typemax(Int)-1))
+                s += 1
+                @test s <= 2
+            end
+            @test s == 2
+
+            s = 0
+            for i = frange(typemin(Int), (typemin(Int)+1))
+                s += 1
+                @test s <= 2
+            end
+            @test s == 2
+
+            # loops covering the full range of integers
+            s = 0
+            for i = frange(typemin(UInt8), typemax(UInt8))
+                s += 1
+            end
+            @test s == 256
+
+            s = 0
+            for i = frange(typemin(UInt), typemax(UInt))
+                i == 10 && break
+                s += 1
+            end
+            @test s == 10
+
+            s = 0
+            for i = frange(typemin(UInt8), step=one(UInt8), stop=typemax(UInt8))
+                s += 1
+            end
+            @test s == 256
+
+            s = 0
+            for i = frange(typemin(UInt), step=1, stop=typemax(UInt))
+                i == 10 && break
+                s += 1
+            end
+            @test s == 10
+
+            # loops past typemax(Int)
+            n = 0
+            s = Int128(0)
+            for i = frange(typemax(UInt64)-2, typemax(UInt64))
+                n += 1
+                s += i
+            end
+            @test n == 3
+            @test s == 3*Int128(typemax(UInt64)) - 3
+
+            # loops over empty ranges
+            s = 0
+            for i = 0xff:0x00
+                s += 1
+            end
+            @test s == 0
+
+            s = 0
+            for i = frange(Int128(typemax(Int128)), Int128(typemin(Int128)))
+                s += 1
+            end
+            @test s == 0
+        end
+
+        function range_fuzztests(::Type{T}, niter, nrange) where {T}
+            for i = 1:niter, n in nrange
+                strt, Δ = randn(T), randn(T)
+                Δ == 0 && continue
+                stop = strt + (n-1)*Δ
+                # `n` is not necessarily unique s.t. `strt + (n-1)*Δ == stop`
+                # so test that `length(strt:Δ:stop)` satisfies this identity
+                # and is the closest value to `(stop-strt)/Δ` to do so
+                lo = hi = n
+                while strt + (lo-1)*Δ == stop; lo -= 1; end
+                while strt + (hi-1)*Δ == stop; hi += 1; end
+                m = clamp(round(Int, (stop-strt)/Δ) + 1, lo+1, hi-1)
+                r = strt:Δ:stop
+                @test m == length(r)
+                @test strt == first(r)
+                @test Δ == step(r)
+                @test_skip stop == last(r)
+                l = range(strt, stop=stop, length=n)
+                @test n == length(l)
+                @test strt == first(l)
+                @test stop  == last(l)
+            end
+        end
+
+        @testset "range fuzztests for $T" for T = (Float32, Float64,)
+            range_fuzztests(T, 2^15, frange(1, 5))
+        end
+
+        @testset "range with very large endpoints for type $T" for T = (Float32, Float64)
+            largeint = Int(min(maxintfloat(T), typemax(Int)))
+            a = floatmax()
+            for i = 1:5
+                @test [frange(a, stop=a, length=1);] == [a]
+                @test [frange(-a, stop=-a, length=1);] == [-a]
+                b = floatmax()
+                for j = 1:5
+                    @test [frange(-a, stop=b, length=0);] == []
+                    @test [frange(-a, stop=b, length=2);] == [-a,b]
+                    @test [frange(-a, stop=b, length=3);] == [-a,(b-a)/2,b]
+                    @test [frange(a, stop=-b, length=0);] == []
+                    @test [frange(a, stop=-b, length=2);] == [a,-b]
+                    @test [frange(a, stop=-b, length=3);] == [a,(a-b)/2,-b]
+                    for c = largeint-3:largeint
+                        s = range(-a, stop=b, length=c)
+                        @test first(s) == -a
+                        @test last(s) == b
+                        @test length(s) == c
+                        s = range(a, stop=-b, length=c)
+                        @test first(s) == a
+                        @test last(s) == -b
+                        @test length(s) == c
+                    end
+                    b = prevfloat(b)
+                end
+                a = prevfloat(a)
+            end
+        end
+
     end
 end
+
+
 #=
-    @testset "issubset" begin
-        @test issubset(1:3, 1:typemax(Int)) #32461
-        @test issubset(1:3, 1:3)
-        @test issubset(1:3, 1:4)
-        @test issubset(1:3, 0:3)
-        @test issubset(1:3, 0:4)
-        @test !issubset(1:5, 2:5)
-        @test !issubset(1:5, 1:4)
-        @test !issubset(1:5, 2:4)
-        @test issubset(Base.OneTo(5), Base.OneTo(10))
-        @test !issubset(Base.OneTo(10), Base.OneTo(5))
-        @test issubset(1:3:10, 1:10)
-        @test !issubset(1:10, 1:3:10)
-    end
     @testset "sort/sort!/partialsort" begin
         @test sort(UnitRange(1,2)) == UnitRange(1,2)
         @test sort!(UnitRange(1,2)) == UnitRange(1,2)
@@ -206,57 +434,7 @@ end
         @test sort(-3:3, by=abs) == [0,-1,1,-2,2,-3,3]
         @test partialsort(1:10, 4) == 4
     end
-    @testset "in" begin
-        @test 0 in UInt(0):100:typemax(UInt)
-        @test last(UInt(0):100:typemax(UInt)) in UInt(0):100:typemax(UInt)
-        @test -9223372036854775790 in -9223372036854775790:100:9223372036854775710
-        @test -9223372036854775690 in -9223372036854775790:100:9223372036854775710
-        @test -90 in -9223372036854775790:100:9223372036854775710
-        @test 10 in -9223372036854775790:100:9223372036854775710
-        @test 110 in -9223372036854775790:100:9223372036854775710
-        @test 9223372036854775610 in -9223372036854775790:100:9223372036854775710
-        @test 9223372036854775710 in -9223372036854775790:100:9223372036854775710
 
-
-        @test !(3.5 in 1:5)
-        @test (3 in 1:5)
-        @test (3 in 5:-1:1)
-        #@test (3 in 3+0*(1:5))
-        #@test !(4 in 3+0*(1:5))
-
-        let r = 0.0:0.01:1.0
-            @test (r[30] in r)
-        end
-        let r = (-4*Int64(maxintfloat(Int === Int32 ? Float32 : Float64))):5
-            @test (3 in r)
-            @test (3.0 in r)
-        end
-
-        @test !(1 in 1:0)
-        @test !(1.0 in 1.0:0.0)
-    end
-    @testset "in() works across types, including non-numeric types (#21728)" begin
-        @test 1//1 in 1:3
-        @test 1//1 in 1.0:3.0
-        @test !(5//1 in 1:3)
-        @test !(5//1 in 1.0:3.0)
-        @test Complex(1, 0) in 1:3
-        @test Complex(1, 0) in 1.0:3.0
-        @test Complex(1.0, 0.0) in 1:3
-        @test Complex(1.0, 0.0) in 1.0:3.0
-        @test !(Complex(1, 1) in 1:3)
-        @test !(Complex(1, 1) in 1.0:3.0)
-        @test !(Complex(1.0, 1.0) in 1:3)
-        @test !(Complex(1.0, 1.0) in 1.0:3.0)
-        @test !(π in 1:3)
-        @test !(π in 1.0:3.0)
-        @test !("a" in 1:3)
-        @test !("a" in 1.0:3.0)
-        @test !(1 in Date(2017, 01, 01):Dates.Day(1):Date(2017, 01, 05))
-        @test !(Complex(1, 0) in Date(2017, 01, 01):Dates.Day(1):Date(2017, 01, 05))
-        @test !(π in Date(2017, 01, 01):Dates.Day(1):Date(2017, 01, 05))
-        @test !("a" in Date(2017, 01, 01):Dates.Day(1):Date(2017, 01, 05))
-    end
 end
 # TODO
 @testset "indexing range with empty range (#4309)" begin
@@ -288,87 +466,7 @@ end
         end
     end
 end
-@testset "loops involving typemin/typemax" begin
-    n = 0
-    s = 0
-    # loops ending at typemax(Int)
-    for i = (typemax(Int)-1):typemax(Int)
-        s += 1
-        @test s <= 2
-    end
-    @test s == 2
 
-    s = 0
-    for i = (typemax(Int)-2):(typemax(Int)-1)
-        s += 1
-        @test s <= 2
-    end
-    @test s == 2
-
-    s = 0
-    for i = typemin(Int):(typemin(Int)+1)
-        s += 1
-        @test s <= 2
-    end
-    @test s == 2
-
-    # loops covering the full range of integers
-    s = 0
-    for i = typemin(UInt8):typemax(UInt8)
-        s += 1
-    end
-    @test s == 256
-
-    s = 0
-    for i = typemin(UInt):typemax(UInt)
-        i == 10 && break
-        s += 1
-    end
-    @test s == 10
-
-    s = 0
-    for i = typemin(UInt8):one(UInt8):typemax(UInt8)
-        s += 1
-    end
-    @test s == 256
-
-    s = 0
-    for i = typemin(UInt):1:typemax(UInt)
-        i == 10 && break
-        s += 1
-    end
-    @test s == 10
-
-    # loops past typemax(Int)
-    n = 0
-    s = Int128(0)
-    for i = typemax(UInt64)-2:typemax(UInt64)
-        n += 1
-        s += i
-    end
-    @test n == 3
-    @test s == 3*Int128(typemax(UInt64)) - 3
-
-    # loops over empty ranges
-    s = 0
-    for i = 0xff:0x00
-        s += 1
-    end
-    @test s == 0
-
-    s = 0
-    for i = Int128(typemax(Int128)):Int128(typemin(Int128))
-        s += 1
-    end
-    @test s == 0
-end
-
-@testset "sums of ranges" begin
-    @test sum(1:100) == 5050
-    @test sum(0:100) == 5050
-    @test sum(-100:100) == 0
-    @test sum(0:2:100) == 2550
-end
 @testset "overflowing sums (see #5798)" begin
     if Sys.WORD_SIZE == 64
         @test sum(Int128(1):10^18) == div(10^18 * (Int128(10^18)+1), 2)
@@ -378,31 +476,7 @@ end
         @test sum(Int64(1):10^9-1) == div(10^9 * (Int64(10^9)-1), 2)
     end
 end
-@testset "Tricky sums of StepRangeLen #8272" begin
-    @test sum(10000.:-0.0001:0) == 5.00000005e11
-    @test sum(0:0.001:1) == 500.5
-    @test sum(0:0.000001:1) == 500000.5
-    @test sum(0:0.1:10) == 505.
-end
-@testset "broadcasted operations with scalars" begin
-    @test broadcast(-, 1:3) === -1:-1:-3
-    @test broadcast(-, 1:3, 2) === -1:1
-    @test broadcast(-, 1:3, 0.25) === 1-0.25:3-0.25
-    @test broadcast(+, 1:3) === 1:3
-    @test broadcast(+, 1:3, 2) === 3:5
-    @test broadcast(+, 1:3, 0.25) === 1+0.25:3+0.25
-    @test broadcast(+, 1:2:6, 1) === 2:2:6
-    @test broadcast(+, 1:2:6, 0.3) === 1+0.3:2:5+0.3
-    @test broadcast(-, 1:2:6, 1) === 0:2:4
-    @test broadcast(-, 1:2:6, 0.3) === 1-0.3:2:5-0.3
-    @test broadcast(-, 2, 1:3) === 1:-1:-1
-end
-@testset "operations between ranges and arrays" begin
-    @test all(([1:5;] + (5:-1:1)) .== 6)
-    @test all(((5:-1:1) + [1:5;]) .== 6)
-    @test all(([1:5;] - (1:5)) .== 0)
-    @test all(((1:5) - [1:5;]) .== 0)
-end
+
 @testset "tricky floating-point ranges" begin
     for (start, step, stop, len) in ((1, 1, 3, 3), (0, 1, 3, 4),
                                     (3, -1, -1, 5), (1, -1, -3, 5),
@@ -497,32 +571,6 @@ end
     @test [-0.2:0.05:-3*0.05;]  == [range(-0.2, stop=-3*0.05, length=2);] == [-0.2,-3*0.05]
 end
 
-function range_fuzztests(::Type{T}, niter, nrange) where {T}
-    for i = 1:niter, n in nrange
-        strt, Δ = randn(T), randn(T)
-        Δ == 0 && continue
-        stop = strt + (n-1)*Δ
-        # `n` is not necessarily unique s.t. `strt + (n-1)*Δ == stop`
-        # so test that `length(strt:Δ:stop)` satisfies this identity
-        # and is the closest value to `(stop-strt)/Δ` to do so
-        lo = hi = n
-        while strt + (lo-1)*Δ == stop; lo -= 1; end
-        while strt + (hi-1)*Δ == stop; hi += 1; end
-        m = clamp(round(Int, (stop-strt)/Δ) + 1, lo+1, hi-1)
-        r = strt:Δ:stop
-        @test m == length(r)
-        @test strt == first(r)
-        @test Δ == step(r)
-        @test_skip stop == last(r)
-        l = range(strt, stop=stop, length=n)
-        @test n == length(l)
-        @test strt == first(l)
-        @test stop  == last(l)
-    end
-end
-@testset "range fuzztests for $T" for T = (Float32, Float64,)
-    range_fuzztests(T, 2^15, 1:5)
-end
 
 @testset "Inexact errors on 32 bit architectures. #22613" begin
     @test first(range(log(0.2), stop=log(10.0), length=10)) == log(0.2)
@@ -553,36 +601,6 @@ end
     @test length(v) == 12
     @test [-3u:u:3u;] == [range(-3u, stop=3u, length=7);] == [-3:3;].*u
     @test [3u:-u:-3u;] == [range(3u, stop=-3u, length=7);] == [3:-1:-3;].*u
-end
-
-@testset "range with very large endpoints for type $T" for T = (Float32, Float64)
-    largeint = Int(min(maxintfloat(T), typemax(Int)))
-    a = floatmax()
-    for i = 1:5
-        @test [range(a, stop=a, length=1);] == [a]
-        @test [range(-a, stop=-a, length=1);] == [-a]
-        b = floatmax()
-        for j = 1:5
-            @test [range(-a, stop=b, length=0);] == []
-            @test [range(-a, stop=b, length=2);] == [-a,b]
-            @test [range(-a, stop=b, length=3);] == [-a,(b-a)/2,b]
-            @test [range(a, stop=-b, length=0);] == []
-            @test [range(a, stop=-b, length=2);] == [a,-b]
-            @test [range(a, stop=-b, length=3);] == [a,(a-b)/2,-b]
-            for c = largeint-3:largeint
-                s = range(-a, stop=b, length=c)
-                @test first(s) == -a
-                @test last(s) == b
-                @test length(s) == c
-                s = range(a, stop=-b, length=c)
-                @test first(s) == a
-                @test last(s) == -b
-                @test length(s) == c
-            end
-            b = prevfloat(b)
-        end
-        a = prevfloat(a)
-    end
 end
 
 # issue #20380

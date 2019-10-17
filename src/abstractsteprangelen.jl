@@ -1,18 +1,68 @@
 """
-    StaticStepRangeLen
+    AbstractStepRangeLen
 """
-abstract type StaticStepRangeLen{T,R,S} <: AbstractRange{T} end
+abstract type AbstractStepRangeLen{T,R,S} <: AbstractRange{T} end
 
-Base.:(-)(r1::StaticStepRangeLen, r2::AbstractRange) = +(r1, -r2)
-Base.:(-)(r1::AbstractRange, r2::StaticStepRangeLen) = +(r1, -r2)
-Base.:(-)(r1::StaticStepRangeLen, r2::StaticStepRangeLen) = +(r1, -r2)
+Base.:(-)(r1::AbstractStepRangeLen, r2::AbstractRange) = +(r1, -r2)
+Base.:(-)(r1::AbstractRange, r2::AbstractStepRangeLen) = +(r1, -r2)
+Base.:(-)(r1::AbstractStepRangeLen, r2::AbstractStepRangeLen) = +(r1, -r2)
 
 
-Base.first(r::StaticStepRangeLen) = unsafe_getindex(r, 1)
+Base.first(r::AbstractStepRangeLen) = unsafe_getindex(r, 1)
 
-Base.last(r::StaticStepRangeLen) = unsafe_getindex(r, length(r))
+Base.last(r::AbstractStepRangeLen) = unsafe_getindex(r, length(r))
 
-function Base.getproperty(r::StaticStepRangeLen, s::Symbol)
+function _getindex_hiprec(r::AbstractStepRangeLen, i::Integer)  # without rounding by T
+    u = i - _offset(r)
+    return _ref(r) + u * step(r)
+end
+
+function _getindex_hiprec(
+    r::AbstractStepRangeLen{<:Any,<:TwicePrecision,<:TwicePrecision},
+    i::Integer
+   )
+    u = i - _offset(r)
+    shift_hi, shift_lo = u * step_hp(r).hi, u * step_hp(r).lo
+    x_hi, x_lo = add12(_ref(r).hi, shift_hi)
+    x_hi, x_lo = add12(x_hi, x_lo + (shift_lo + _ref(r).lo))
+    return TwicePrecision(x_hi, x_lo)
+end
+
+function Base.sum(r::AbstractStepRangeLen)
+    l = length(r)
+    # Compute the contribution of step over all indices.
+    # Indexes on opposite side of r.offset contribute with opposite sign,
+    #    r.step * (sum(1:np) - sum(1:nn))
+    np, nn = l - r.offset, r.offset - 1  # positive, negative
+    # To prevent overflow in sum(1:n), multiply its factors by the step
+    sp, sn = sumpair(np), sumpair(nn)
+    tp = Base._tp_prod(r.step, sp[1], sp[2])
+    tn = Base._tp_prod(r.step, sn[1], sn[2])
+    s_hi, s_lo = add12(tp.hi, -tn.hi)
+    s_lo += tp.lo - tn.lo
+    # Add in contributions of ref
+    ref = r.ref * l
+    sm_hi, sm_lo = add12(s_hi, ref.hi)
+    return add12(sm_hi, sm_lo + ref.lo)[1]
+end
+
+function Base.show(io::IO, r::AbstractStepRangeLen)
+    print(io, typeof(r).name, "(", first(r), ":", step(r), ":", last(r), ")")
+end
+
+
+"""
+    StepSRangeLen
+"""
+struct StepSRangeLen{T,Tr,Ts,R,S,L,F} <: AbstractStepRangeLen{T,R,S} end
+
+function StepSRangeLen{T,R,S}(ref::R, step::S, len::Integer, offset::Integer = 1) where {T,R,S}
+    len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
+    1 <= offset <= max(1,len) || throw(ArgumentError("StepRangeLen: offset must be in [1,$len], got $offset"))
+    StepSRangeLen{T,R,S,tp2val(ref),tp2val(step),len,offset}()
+end
+
+function Base.getproperty(r::StepSRangeLen, s::Symbol)
     if s === :ref
         return _ref(r)
     elseif s === :step
@@ -26,70 +76,6 @@ function Base.getproperty(r::StaticStepRangeLen, s::Symbol)
     end
 end
 
-function Base.unsafe_getindex(r::StaticStepRangeLen{T}, i::Integer) where T
-    u = i - _offset(r)
-    return T(_ref(r) + u * step(r))
-end
-
-function _getindex_hiprec(r::StaticStepRangeLen, i::Integer)  # without rounding by T
-    u = i - _offset(r)
-    return _ref(r) + u * step(r)
-end
-
-function Base.unsafe_getindex(
-    r::StaticStepRangeLen{T,<:TwicePrecision,<:TwicePrecision},
-    i::Integer
-   ) where T
-    # Very similar to _getindex_hiprec, but optimized to avoid a 2nd call to add12
-    Base.@_inline_meta
-    u = i - _offset(r)
-    shift_hi, shift_lo = u * step_hp(r).hi, u * step_hp(r).lo
-    x_hi, x_lo = add12(_ref(r).hi, shift_hi)
-    return T(x_hi + (x_lo + (shift_lo + _ref(r).lo)))
-end
-
-function _getindex_hiprec(r::StaticStepRangeLen{<:Any,<:TwicePrecision,<:TwicePrecision}, i::Integer)
-    u = i - _offset(r)
-    shift_hi, shift_lo = u * step(r).hi, u * step_hp(r).lo
-    x_hi, x_lo = add12(_ref(r).hi, shift_hi)
-    x_hi, x_lo = add12(x_hi, x_lo + (shift_lo + _ref(r).lo))
-    return TwicePrecision(x_hi, x_lo)
-end
-
-function Base.sum(r::StaticStepRangeLen)
-    l = length(r)
-    # Compute the contribution of step over all indices.
-    # Indexes on opposite side of r.offset contribute with opposite sign,
-    #    r.step * (sum(1:np) - sum(1:nn))
-    np, nn = l - _offset(r), _offset(r) - 1  # positive, negative
-    # To prevent overflow in sum(1:n), multiply its factors by the step
-    sp, sn = sumpair(np), sumpair(nn)
-    tp = Base._tp_prod(step_hp(r), sp[1], sp[2])
-    tn = Base._tp_prod(step_hp(r), sn[1], sn[2])
-    s_hi, s_lo = add12(tp.hi, -tn.hi)
-    s_lo += tp.lo - tn.lo
-    # Add in contributions of ref
-    ref = _ref(r) * l
-    sm_hi, sm_lo = add12(s_hi, ref.hi)
-    return add12(sm_hi, sm_lo + ref.lo)[1]
-end
-
-function Base.show(io::IO, r::StaticStepRangeLen)
-    print(io, typeof(r).name, "(", first(r), ":", step(r), ":", last(r), ")")
-end
-
-
-"""
-    StepSRangeLen
-"""
-struct StepSRangeLen{T,Tr,Ts,R,S,L,F} <: StaticStepRangeLen{T,R,S} end
-
-function StepSRangeLen{T,R,S}(ref::R, step::S, len::Integer, offset::Integer = 1) where {T,R,S}
-    len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
-    1 <= offset <= max(1,len) || throw(ArgumentError("StepRangeLen: offset must be in [1,$len], got $offset"))
-    StepSRangeLen{T,R,S,tp2val(ref),tp2val(ref),len,offset}()
-end
-
 # convert TPVal to TwicePrecision
 Base.step_hp(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts<:TwicePrecision,R,S} = convert(Ts, S)
 _ref(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr<:TwicePrecision,Ts,R,S,L,F} = convert(Tr, R)
@@ -99,12 +85,10 @@ Base.length(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = L
 _offset(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = F
 _ref(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = R
 
-isstatic(::Type{X}) where {X<:StepSRangeLen} = true
-
 """
     StepMRangeLen
 """
-mutable struct StepMRangeLen{T,R,S} <: StaticStepRangeLen{T,R,S}
+mutable struct StepMRangeLen{T,R,S} <: AbstractStepRangeLen{T,R,S}
     ref::R
     step::S
     len::Int
@@ -303,5 +287,25 @@ for (F,f) in ((:M,:m), (:S,:s))
             step = twiceprecision(step(r1) + step(r2), nbitslen(T, len, imid))
             return $(SR){T,typeof(ref),typeof(step)}(ref, step, len, imid)
         end
+
+        # although these should technically not need to be completely typed for
+        # each, dispatch ignores TwicePrecision on the static version and only
+        # uses the first otherwise
+        function Base.unsafe_getindex(r::$(SR){T,R,S}, i::Integer) where {T,R,S}
+            return T(_ref(r) + (i - _offset(r)) * step_hp(r))
+        end
+
+        function Base.unsafe_getindex(
+            r::$(SR){T,TwicePrecision{T},TwicePrecision{T}},
+            i::Integer
+           ) where {T}
+            # Very similar to _getindex_hiprec, but optimized to avoid a 2nd call to add12
+            Base.@_inline_meta
+            u = i - _offset(r)
+            shift_hi, shift_lo = u * step_hp(r).hi, u * step_hp(r).lo
+            x_hi, x_lo = add12(_ref(r).hi, shift_hi)
+            return T(x_hi + (x_lo + (shift_lo + _ref(r).lo)))
+        end
+
    end
 end

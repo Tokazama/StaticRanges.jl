@@ -2,13 +2,15 @@
 
 [![Build Status](https://travis-ci.com/Tokazama/StaticRanges.jl.svg?branch=master)](https://travis-ci.com/Tokazama/StaticRanges.jl) ![Lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)
 
+[![codecov](https://codecov.io/gh/Tokazama/StaticRanges.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/Tokazama/StaticRanges.jl)
 
 ## Introduction
 
 StaticRanges is inspired by [StaticArrays](https://github.com/JuliaArrays/StaticArrays.jl).
-In its current form StaticRanges aims to be a tool for performant indexing using the strongly
-typed `StaticRange`. Current work is focused towards optimizing multidimensional indexing
-for a variety of use cases (sliding windows, multidimensional filters, etc.).
+Documentation is forthcoming, but you can get started by using the methods
+`mrange` and `srange` to create mutable and static ranges in a similar manner
+to the `range` method.
+
 
 ## Installation
 ```julia

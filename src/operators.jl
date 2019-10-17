@@ -1,17 +1,17 @@
 
-function Base.getindex(r::Union{StaticStepRangeLen,StaticLinRange}, i::Integer)
+function Base.getindex(r::Union{AbstractStepRangeLen,AbstractLinRange}, i::Integer)
     Base.@_inline_meta
     @boundscheck checkbounds(r, i)
     unsafe_getindex(r, i)
 end
 
-function Base.iterate(r::Union{StaticLinRange,StaticStepRangeLen}, i::Int=1)
+function Base.iterate(r::Union{AbstractLinRange,AbstractStepRangeLen}, i::Int=1)
     Base.@_inline_meta
     length(r) < i && return nothing
     unsafe_getindex(r, i), i + 1
 end
 
-Base.isempty(r::Union{StaticLinRange,StaticStepRangeLen}) = length(r) == 0
+Base.isempty(r::Union{AbstractLinRange,AbstractStepRangeLen}) = length(r) == 0
 
 #= TODO
 
@@ -29,9 +29,11 @@ function promote_rule(::Type{LinRange{L}}, b::Type{StepRangeLen{T,R,S}}) where {
     promote_rule(StepRangeLen{L,L,L}, b)
 end
 
+#=
 $f(r1::Union{StepRangeLen, OrdinalRange, LinRange},
    r2::Union{StepRangeLen, OrdinalRange, LinRange}) =
        $f(promote(r1, r2)...)
 
 Base.:(==)(r::T, s::T) where {T<:Union{StepRangeLen,LinRange}} =
     (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
+=#

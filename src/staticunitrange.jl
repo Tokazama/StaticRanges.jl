@@ -28,10 +28,9 @@ function Base.getindex(v::StaticUnitRange{T}, i::Integer) where T
     val
 end
 
-
 function Base.getindex(v::StaticUnitRange{T}, i::Integer) where {T<:Base.OverflowSafe}
     Base.@_inline_meta
-    val =  + (i - 1)
+    val = v.start + (i - 1)
     @boundscheck _in_unit_range(v, val, i) ||  throw(BoundsError(v, i))
     val % T
 end

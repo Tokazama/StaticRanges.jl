@@ -1,17 +1,17 @@
 
-abstract type StaticLinRange{T} <: AbstractRange{T} end
+abstract type AbstractLinRange{T} <: AbstractRange{T} end
 
-Base.isempty(r::StaticLinRange) = length(r) == 0
+Base.isempty(r::AbstractLinRange) = length(r) == 0
 
-Base.firstindex(::StaticLinRange) = 1
+Base.firstindex(::AbstractLinRange) = 1
 
-function Base.unsafe_getindex(r::StaticLinRange, i::Integer)
+function Base.unsafe_getindex(r::AbstractLinRange, i::Integer)
     return Base.lerpi(i-1, lendiv(r), first(r), last(r))
 end
 
-Base.step(r::StaticLinRange) = (last(r)-first(r)) / lendiv(r)
+Base.step(r::AbstractLinRange) = (last(r)-first(r)) / lendiv(r)
 
-function Base.getproperty(r::StaticLinRange, s::Symbol)
+function Base.getproperty(r::AbstractLinRange, s::Symbol)
     if s === start
         return first(r)
     elseif s === :stop
@@ -25,7 +25,7 @@ function Base.getproperty(r::StaticLinRange, s::Symbol)
     end
 end
 
-struct LinSRange{T,B,E,L,D} <: StaticLinRange{T}
+struct LinSRange{T,B,E,L,D} <: AbstractLinRange{T}
     function LinSRange{T}(start, stop, len) where T
         len >= 0 || throw(ArgumentError("srange($start, stop=$stop, length=$len): negative length"))
         if len == 1
@@ -48,7 +48,7 @@ Base.length(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = L
 
 lendiv(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = D
 
-mutable struct LinMRange{T} <: StaticLinRange{T}
+mutable struct LinMRange{T} <: AbstractLinRange{T}
     start::T
     stop::T
     len::Int

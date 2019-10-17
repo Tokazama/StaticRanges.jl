@@ -1,7 +1,7 @@
 
-abstract type StaticStepRange{T,S} <: OrdinalRange{T,S} end
+abstract type AbstractStepRange{T,S} <: OrdinalRange{T,S} end
 
-function Base.isempty(r::StaticStepRange)
+function Base.isempty(r::AbstractStepRange)
     (first(r) != last(r)) & ((step(r) > zero(step(r))) != (last(r) > first(r)))
 end
 
@@ -13,17 +13,6 @@ function start_step_stop_to_length(::Type{T}, start, step, stop) where {T}
     end
 end
 
-function Base.getproperty(r::StaticStepRange, s::Symbol)
-    if s === :start
-        return first(r)
-    elseif s === :step
-        return step(r)
-    elseif s === :stop
-        return last(r)
-    else
-        error("type $(typeof(r)) has no property $s")
-    end
-end
 
 function start_step_stop_to_length(::Type{T}, start, step, stop) where {T<:Union{Int,UInt,Int64,UInt64,Int128,UInt128}}
     if (start != stop) & ((step > zero(step)) != (stop > start))
@@ -39,14 +28,26 @@ function start_step_stop_to_length(::Type{T}, start, step, stop) where {T<:Union
     end
 end
 
-function Base.length(r::StaticStepRange{T}) where {T}
+function Base.length(r::AbstractStepRange{T}) where {T}
     return start_step_stop_to_length(T, first(r), step(r), last(r))
 end
 
-struct StepSRange{T,Ts,F,S,L} <: StaticStepRange{T,Ts}
+struct StepSRange{T,Ts,F,S,L} <: AbstractStepRange{T,Ts}
 
     function StepSRange{T,Ts}(start::T, step::Ts, stop::T) where {T,Ts}
         return new{T,Ts,start,step,Base.steprange_last(start, step, stop)}()
+    end
+end
+
+function Base.getproperty(r::StepSRange, s::Symbol)
+    if s === :start
+        return first(r)
+    elseif s === :step
+        return step(r)
+    elseif s === :stop
+        return last(r)
+    else
+        error("type $(typeof(r)) has no property $s")
     end
 end
 
@@ -61,7 +62,7 @@ Base.last(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = L
 """
     StepMRange
 """
-mutable struct StepMRange{T,S} <: StaticStepRange{T,S}
+mutable struct StepMRange{T,S} <: AbstractStepRange{T,S}
     start::T
     step::S
     stop::T
@@ -85,7 +86,7 @@ can_growfirst(::Type{T}) where {T<:StepMRange} = true
 can_setstep(::Type{T}) where {T<:StepMRange} = true
 can_growlast(::Type{T}) where {T<:StepMRange} = true
 
-function Base.intersect(r::AbstractUnitRange{<:Integer}, s::StaticStepRange{<:Integer})
+function Base.intersect(r::AbstractUnitRange{<:Integer}, s::AbstractStepRange{<:Integer})
     if isempty(s)
         range(first(r), length=0)
     elseif step(s) == 0
@@ -104,7 +105,7 @@ function Base.intersect(r::AbstractUnitRange{<:Integer}, s::StaticStepRange{<:In
     end
 end
 
-function Base.intersect(r::StaticStepRange{<:Integer}, s::AbstractUnitRange{<:Integer})
+function Base.intersect(r::AbstractStepRange{<:Integer}, s::AbstractUnitRange{<:Integer})
     if step(r) < 0
         return reverse(intersect(s, reverse(r)))
     else
@@ -112,9 +113,9 @@ function Base.intersect(r::StaticStepRange{<:Integer}, s::AbstractUnitRange{<:In
     end
 end
 
-Base.intersect(r::StaticStepRange, s::StepRange) = _intersect(r, s)
-Base.intersect(r::StepRange, s::StaticStepRange) = _intersect(r, s)
-Base.intersect(r::StaticStepRange, s::StaticStepRange) = _intersect(r, s)
+Base.intersect(r::AbstractStepRange, s::StepRange) = _intersect(r, s)
+Base.intersect(r::StepRange, s::AbstractStepRange) = _intersect(r, s)
+Base.intersect(r::AbstractStepRange, s::AbstractStepRange) = _intersect(r, s)
 
 function _intersect(r, s)
     if isempty(r) || isempty(s)
