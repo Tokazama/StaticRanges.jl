@@ -11,6 +11,20 @@ end
 
 Base.step(r::StaticLinRange) = (last(r)-first(r)) / lendiv(r)
 
+function Base.getproperty(r::StaticLinRange, s::Symbol)
+    if s === start
+        return first(r)
+    elseif s === :stop
+        return last(r)
+    elseif s === :len
+        return length(r)
+    elseif s === :lendiv
+        return lendiv(r)
+    else
+        error("type $(typeof(r)) has no property $s")
+    end
+end
+
 struct LinSRange{T,B,E,L,D} <: StaticLinRange{T}
     function LinSRange{T}(start, stop, len) where T
         len >= 0 || throw(ArgumentError("srange($start, stop=$stop, length=$len): negative length"))

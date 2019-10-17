@@ -7,9 +7,24 @@ Base.:(-)(r1::StaticStepRangeLen, r2::AbstractRange) = +(r1, -r2)
 Base.:(-)(r1::AbstractRange, r2::StaticStepRangeLen) = +(r1, -r2)
 Base.:(-)(r1::StaticStepRangeLen, r2::StaticStepRangeLen) = +(r1, -r2)
 
+
 Base.first(r::StaticStepRangeLen) = unsafe_getindex(r, 1)
 
 Base.last(r::StaticStepRangeLen) = unsafe_getindex(r, length(r))
+
+function Base.getproperty(r::StaticStepRangeLen, s::Symbol)
+    if s === :ref
+        return _ref(r)
+    elseif s === :step
+        return step_hp(r)
+    elseif s === :len
+        return length(r)
+    elseif s === :offset
+        return _offset(r)
+    else
+        error("type $(typeof(r)) has no property $s")
+    end
+end
 
 function Base.unsafe_getindex(r::StaticStepRangeLen{T}, i::Integer) where T
     u = i - _offset(r)
@@ -288,5 +303,5 @@ for (F,f) in ((:M,:m), (:S,:s))
             step = twiceprecision(step(r1) + step(r2), nbitslen(T, len, imid))
             return $(SR){T,typeof(ref),typeof(step)}(ref, step, len, imid)
         end
-    end
+   end
 end

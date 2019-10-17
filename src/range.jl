@@ -33,14 +33,32 @@ for (F,f) in ((:M,:m), (:S,:s))
 
         $(fcolon)(start::T, stop::T) where {T} = $(fcolon)(start, oftype(stop-start, 1), stop)
 
+        $(fcolon)(a::T, b::T) where {T<:AbstractFloat} = $(fcolon)(a, T(1), b)
+
+       function $(fcolon)(a::T, b::AbstractFloat, c::T) where {T<:Real}
+            return $(fcolon)(promote(a,b,c)...)
+        end
+        function $(fcolon)(a::T, b::AbstractFloat, c::T) where {T<:AbstractFloat}
+            return $(fcolon)(promote(a,b,c)...)
+        end
+        function $(fcolon)(a::T, b::Real, c::T) where {T<:AbstractFloat}
+            return $(fcolon)(promote(a,b,c)...)
+        end
+
         # promote start and stop, leaving step alone
         function $(fcolon)(start::A, step, stop::C) where {A<:Real,C<:Real}
-            return $(_fcolon_colon)(convert(promote_type(A, C), start),
+            return $(fcolon)(convert(promote_type(A, C), start),
                              step,
                              convert(promote_type(A, C), stop)
                             )
         end
-
+        function $(fcolon)(start::T, step, stop::T) where {T}
+            return $(_fcolon_colon)(start, step, stop)
+        end
+        function $(fcolon)(start::T, step, stop::T) where {T<:Real}
+            return $(_fcolon_colon)(start, step, stop)
+        end
+ 
 
         function $(fcolon)(start::T, step::T, stop::T) where T<:Union{Float16,Float32,Float64}
             step == 0 && throw(ArgumentError("range step cannot be zero"))
@@ -83,22 +101,6 @@ for (F,f) in ((:M,:m), (:S,:s))
             $(stepfrangelen_hp)(T, start, step, 0, len, 1)
         end
         # AbstractFloat specializations
-        $(fcolon)(a::T, b::T) where {T<:AbstractFloat} = $(fcolon)(a, T(1), b)
-
-
-        function $(fcolon)(start::T, step, stop::T) where {T}
-            return $(_fcolon_colon)(start, step, stop)
-        end
-        function $(fcolon)(a::T, b::AbstractFloat, c::T) where {T<:Real}
-            return $(fcolon)(promote(a,b,c)...)
-        end
-        function $(fcolon)(a::T, b::AbstractFloat, c::T) where {T<:AbstractFloat}
-            return $(fcolon)(promote(a,b,c)...)
-        end
-        function $(fcolon)(a::T, b::Real, c::T) where {T<:AbstractFloat}
-            return $(fcolon)(promote(a,b,c)...)
-        end
-
         function $(_fcolon_colon)(start::T, step, stop::T) where {T}
             T′ = typeof(start+zero(step))
             return $(SR)(convert(T′,start), step, convert(T′,stop))
@@ -263,7 +265,7 @@ for (F,f) in ((:M,:m), (:S,:s))
             imin = clamp(round(Int, -start_n/step_n+1), 1, Int(len))
             # Compute smallest-magnitude element to 2x precision
             ref_n = start_n+(imin-1)*step_n  # this shouldn't overflow, so don't check
-            nb = Base.nbitslen(T, len, imin)
+            nb = nbitslen(T, len, imin)
             $(stepfrangelen_hp)(T, (ref_n, den), (step_n, den), nb, Int(len), imin)
         end
 

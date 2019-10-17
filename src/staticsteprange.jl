@@ -1,13 +1,46 @@
 
 abstract type StaticStepRange{T,S} <: OrdinalRange{T,S} end
 
-function Base.unsafe_length(r::StaticStepRange)
-    n = Integer(div((last(r0 - first(r)) + step(r), step(r))))
-    return isempty(r) ? zero(n) : n
-end
-
 function Base.isempty(r::StaticStepRange)
     (first(r) != last(r)) & ((step(r) > zero(step(r))) != (last(r) > first(r)))
+end
+
+function start_step_stop_to_length(::Type{T}, start, step, stop) where {T}
+    if (start != stop) & ((step > zero(step)) != (stop > start))
+        return zero(T)
+    else
+        return Integer(div((stop - start) + step, step))
+    end
+end
+
+function Base.getproperty(r::StaticStepRange, s::Symbol)
+    if s === :start
+        return first(r)
+    elseif s === :step
+        return step(r)
+    elseif s === :stop
+        return last(r)
+    else
+        error("type $(typeof(r)) has no property $s")
+    end
+end
+
+function start_step_stop_to_length(::Type{T}, start, step, stop) where {T<:Union{Int,UInt,Int64,UInt64,Int128,UInt128}}
+    if (start != stop) & ((step > zero(step)) != (stop > start))
+        return zero(T)
+    elseif step > 1
+        return (convert(T, div(unsigned(stop - start), step)) + one(T))
+    elseif step < -1
+        return (convert(T, div(unsigned(start - stop), -step)) + one(T))
+    elseif step > 0
+        return (div(stop - start, step) + one(T))
+    else
+        return (div(start - stop, -step) + one(T))
+    end
+end
+
+function Base.length(r::StaticStepRange{T}) where {T}
+    return start_step_stop_to_length(T, first(r), step(r), last(r))
 end
 
 struct StepSRange{T,Ts,F,S,L} <: StaticStepRange{T,Ts}
@@ -16,7 +49,6 @@ struct StepSRange{T,Ts,F,S,L} <: StaticStepRange{T,Ts}
         return new{T,Ts,start,step,Base.steprange_last(start, step, stop)}()
     end
 end
-
 
 isstatic(::Type{X}) where {X<:StepSRange} = true
 
@@ -46,16 +78,12 @@ Base.step(r::StepMRange) = getfield(r, :step)
 Base.last(r::StepMRange) = getfield(r, :stop)
 
 setfirst!(r::StepMRange, val) = setfield!(r, :start, val)
-
+setstep!(r::StepMRange, val) = setfield!(r, :step, val)
 setlast!(r::StepMRange, val) = setfield!(r, :stop, val)
 
 can_growfirst(::Type{T}) where {T<:StepMRange} = true
 can_setstep(::Type{T}) where {T<:StepMRange} = true
 can_growlast(::Type{T}) where {T<:StepMRange} = true
-
-function Base.length(r::StaticStepRange{T}) where {T}
-    return start_step_stop_to_length(T, first(r), step(r), last(r))
-end
 
 function Base.intersect(r::AbstractUnitRange{<:Integer}, s::StaticStepRange{<:Integer})
     if isempty(s)

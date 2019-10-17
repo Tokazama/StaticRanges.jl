@@ -58,25 +58,4 @@ function setstep!(x, val)
     end
 end
 
-function start_step_stop_to_length(::Type{T}, start, step, stop) where {T}
-    return Integer(div((stop - start) + step, step))
-end
 
-
-function start_step_stop_to_length(
-    ::Type{T},
-    start,
-    step,
-    stop
-   ) where {T<:Union{Int,UInt,Int64,UInt64,Int128,UInt128}}
-    # TODO isempty(r) && return zero(T)
-    if step > 1
-        return (convert(T, div(unsigned(stop - start), step)) + one(T))
-    elseif step < -1
-        return (convert(T, div(unsigned(start - stop), -step)) + one(T))
-    elseif step > 0
-        return (div(stop - start, step) + one(T))
-    else
-        return (div(start - stop, -step) + one(T))
-    end
-end

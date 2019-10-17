@@ -9,6 +9,13 @@ Base.step(::OneToRange{T}) where {T} = one(T)
 
 Base.lastindex(r::OneToRange) = Int(last(r))
 
+function Base.getproperty(r::OneToRange, s::Symbol)
+    if s === :stop
+        return last(r)
+    else
+        error("type $(typeof(r)) has no property $s")
+    end
+end
 
 Base.length(r::OneToRange{T}) where {T<:Union{Int,Int64}} = T(last(r))
 

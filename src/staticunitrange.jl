@@ -5,12 +5,19 @@ Base.firstindex(::StaticUnitRange) = 1
 
 Base.lastindex(r::StaticUnitRange) = length(r)
 
+function Base.getproperty(r::StaticUnitRange, s::Symbol)
+    if s === :start
+        return first(r)
+    elseif s === :stop
+        return last(r)
+    else
+        error("type $(typeof(r)) has no property $s")
+    end
+end
 
 function Base.show(io::IO, r::StaticUnitRange)
     print(io, typeof(r).name, "(", repr(first(r)), ':', repr(last(r)), ")")
 end
-
-
 
 _in_unit_range(v::StaticUnitRange, val, i::Integer) = i > 0 && val <= last(v) && val >= first(v)
 
@@ -28,6 +35,7 @@ function Base.getindex(v::StaticUnitRange{T}, i::Integer) where {T<:Base.Overflo
     @boundscheck _in_unit_range(v, val, i) ||  throw(BoundsError(v, i))
     val % T
 end
+
 struct UnitSRange{T,F,L} <: StaticUnitRange{T}
 
     function UnitSRange{T}(start, stop) where {T<:Real}
@@ -69,6 +77,8 @@ for (F,f) in ((:M,:m), (:S,:s))
            ) where {T1,UR<:AbstractUnitRange}
             return promote_rule(a, $(UR){eltype(UR)})
         end
+
+        $(UR)(start::T, stop::T) where {T<:Real} = $(UR){T}(start, stop)
         $(UR){T}(r::AbstractUnitRange) where {T<:Real} = $(UR){T}(first(r), last(r))
         $(UR)(r::AbstractUnitRange) = $(UR)(first(r), last(r))
 
