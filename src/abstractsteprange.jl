@@ -159,7 +159,7 @@ for (F,f) in ((:M,:m), (:S,:s))
             Base.@_inline_meta
             @boundscheck checkbounds(r, s)
             st = oftype(first(r), first(r) + (first(s)-1)*step(r))
-            $(frange)(st, step=step(r)*step(s), length=length(s))
+            return $(frange)(st, step=step(r)*step(s), length=length(s))
         end
 
         $(SR)(r::AbstractUnitRange{T}) where {T} = $(SR){T,T}(first(r), step(r), last(r))
@@ -177,26 +177,6 @@ for (F,f) in ((:M,:m), (:S,:s))
 
         function (::Type{<:$(SR){T1,T2} where T1})(r::AbstractRange) where {T2}
             return $(SR){eltype(r),T2}(r)
-        end
-
-        function Base.promote_rule(
-            a::Type{<:$(SR){T1a,T1b}},
-            ::Type{UR}
-           ) where {T1a,T1b,UR<:AbstractUnitRange}
-            return promote_rule(a, $(SR){eltype(UR), eltype(UR)})
-        end
-
-        function promote_rule(
-            ::Type{<:$(SR){T1a,T1b}},
-            ::Type{$(SR){T2a,T2b}}
-           ) where {T1a,T1b,T2a,T2b}
-            return Base.el_same(
-                promote_type(T1a,T2a),
-                # el_same only operates on array element type, so just promote
-                # second type parameter
-                $(SR){T1a, promote_type(T1b,T2b)},
-                $(SR){T2a, promote_type(T1b,T2b)}
-               )
         end
 
         function Base.:(-)(r::$(SR))

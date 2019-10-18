@@ -1,4 +1,7 @@
 
+"""
+    StaticUnitRange
+"""
 abstract type StaticUnitRange{T<:Real} <: AbstractUnitRange{T} end
 
 Base.firstindex(::StaticUnitRange) = 1
@@ -70,25 +73,11 @@ for (F,f) in ((:M,:m), (:S,:s))
     frange = Symbol(f, :range)
     @eval begin
         Base.AbstractUnitRange{T}(r::$(UR)) where {T} = $(UR){T}(r)
-        function Base.promote_rule(
-            a::Type{<:$(UR){T1}},
-            ::Type{UR}
-           ) where {T1,UR<:AbstractUnitRange}
-            return promote_rule(a, $(UR){eltype(UR)})
-        end
-
         $(UR)(start::T, stop::T) where {T<:Real} = $(UR){T}(start, stop)
         $(UR){T}(r::AbstractUnitRange) where {T<:Real} = $(UR){T}(first(r), last(r))
         $(UR)(r::AbstractUnitRange) = $(UR)(first(r), last(r))
 
-        function promote_rule(
-            a::Type{<:$(UR){T1}},
-            b::Type{<:$(UR){T2}}
-           ) where {T1,T2}
-            return el_same(promote_type(T1,T2), a, b)
-        end
         $(UR){T}(r::$(UR){T}) where {T<:Real} = r
         $(UR){T}(r::$(UR)) where {T<:Real} = $(UR){T}(first(r), last(r))
-
     end
 end

@@ -4,6 +4,8 @@ import Base: OneTo, TwicePrecision, el_same, unsafe_getindex, nbitslen, rat,
              IEEEFloat, floatrange, sumpair, add12, twiceprecision, step_hp,
              truncbits
 
+using Base.Broadcast: DefaultArrayStyle
+
 export
     StepSRangeLen,
     StepMRangeLen,
@@ -34,12 +36,13 @@ isstatic(::Type{T}) where {T<:SRange} = true
 IsStaticTrait(::Type{T}) where {T<:SRange} = IsStatic
 
 const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},StepMRangeLen{T}}
-
+include("promotion.jl")
 include("range.jl")
-#include("initialize.jl")
+include("initialize.jl")
 
 include("broadcast.jl")
 include("operators.jl")
+include("indexing.jl")
 
 end
 

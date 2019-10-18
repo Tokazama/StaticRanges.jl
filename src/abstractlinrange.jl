@@ -1,8 +1,6 @@
 
 abstract type AbstractLinRange{T} <: AbstractRange{T} end
 
-Base.isempty(r::AbstractLinRange) = length(r) == 0
-
 Base.firstindex(::AbstractLinRange) = 1
 
 function Base.unsafe_getindex(r::AbstractLinRange, i::Integer)
@@ -84,22 +82,9 @@ for (F,f) in ((:M,:m), (:S,:s))
     @eval begin
         Base.:(-)(r::$(LR)) = $(LR)(-firs(r), -last(r), length(r))
 
-        function Base.promote_rule(
-            a::Type{<:$(LR){T1}},
-            b::Type{<:$(LR){T2}}
-           ) where {T1,T2}
-            return Base.el_same(promote_type(T1,T2), a, b)
-        end
-        $(LR){T}(r::$(LR){T}) where {T} = r
+       $(LR){T}(r::$(LR){T}) where {T} = r
         $(LR){T}(r::AbstractRange) where {T} = $(LR){T}(first(r), last(r), length(r))
         $(LR)(r::AbstractRange{T}) where {T} = $(LR){T}(r)
-
-        function Base.promote_rule(
-            a::Type{<:$(LR){T}},
-            ::Type{OR}
-           ) where {T,OR<:OrdinalRange}
-            return promote_rule(a, $(LR){eltype(OR)})
-        end
 
         Base.reverse(r::$(LR)) = $(LR)(last(r), first(r), length(r))
 

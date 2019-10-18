@@ -18,8 +18,9 @@ for (F,f) in ((:M,:m), (:S,:s))
             return $(_frange)(start, step, stop, length)
         end
 
-        $(frange)(start, stop; length::Union{Integer,Nothing}=nothing, step=nothing) =
-            $(_frange)(start, step, stop, length)
+        function $(frange)(start, stop; length::Union{Integer,Nothing}=nothing, step=nothing)
+            return $(_frange)(start, step, stop, length)
+        end
 
         $(_frange)(start, step, stop, length) = $(_frange)(start, step, stop, length)
 
@@ -157,7 +158,7 @@ for (F,f) in ((:M,:m), (:S,:s))
                     end
                 end
             end
-            $(flinspace)(start, stop, len)
+            return $(flinspace)(start, stop, len)
         end
 
         $(_frange)(start,     step,      ::Nothing, ::Nothing) = # range(a, step=s)
@@ -174,7 +175,7 @@ for (F,f) in ((:M,:m), (:S,:s))
 
         function $(_frange)(start::T, ::Nothing, stop::S, len::Integer) where {T,S}
             a, b = promote(start, stop)
-            $(_frange)(a, nothing, b, len)
+            return $(_frange)(a, nothing, b, len)
         end
         $(_frange)(start::T, ::Nothing, stop::T, len::Integer) where {T<:Real} = $(LINR){T}(start, stop, len)
         $(_frange)(start::T, ::Nothing, stop::T, len::Integer) where {T} = $(LINR){T}(start, stop, len)
@@ -184,10 +185,16 @@ for (F,f) in ((:M,:m), (:S,:s))
         # for all other types we fall back to a plain old LinRange
         $(flinspace)(::Type{T}, start::Integer, stop::Integer, len::Integer) where T = $(LINR){T}(start, stop, len)
 
-        function $(flinspace)(::Type{T}, start::Integer, stop::Integer, len::Integer) where {T<:Base.IEEEFloat}
+        function $(flinspace)(::Type{T}, start::Integer, stop::Integer, len::Integer) where {T<:IEEEFloat}
             return $(flinspace)(T, start, stop, len, 1)
         end
-        function $(flinspace)(::Type{T}, start_n::Integer, stop_n::Integer, len::Integer, den::Integer) where {T<:Base.IEEEFloat}
+        function $(flinspace)(
+            ::Type{T},
+            start_n::Integer,
+            stop_n::Integer,
+            len::Integer,
+            den::Integer
+           ) where {T<:IEEEFloat}
             len < 2 && return $(flinspace1)(T, start_n/den, stop_n/den, len)
             start_n == stop_n && return $(stepfrangelen_hp)(T, (start_n, den), (zero(start_n), den), 0, len, 1)
             tmin = -start_n/(Float64(stop_n) - Float64(start_n))
@@ -197,10 +204,10 @@ for (F,f) in ((:M,:m), (:S,:s))
             ref_denom = Int128(len-1) * den
             ref = (ref_num, ref_denom)
             step_full = (Int128(stop_n) - Int128(start_n), ref_denom)
-            $(stepfrangelen_hp)(T, ref, step_full,  nbitslen(T, len, imin), Int(len), imin)
+            return $(stepfrangelen_hp)(T, ref, step_full,  nbitslen(T, len, imin), Int(len), imin)
         end
 
-        function $(flinspace1)(::Type{T}, start, stop, len::Integer) where {T<:Base.IEEEFloat}
+        function $(flinspace1)(::Type{T}, start, stop, len::Integer) where {T<:IEEEFloat}
             len >= 0 || throw(ArgumentError("range($start, stop=$stop, length=$len): negative length"))
             if len <= 1
                 len == 1 && (start == stop || throw(ArgumentError("range($start, stop=$stop, length=$len): endpoints differ")))
@@ -228,34 +235,49 @@ for (F,f) in ((:M,:m), (:S,:s))
                     return $(floatfrange)(T, start_n, step_n, len, den)
                 end
             end
-            $(stepfrangelen_hp)(T, a, st, 0, len, 1)
+            return $(stepfrangelen_hp)(T, a, st, 0, len, 1)
         end
 
-        function $(stepfrangelen_hp)(::Type{Float64}, ref::Tuple{Integer,Integer},
-                                 step::Tuple{Integer,Integer}, nb::Integer,
-                                 len::Integer, offset::Integer)
-            $(SRL)(TwicePrecision{Float64}(ref),
-                         TwicePrecision{Float64}(step, nb), Int(len), offset)
+        function $(stepfrangelen_hp)(
+            ::Type{Float64},
+            ref::Tuple{Integer,Integer},
+            step::Tuple{Integer,Integer},
+            nb::Integer,
+            len::Integer,
+            offset::Integer
+           )
+            $(SRL)(TwicePrecision{Float64}(ref), TwicePrecision{Float64}(step, nb), Int(len), offset)
         end
 
-        function $(stepfrangelen_hp)(::Type{T}, ref::Tuple{Integer,Integer},
-                                 step::Tuple{Integer,Integer}, nb::Integer,
-                                 len::Integer, offset::Integer) where {T<:Base.IEEEFloat}
-            $(SRL){T}(ref[1]/ref[2], step[1]/step[2], Int(len), offset)
+        function $(stepfrangelen_hp)(
+            ::Type{T},
+            ref::Tuple{Integer,Integer},
+            step::Tuple{Integer,Integer},
+            nb::Integer,
+            len::Integer,
+            offset::Integer
+           ) where {T<:IEEEFloat}
+            return $(SRL){T}(ref[1]/ref[2], step[1]/step[2], Int(len), offset)
         end
 
-        function $(stepfrangelen_hp)(::Type{Float64}, ref::Base.F_or_FF,
-                                 step::Base.F_or_FF, nb::Integer,
-                                 len::Integer, offset::Integer)
-            $(SRL)(Base._TP(ref),
-                         twiceprecision(Base._TP(step), nb), Int(len), offset)
+        function $(stepfrangelen_hp)(
+            ::Type{Float64},
+            ref::Base.F_or_FF,
+            step::Base.F_or_FF,
+            nb::Integer,
+            len::Integer,
+            offset::Integer
+           )
+            return $(SRL)(Base._TP(ref), twiceprecision(Base._TP(step), nb), Int(len), offset)
         end
 
-        function $(stepfrangelen_hp)(::Type{T}, ref::Base.F_or_FF,
-                                 step::Base.F_or_FF, nb::Integer,
-                                 len::Integer, offset::Integer) where {T<:IEEEFloat}
-            $(SRL){T}(Base.asF64(ref),
-                            Base.asF64(step), Int(len), offset)
+        function $(stepfrangelen_hp)(
+            ::Type{T}, ref::Base.F_or_FF,
+            step::Base.F_or_FF, nb::Integer,
+            len::Integer,
+            offset::Integer
+           ) where {T<:IEEEFloat}
+            return $(SRL){T}(Base.asF64(ref), Base.asF64(step), Int(len), offset)
         end
         function $(floatfrange)(::Type{T}, start_n::Integer, step_n::Integer, len::Integer, den::Integer) where T
             if len < 2 || step_n == 0
@@ -266,7 +288,7 @@ for (F,f) in ((:M,:m), (:S,:s))
             # Compute smallest-magnitude element to 2x precision
             ref_n = start_n+(imin-1)*step_n  # this shouldn't overflow, so don't check
             nb = nbitslen(T, len, imin)
-            $(stepfrangelen_hp)(T, (ref_n, den), (step_n, den), nb, Int(len), imin)
+            return $(stepfrangelen_hp)(T, (ref_n, den), (step_n, den), nb, Int(len), imin)
         end
 
         function $(floatfrange)(a::AbstractFloat, st::AbstractFloat, len::Real, divisor::AbstractFloat)
@@ -281,7 +303,7 @@ for (F,f) in ((:M,:m), (:S,:s))
             end
             # Fallback (misses the opportunity to set offset different from 1,
             # but otherwise this is still high-precision)
-            $(stepfrangelen_hp)(T, (a,divisor), (st,divisor), Base.nbitslen(T, len, 1), Int(len), 1)
+            return $(stepfrangelen_hp)(T, (a,divisor), (st,divisor), Base.nbitslen(T, len, 1), Int(len), 1)
         end
         function $(flinspace)(start::T, stop::T, len::Integer) where {T<:IEEEFloat}
             (isfinite(start) && isfinite(stop)) || throw(ArgumentError("start and stop must be finite, got $start and $stop"))
@@ -322,7 +344,7 @@ for (F,f) in ((:M,:m), (:S,:s))
             a, b = (start - x1_hi) - x1_lo, (stop - x2_hi) - x2_lo
             step_lo = (b - a)/(len - 1)
             ref_lo = a - (1 - imin)*step_lo
-            $(stepfrangelen_hp)(T, (ref, ref_lo), (step_hi, step_lo), 0, Int(len), imin)
+            return $(stepfrangelen_hp)(T, (ref, ref_lo), (step_hi, step_lo), 0, Int(len), imin)
         end
     end
 end

@@ -422,8 +422,162 @@ for frange in (mrange, srange)
             end
         end
 
+        @testset "ranges with very small endpoints for type $T" for T = (Float32, Float64)
+            z = zero(T)
+            u = eps(z)
+            @test first(frange(u, stop=u, length=0)) == u
+            @test last(frange(u, stop=u, length=0)) == u
+            @test first(frange(-u, stop=u, length=0)) == -u
+            @test last(frange(-u, stop=u, length=0)) == u
+            @test [frange(-u, stop=u, length=0);] == []
+            @test [frange(-u, stop=-u, length=1);] == [-u]
+            @test [frange(-u, stop=u, length=2);] == [-u,u]
+            @test [frange(-u, stop=u, length=3);] == [-u,0,u]
+            @test first(frange(-u, stop=-u, length=0)) == -u
+            @test last(frange(-u, stop=-u, length=0)) == -u
+            @test first(frange(u, stop=-u, length=0)) == u
+            @test last(frange(u, stop=-u, length=0)) == -u
+            @test [frange(u, stop=-u, length=0);] == []
+            @test [frange(u, stop=u, length=1);] == [u]
+            @test [frange(u, stop=-u, length=2);] == [u,-u]
+            @test [frange(u, stop=-u, length=3);] == [u,0,-u]
+            v = frange(-u, stop=u, length=12)
+            @test length(v) == 12
+            @test [-3u:u:3u;] == [frange(-3u, stop=3u, length=7);] == [-3:3;].*u
+            @test [3u:-u:-3u;] == [frange(3u, stop=-3u, length=7);] == [3:-1:-3;].*u
+        end
+
+        @testset "tricky floating-point ranges" begin
+            for (start, step, stop, len) in ((1, 1, 3, 3),
+                                             (0, 1, 3, 4),
+                                             (3, -1, -1, 5),
+                                             (1, -1, -3, 5),
+                                             (0, 1, 10, 11),
+                                             (0, 7, 21, 4),
+                                             (0, 11, 33, 4),
+                                             (1, 11, 34, 4),
+                                             (0, 13, 39, 4),
+                                             (1, 13, 40, 4),
+                                             (11, 11, 33, 3),
+                                             (3, 1, 11, 9),
+                                             (0, 10, 55, 0),
+                                             (0, -1, 5, 0),
+                                             (0, 10, 5, 0),
+                                             (0, 1, 5, 0),
+                                             (0, -10, 5, 0),
+                                             (0, -10, 0, 1),
+                                             (0, -1, 1, 0),
+                                             (0, 1, -1, 0),
+                                             (0, -1, -10, 11))
+                r = frange(start/10, step=step/10, stop=stop/10)
+                a = Vector(frange(start, step=step, stop=stop))./10
+                ra = Vector(r)
+
+                @test r == a
+                @test isequal(r, a)
+
+                @test r == ra
+                @test isequal(r, ra)
+
+                @test hash(r) == hash(a)
+                @test hash(r) == hash(ra)
+
+                if len > 0
+                    l = frange(start/10, stop=stop/10, length=len)
+                    la = Vector(l)
+
+                    @test a == l
+                    @test r == l
+                    @test isequal(a, l)
+                    @test isequal(r, l)
+
+                    @test l == la
+                    @test isequal(l, la)
+
+                    @test hash(l) == hash(a)
+                    @test hash(l) == hash(la)
+                end
+            end
+
+            @test 1.0:1/49:27.0 == range(1.0, stop=27.0, length=1275) == [49:1323;]./49
+            @test isequal(1.0:1/49:27.0, range(1.0, stop=27.0, length=1275))
+            @test isequal(frange(1.0, step=1/49, stop=27.0), Vector(49:1323)./49)
+            @test hash(1.0:1/49:27.0) == hash(frange(1.0, stop=27.0, length=1275)) == hash(Vector(frange(49, 1323))./49)
+
+            @test [frange(prevfloat(0.1), step=0.1, stop=0.3);] == [prevfloat(0.1), 0.2, 0.3]
+            @test [frange(nextfloat(0.1), step=0.1, stop=0.3);] == [nextfloat(0.1), 0.2]
+            @test [frange(prevfloat(0.0), step=0.1, stop=0.3);] == [prevfloat(0.0), 0.1, 0.2]
+            @test [frange(nextfloat(0.0), step=0.1, stop=0.3);] == [nextfloat(0.0), 0.1, 0.2]
+            @test [frange(0.1, step=0.1, stop=prevfloat(0.3));] == [0.1, 0.2]
+            @test [frange(0.1, step=0.1, stop=nextfloat(0.3));] == [0.1, 0.2, nextfloat(0.3)]
+            @test [frange(0.0, step=0.1, stop=prevfloat(0.3));] == [0.0, 0.1, 0.2]
+            @test [frange(0.0, step=0.1, stop=nextfloat(0.3));] == [0.0, 0.1, 0.2, nextfloat(0.3)]
+            @test [frange(0.1, step=prevfloat(0.1), stop=0.3);] == [0.1, 0.2, 0.3]
+            @test [frange(0.1, step=nextfloat(0.1), stop=0.3);] == [0.1, 0.2]
+            @test [frange(0.0, step=prevfloat(0.1), stop=0.3);] == [0.0, prevfloat(0.1), prevfloat(0.2), 0.3]
+            @test [frange(0.0, step=nextfloat(0.1), stop=0.3);] == [0.0, nextfloat(0.1), nextfloat(0.2)]
+        end
+
+        @testset "overflowing sums (see #5798)" begin
+            if Sys.WORD_SIZE == 64
+                @test sum(frange(Int128(1), 10^18)) == div(10^18 * (Int128(10^18)+1), 2)
+                @test sum(frange(Int128(1), 10^18-1)) == div(10^18 * (Int128(10^18)-1), 2)
+            else
+                @test sum(frange(Int64(1), 10^9)) == div(10^9 * (Int64(10^9)+1), 2)
+                @test sum(frange(Int64(1), 10^9-1)) == div(10^9 * (Int64(10^9)-1), 2)
+            end
+        end
+
+        @testset "issue #20373 (unliftable ranges with exact end points)" begin
+            @test [3*0.05:0.05:0.2;]    == [frange(3*0.05, stop=0.2, length=2);]   == [3*0.05,0.2]
+            @test [0.2:-0.05:3*0.05;]   == [frange(0.2, stop=3*0.05, length=2);]   == [0.2,3*0.05]
+            @test [-3*0.05:-0.05:-0.2;] == [frange(-3*0.05, stop=-0.2, length=2);] == [-3*0.05,-0.2]
+            @test [-0.2:0.05:-3*0.05;]  == [frange(-0.2, stop=-3*0.05, length=2);] == [-0.2,-3*0.05]
+        end
+
+        @testset "length with typemin/typemax" begin
+            let r = frange(typemin(Int64), step=2, stop=typemax(Int64)), s = frange(typemax(Int64), step=-2, stop=typemin(Int64))
+                @test first(r) == typemin(Int64)
+                @test last(r) == (typemax(Int64)-1)
+                #@test_throws OverflowError length(r)
+
+                @test first(s) == typemax(Int64)
+                @test last(s) == (typemin(Int64)+1)
+                #@test_throws OverflowError length(s)
+            end
+
+            @test length(frange(typemin(Int64), step=3, stop=typemax(Int64))) == 6148914691236517206
+            @test length(frange(typemax(Int64), step=-3, stop=typemin(Int64))) == 6148914691236517206
+
+            #= No static type for big
+            for s in 3:100
+                @test length(frange(typemin(Int), step=s, stop=typemax(Int))) == length(big(typemin(Int)):big(s):big(typemax(Int)))
+                @test length(frange(typemax(Int), step=-s, stop=typemin(Int))) == length(big(typemax(Int)):big(-s):big(typemin(Int)))
+            end
+            =#
+
+            #= TODO
+            @test length(frange(UInt(1), step=UInt(1), stop=UInt(0))) == 0
+            @test length(frange(typemax(UInt), step=UInt(1), stop=(typemax(UInt)-1))) == 0
+            @test length(frange(typemax(UInt), step=UInt(2), stop=(typemax(UInt)-1))) == 0
+            @test length((frange(typemin(Int)+3, step=5, stop=(typemin(Int)+1)))) == 0
+
+            =#
+        end
+
+        @testset "issue #6973" begin
+            r1 = frange(1.0, step=0.1, stop=2.0)
+            r2 = frange(1.0f0, step=0.2f0, stop=3.0f0)
+            r3 = frange(1, step=2, stop=21)
+            @test r1 + r1 == 2*r1
+            @test r1 + r2 == 2.0:0.3:5.0
+            @test (r1 + r2) - r2 == r1
+            @test r1 + r3 == convert(StepRangeLen{Float64}, r3) + r1
+            @test r3 + r3 == 2 * r3
+        end
     end
 end
+
 
 
 #=
@@ -449,6 +603,30 @@ for a=AbstractRange[3:6, 0:2:10], b=AbstractRange[0:1, 2:-1:0]
     @test_throws BoundsError a[b]
 end
 
+        function loop_range_values(::Type{T}) where T
+            for a = frange(-5, 25)
+                s = [-5:-1; 1:25; ],
+                d = frange(1, 25),
+                n = frange(-1, 15)
+
+                denom = convert(T, d)
+                strt = convert(T, a)/denom
+                Δ     = convert(T, s)/denom
+                stop  = convert(T, (a + (n - 1) * s)) / denom
+                vals  = T[a:s:(a + (n - 1) * s); ] ./ denom
+                r = strt:Δ:stop
+                @test [r;] == vals
+                @test [range(strt, stop=stop, length=length(r));] == vals
+                n = length(r)
+                @test [r[1:n];] == [r;]
+                @test [r[2:n];] == [r;][2:end]
+                @test [r[1:3:n];] == [r;][1:3:n]
+                @test [r[2:2:n];] == [r;][2:2:n]
+                @test [r[n:-1:2];] == [r;][n:-1:2]
+                @test [r[n:-2:1];] == [r;][n:-2:1]
+            end
+        end
+
 # avoiding intermediate overflow (#5065)
 @test length(1:4:typemax(Int)) == div(typemax(Int),4) + 1
 
@@ -467,108 +645,9 @@ end
     end
 end
 
-@testset "overflowing sums (see #5798)" begin
-    if Sys.WORD_SIZE == 64
-        @test sum(Int128(1):10^18) == div(10^18 * (Int128(10^18)+1), 2)
-        @test sum(Int128(1):10^18-1) == div(10^18 * (Int128(10^18)-1), 2)
-    else
-        @test sum(Int64(1):10^9) == div(10^9 * (Int64(10^9)+1), 2)
-        @test sum(Int64(1):10^9-1) == div(10^9 * (Int64(10^9)-1), 2)
-    end
-end
-
-@testset "tricky floating-point ranges" begin
-    for (start, step, stop, len) in ((1, 1, 3, 3), (0, 1, 3, 4),
-                                    (3, -1, -1, 5), (1, -1, -3, 5),
-                                    (0, 1, 10, 11), (0, 7, 21, 4),
-                                    (0, 11, 33, 4), (1, 11, 34, 4),
-                                    (0, 13, 39, 4), (1, 13, 40, 4),
-                                    (11, 11, 33, 3), (3, 1, 11, 9),
-                                    (0, 10, 55, 0), (0, -1, 5, 0), (0, 10, 5, 0),
-                                    (0, 1, 5, 0), (0, -10, 5, 0), (0, -10, 0, 1),
-                                    (0, -1, 1, 0), (0, 1, -1, 0), (0, -1, -10, 11))
-        r = start/10:step/10:stop/10
-        a = Vector(start:step:stop)./10
-        ra = Vector(r)
-
-        @test r == a
-        @test isequal(r, a)
-
-        @test r == ra
-        @test isequal(r, ra)
-
-        @test hash(r) == hash(a)
-        @test hash(r) == hash(ra)
-
-        if len > 0
-            l = range(start/10, stop=stop/10, length=len)
-            la = Vector(l)
-
-            @test a == l
-            @test r == l
-            @test isequal(a, l)
-            @test isequal(r, l)
-
-            @test l == la
-            @test isequal(l, la)
-
-            @test hash(l) == hash(a)
-            @test hash(l) == hash(la)
-        end
-    end
-
-    @test 1.0:1/49:27.0 == range(1.0, stop=27.0, length=1275) == [49:1323;]./49
-    @test isequal(1.0:1/49:27.0, range(1.0, stop=27.0, length=1275))
-    @test isequal(1.0:1/49:27.0, Vector(49:1323)./49)
-    @test hash(1.0:1/49:27.0) == hash(range(1.0, stop=27.0, length=1275)) == hash(Vector(49:1323)./49)
-
-    @test [prevfloat(0.1):0.1:0.3;] == [prevfloat(0.1), 0.2, 0.3]
-    @test [nextfloat(0.1):0.1:0.3;] == [nextfloat(0.1), 0.2]
-    @test [prevfloat(0.0):0.1:0.3;] == [prevfloat(0.0), 0.1, 0.2]
-    @test [nextfloat(0.0):0.1:0.3;] == [nextfloat(0.0), 0.1, 0.2]
-    @test [0.1:0.1:prevfloat(0.3);] == [0.1, 0.2]
-    @test [0.1:0.1:nextfloat(0.3);] == [0.1, 0.2, nextfloat(0.3)]
-    @test [0.0:0.1:prevfloat(0.3);] == [0.0, 0.1, 0.2]
-    @test [0.0:0.1:nextfloat(0.3);] == [0.0, 0.1, 0.2, nextfloat(0.3)]
-    @test [0.1:prevfloat(0.1):0.3;] == [0.1, 0.2, 0.3]
-    @test [0.1:nextfloat(0.1):0.3;] == [0.1, 0.2]
-    @test [0.0:prevfloat(0.1):0.3;] == [0.0, prevfloat(0.1), prevfloat(0.2), 0.3]
-    @test [0.0:nextfloat(0.1):0.3;] == [0.0, nextfloat(0.1), nextfloat(0.2)]
-end
-
-function loop_range_values(::Type{T}) where T
-    for a = -5:25,
-        s = [-5:-1; 1:25; ],
-        d = 1:25,
-        n = -1:15
-
-        denom = convert(T, d)
-        strt = convert(T, a)/denom
-        Δ     = convert(T, s)/denom
-        stop  = convert(T, (a + (n - 1) * s)) / denom
-        vals  = T[a:s:(a + (n - 1) * s); ] ./ denom
-        r = strt:Δ:stop
-        @test [r;] == vals
-        @test [range(strt, stop=stop, length=length(r));] == vals
-        n = length(r)
-        @test [r[1:n];] == [r;]
-        @test [r[2:n];] == [r;][2:end]
-        @test [r[1:3:n];] == [r;][1:3:n]
-        @test [r[2:2:n];] == [r;][2:2:n]
-        @test [r[n:-1:2];] == [r;][n:-1:2]
-        @test [r[n:-2:1];] == [r;][n:-2:1]
-    end
-end
 
 @testset "issue #7420 for type $T" for T = (Float32, Float64,) # BigFloat),
     loop_range_values(T)
-end
-
-@testset "issue #20373 (unliftable ranges with exact end points)" begin
-    @test [3*0.05:0.05:0.2;]    == [range(3*0.05, stop=0.2, length=2);]   == [3*0.05,0.2]
-    @test [0.2:-0.05:3*0.05;]   == [range(0.2, stop=3*0.05, length=2);]   == [0.2,3*0.05]
-    @test [-3*0.05:-0.05:-0.2;] == [range(-3*0.05, stop=-0.2, length=2);] == [-3*0.05,-0.2]
-    @test [-0.2:0.05:-3*0.05;]  == [range(-0.2, stop=-3*0.05, length=2);] == [-0.2,-3*0.05]
 end
 
 
@@ -576,31 +655,6 @@ end
     @test first(range(log(0.2), stop=log(10.0), length=10)) == log(0.2)
     @test last(range(log(0.2), stop=log(10.0), length=10)) == log(10.0)
     @test length(Base.floatrange(-3e9, 1.0, 1, 1.0)) == 1
-end
-
-@testset "ranges with very small endpoints for type $T" for T = (Float32, Float64)
-    z = zero(T)
-    u = eps(z)
-    @test first(range(u, stop=u, length=0)) == u
-    @test last(range(u, stop=u, length=0)) == u
-    @test first(range(-u, stop=u, length=0)) == -u
-    @test last(range(-u, stop=u, length=0)) == u
-    @test [range(-u, stop=u, length=0);] == []
-    @test [range(-u, stop=-u, length=1);] == [-u]
-    @test [range(-u, stop=u, length=2);] == [-u,u]
-    @test [range(-u, stop=u, length=3);] == [-u,0,u]
-    @test first(range(-u, stop=-u, length=0)) == -u
-    @test last(range(-u, stop=-u, length=0)) == -u
-    @test first(range(u, stop=-u, length=0)) == u
-    @test last(range(u, stop=-u, length=0)) == -u
-    @test [range(u, stop=-u, length=0);] == []
-    @test [range(u, stop=u, length=1);] == [u]
-    @test [range(u, stop=-u, length=2);] == [u,-u]
-    @test [range(u, stop=-u, length=3);] == [u,0,-u]
-    v = range(-u, stop=u, length=12)
-    @test length(v) == 12
-    @test [-3u:u:3u;] == [range(-3u, stop=3u, length=7);] == [-3:3;].*u
-    @test [3u:-u:-3u;] == [range(3u, stop=-3u, length=7);] == [3:-1:-3;].*u
 end
 
 # issue #20380
@@ -646,46 +700,13 @@ end
 @test 1.0:1.5 == 1.0:1.0:1.5 == 1.0:1.0
 #@test 1.0:(.3-.1)/.1 == 1.0:2.0
 
-@testset "length with typemin/typemax" begin
-    let r = typemin(Int64):2:typemax(Int64), s = typemax(Int64):-2:typemin(Int64)
-        @test first(r) == typemin(Int64)
-        @test last(r) == (typemax(Int64)-1)
-        @test_throws OverflowError length(r)
-
-        @test first(s) == typemax(Int64)
-        @test last(s) == (typemin(Int64)+1)
-        @test_throws OverflowError length(s)
-    end
-
-    @test length(typemin(Int64):3:typemax(Int64)) == 6148914691236517206
-    @test length(typemax(Int64):-3:typemin(Int64)) == 6148914691236517206
-
-    for s in 3:100
-        @test length(typemin(Int):s:typemax(Int)) == length(big(typemin(Int)):big(s):big(typemax(Int)))
-        @test length(typemax(Int):-s:typemin(Int)) == length(big(typemax(Int)):big(-s):big(typemin(Int)))
-    end
-
-    @test length(UInt(1):UInt(1):UInt(0)) == 0
-    @test length(typemax(UInt):UInt(1):(typemax(UInt)-1)) == 0
-    @test length(typemax(UInt):UInt(2):(typemax(UInt)-1)) == 0
-    @test length((typemin(Int)+3):5:(typemin(Int)+1)) == 0
-end
 # issue #6364
 @test length((1:64)*(pi/5)) == 64
 
-@testset "issue #6973" begin
-    r1 = 1.0:0.1:2.0
-    r2 = 1.0f0:0.2f0:3.0f0
-    r3 = 1:2:21
-    @test r1 + r1 == 2*r1
-    @test r1 + r2 == 2.0:0.3:5.0
-    @test (r1 + r2) - r2 == r1
-    @test r1 + r3 == convert(StepRangeLen{Float64}, r3) + r1
-    @test r3 + r3 == 2 * r3
-end
+
 
 @testset "issue #7114" begin
-    let r = -0.004532318104333742:1.2597349521122731e-5:0.008065031416788989
+    let r = frange(-0.004532318104333742, step=1.2597349521122731e-5, stop=0.008065031416788989)
         @test length(r[1:end-1]) == length(r) - 1
         @test isa(r[1:2:end],AbstractRange) && length(r[1:2:end]) == div(length(r)+1, 2)
         @test r[3:5][2] ≈ r[4]
