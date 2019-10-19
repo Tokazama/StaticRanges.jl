@@ -184,32 +184,35 @@ for frange in (mrange, srange)
                 end
             end
         end
-        @testset "issubset" begin
-            @test issubset(frange(1, 3), 1:typemax(Int)) #32461
-            @test issubset(frange(1, 3), 1:3)
-            @test issubset(frange(1, 3), 1:4)
-            @test issubset(frange(1, 3), 0:3)
-            @test issubset(frange(1, 3), 0:4)
-            @test !issubset(frange(1, 5), 2:5)
-            @test !issubset(frange(1, 5), 1:4)
-            @test !issubset(frange(1, 5), 2:4)
-#                @test issubset(Base.OneTo(5), Base.OneTo(10))
-#                @test !issubset(Base.OneTo(10), Base.OneTo(5))
-            @test issubset(frange(1, step=3, stop=10), 1:10)
-            @test !issubset(frange(1, 10), 1:3:10)
 
-            @test issubset(1:3, frange(1, typemax(Int))) #32461
-            @test issubset(1:3, frange(1, 3))
-            @test issubset(1:3, frange(1, 4))
-            @test issubset(1:3, frange(0, 3))
-            @test issubset(1:3, frange(0, 4))
-            @test !issubset(1:5, frange(2, 5))
-            @test !issubset(1:5, frange(1, 4))
-            @test !issubset(1:5, frange(2, 4))
-#                @test issubset(Base.OneTo(5), Base.OneTo(10))
-#                @test !issubset(Base.OneTo(10), Base.OneTo(5))
-            @test issubset(1:3:10, frange(1, 10))
-            @test !issubset(1:10, frange(1, step=3, stop=10))
+        if VERSION > v"1.2"
+            @testset "issubset" begin
+                @test issubset(frange(1, 3), 1:typemax(Int)) #32461
+                @test issubset(frange(1, 3), 1:3)
+                @test issubset(frange(1, 3), 1:4)
+                @test issubset(frange(1, 3), 0:3)
+                @test issubset(frange(1, 3), 0:4)
+                @test !issubset(frange(1, 5), 2:5)
+                @test !issubset(frange(1, 5), 1:4)
+                @test !issubset(frange(1, 5), 2:4)
+    #                @test issubset(Base.OneTo(5), Base.OneTo(10))
+    #                @test !issubset(Base.OneTo(10), Base.OneTo(5))
+                @test issubset(frange(1, step=3, stop=10), 1:10)
+                @test !issubset(frange(1, 10), 1:3:10)
+
+                @test issubset(1:3, frange(1, typemax(Int))) #32461
+                @test issubset(1:3, frange(1, 3))
+                @test issubset(1:3, frange(1, 4))
+                @test issubset(1:3, frange(0, 3))
+                @test issubset(1:3, frange(0, 4))
+                @test !issubset(1:5, frange(2, 5))
+                @test !issubset(1:5, frange(1, 4))
+                @test !issubset(1:5, frange(2, 4))
+    #                @test issubset(Base.OneTo(5), Base.OneTo(10))
+    #                @test !issubset(Base.OneTo(10), Base.OneTo(5))
+                @test issubset(1:3:10, frange(1, 10))
+                @test !issubset(1:10, frange(1, step=3, stop=10))
+            end
         end
 
         @testset "in" begin
