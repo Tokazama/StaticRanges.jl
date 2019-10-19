@@ -1,6 +1,6 @@
 for RANGE_TYPE in (:OneTo,:OneToMRange,:OneToSRange)
     @eval begin
-        function similar_type(
+        function StaticArrays.similar_type(
             ::$(RANGE_TYPE){T},
             element_type=T,
            ) where {T}
@@ -15,7 +15,7 @@ lower_rangetype(::Type{OneToMRange{T}}) where {T} = OneToMRange{T}
 
 for RANGE_TYPE in (:UnitRange,:UnitMRange,:UnitSRange)
     @eval begin
-        function similar_type(
+        function StaticArrays.similar_type(
             ::$(RANGE_TYPE){T},
             element_type=T,
            ) where {T}
@@ -30,7 +30,7 @@ lower_rangetype(::Type{UnitMRange{T}}) where {T} = UnitMRange{T}
 
 for RANGE_TYPE in (:LinRange,:LinMRange,:LinSRange)
     @eval begin
-        function similar_type(
+        function StaticArrays.similar_type(
             ::$(RANGE_TYPE){T},
             element_type=T,
            ) where {T}
@@ -45,7 +45,7 @@ lower_rangetype(::Type{LinMRange{T}}) where {T} = LinMRange{T}
 
 for RANGE_TYPE in (:StepRangeLen,:StepMRangeLen,:StepSRangeLen)
     @eval begin
-        function similar_type(
+        function StaticArrays.similar_type(
             ::$(RANGE_TYPE){T,R,S},
             element_type=T,
             reference_type=R,
@@ -62,7 +62,7 @@ lower_rangetype(::Type{StepMRangeLen{T,R,S}}) where {T,R,S} = StepMRangeLen{T,R,
 
 for RANGE_TYPE in (:StepRange,:StepMRange,:StepSRange)
     @eval begin
-        function similar_type(
+        function StaticArrays.similar_type(
             ::$(RANGE_TYPE){T,S},
             element_type=T,
             step_type=S

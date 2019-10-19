@@ -1,6 +1,9 @@
 
 """
     StaticUnitRange
+
+Supertype for `UnitSRange` and `UnitMRange`. It's subtypes should behave
+identically to `UnitRange`.
 """
 abstract type StaticUnitRange{T<:Real} <: AbstractUnitRange{T} end
 
@@ -57,8 +60,6 @@ end
 
 Base.first(r::UnitMRange) = getfield(r, :start)
 Base.last(r::UnitMRange) = getfield(r, :stop)
-
-
 
 for (F,f) in ((:M,:m), (:S,:s))
     UR = Symbol(:Unit, F, :Range)

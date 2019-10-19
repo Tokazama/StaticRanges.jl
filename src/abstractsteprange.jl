@@ -1,4 +1,9 @@
+"""
+    AbstractStepRange
 
+Supertype for `StepSRange` and `StepMRange`. It's subtypes should behave
+identically to `StepRange`.
+"""
 abstract type AbstractStepRange{T,S} <: OrdinalRange{T,S} end
 
 function Base.isempty(r::AbstractStepRange)

@@ -1,4 +1,10 @@
 
+"""
+    OneToRange
+
+Supertype for `OntToSRange` and `OneToMRange`. It's subtypes should behave
+identically to `Base.OneTo`.
+"""
 abstract type OneToRange{T<:Integer} <: AbstractUnitRange{T} end
 
 Base.firstindex(::OneToRange) = 1

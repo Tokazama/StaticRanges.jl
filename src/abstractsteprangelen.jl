@@ -1,5 +1,8 @@
 """
     AbstractStepRangeLen
+
+Supertype for `StepSRangeLen` and `StepMRangeLen`. It's subtypes should behave
+identically to `StepRangeLen`.
 """
 abstract type AbstractStepRangeLen{T,R,S} <: AbstractRange{T} end
 
@@ -18,9 +21,7 @@ function Base.show(io::IO, r::AbstractStepRangeLen)
     print(io, typeof(r).name, "(", first(r), ":", step(r), ":", last(r), ")")
 end
 
-
 Base.nbitslen(r::AbstractStepRangeLen) = nbitslen(eltype(r), length(r), r.offset)
-
 
 """
     StepSRangeLen
@@ -73,6 +74,13 @@ _ref(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = R
 
 """
     StepMRangeLen
+
+A mutable range `r` where `r[i]` produces values of type `T` (in the second form,
+`T` is deduced automatically), parameterized by a `ref`erence value, a `step`,
+and the `len`gth. By default `ref` is the starting value `r[1]`, but
+alternatively you can supply it as the value of `r[offset]` for some other
+index `1 <= offset <= len`. In conjunction with `TwicePrecision` this can be
+used to implement ranges that are free of roundoff error.
 """
 mutable struct StepMRangeLen{T,R,S} <: AbstractStepRangeLen{T,R,S}
     ref::R

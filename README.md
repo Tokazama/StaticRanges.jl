@@ -13,8 +13,10 @@ ranges found herein should be fairly consistent with what one would typically
 expect so that end users don't have to muck around in the specific details to
 get started.
 
-Although formal documentation is still in development (including docstrings),
-you can access most functionality permitted by this package by simply using
-`mrange` and `srange` to create mutable and static ranges in a similar manner
-to the `range` method.
+Although formal documentation is still in development, users can access most
+functionality permitted by this package by simply using `mrange` and `srange`
+to create mutable and static ranges in a similar manner to the `range` method.
+Most docstrings are implemented in at least a rudimentary form at this point
+but don't have examples. Until examples are present there's a fairly extensive
+set of tests in the `test/runtests.jl` and `test/mutate.jl` files for refrence.
 

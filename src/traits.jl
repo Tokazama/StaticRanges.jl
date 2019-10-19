@@ -158,5 +158,3 @@ function setoffset!(r::StepMRangeLen, val::Int)
     setfield!(r, :offset, val)
 end
 setoffset!(r::StepMRangeLen, val) = setoffset!(r, Int(val))
-
-

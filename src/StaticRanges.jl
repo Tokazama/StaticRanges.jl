@@ -6,6 +6,8 @@ import Base: OneTo, TwicePrecision, el_same, unsafe_getindex, nbitslen, rat,
 
 using Base.Broadcast: DefaultArrayStyle
 
+using StaticArrays
+
 export
     StepSRangeLen,
     StepMRangeLen,
