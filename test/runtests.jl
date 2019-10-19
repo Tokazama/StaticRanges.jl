@@ -79,9 +79,6 @@ for frange in (mrange, srange)
             @test keytype_is_correct(frange(Int64(1), Int64(5)))
             @test keytype_is_correct(frange(Int64(1), Int64(5)))
             @test keytype_is_correct(frange(Int128(1), Int128(5)))
-#            @test keytype_is_correct(OneTo(4))
-#            @test keytype_is_correct(Base.OneTo(Int32(4)))
-
             @test valtype_is_correct(1:3)
             @test valtype_is_correct(1:.3:4)
             @test valtype_is_correct(.1:.1:.3)
@@ -93,8 +90,18 @@ for frange in (mrange, srange)
             @test valtype_is_correct(frange(Int64(1), Int64(5)))
             @test valtype_is_correct(frange(Int64(1), Int64(5)))
             @test valtype_is_correct(frange(Int128(1), Int128(5)))
-#            @test valtype_is_correct(Base.OneTo(4))
-#            @test valtype_is_correct(Base.OneTo(Int32(4)))
+
+            if frange isa typeof(mrange)
+                @test keytype_is_correct(OneToMRange(4))
+                @test keytype_is_correct(OneToMRange(Int32(4)))
+                @test valtype_is_correct(OneToMRange(4))
+                @test valtype_is_correct(OneToMRange(Int32(4)))
+            else
+                @test keytype_is_correct(OneToSRange(4))
+                @test keytype_is_correct(OneToSRange(Int32(4)))
+                @test valtype_is_correct(OneToSRange(4))
+                @test valtype_is_correct(OneToSRange(Int32(4)))
+            end
         end
         @testset "findall(::Base.Fix2{typeof(in)}, ::Array)" begin
             @test findall(in(3:20), [5.2, 3.3]) == findall(in(Vector(3:20)), [5.2, 3.3])
@@ -195,8 +202,6 @@ for frange in (mrange, srange)
                 @test !issubset(frange(1, 5), 2:5)
                 @test !issubset(frange(1, 5), 1:4)
                 @test !issubset(frange(1, 5), 2:4)
-    #                @test issubset(Base.OneTo(5), Base.OneTo(10))
-    #                @test !issubset(Base.OneTo(10), Base.OneTo(5))
                 @test issubset(frange(1, step=3, stop=10), 1:10)
                 @test !issubset(frange(1, 10), 1:3:10)
 
@@ -208,10 +213,20 @@ for frange in (mrange, srange)
                 @test !issubset(1:5, frange(2, 5))
                 @test !issubset(1:5, frange(1, 4))
                 @test !issubset(1:5, frange(2, 4))
-    #                @test issubset(Base.OneTo(5), Base.OneTo(10))
-    #                @test !issubset(Base.OneTo(10), Base.OneTo(5))
                 @test issubset(1:3:10, frange(1, 10))
                 @test !issubset(1:10, frange(1, step=3, stop=10))
+                if frange isa typeof(mrange)
+                    @test issubset(OneToMRange(5), OneToMRange(10))
+                    @test !issubset(OneToMRange(10), OneToMRange(5))
+                    @test issubset(OneToMRange(5), OneToMRange(10))
+                    @test !issubset(OneToMRange(10), OneToMRange(5))
+                else
+                    @test issubset(OneToSRange(5), OneToSRange(10))
+                    @test !issubset(OneToSRange(10), OneToSRange(5))
+                    @test issubset(OneToSRange(5), OneToSRange(10))
+                    @test !issubset(OneToSRange(10), OneToSRange(5))
+                end
+ 
             end
         end
 

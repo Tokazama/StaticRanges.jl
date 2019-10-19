@@ -79,10 +79,7 @@ OneToMRange{T}(r::Union{OneToRange,OneTo}) where {T<:Integer} = OneTo{T}(last(r)
 OneToMRange(stop::T) where {T<:Integer} = OneToMRange{T}(stop)
 OneToMRange(r::AbstractRange{T}) where {T<:Integer} = OneToMRange{T}(r)
 
-
-
-Base.show(io::IO, r::OneToMRange) = print(io, "OneToMRange(", last(r), ")")
-Base.show(io::IO, r::OneToSRange) = print(io, "OneToSRange(", last(r), ")")
+Base.show(io::IO, r::OneToRange) = print(io, typeof(r).name, "(", last(r), ")")
 
 for (F,f) in ((:M,:m), (:S,:s))
     OTR = Symbol(:OneTo, F, :Range)
