@@ -1,15 +1,4 @@
 
-
-struct IsStaticTrait end
-const IsStatic = IsStaticTrait
-
-struct IsNotStaticTrait end
-const IsNotStatic = IsNotStaticTrait()
-
-StaticTrait(::T) where {T} = StaticTrait(T)
-StaticTrait(::Type{T}) where {T} = IsNotStatic
-StaticTrait(::Type{T}) where {T<:Val} = IsStatic
-
 """
     isstatic(x) -> Bool
 
@@ -20,27 +9,62 @@ isstatic(::Type{X}) where {X} = false
 
 
 """
+    can_setfirst(x) -> Bool
+
+Returns `true` if the first element of `x` can be set. If `x` is a range then
+changing the first element will also change the length of `x`.
+"""
+can_setfirst(::X) where {X} = can_setfirst(X)
+can_setfirst(::Type{X}) where {X} = false
+# TODO figure out how to make this possible
+#can_setfirst(::Type{T}) where {T<:StepMRangeLen} = true
+can_setfirst(::Type{T}) where {T<:LinMRange} = true
+can_setfirst(::Type{T}) where {T<:StepMRange} = true
+can_setfirst(::Type{T}) where {T<:UnitMRange} = true
+
+"""
     setfirst!(x, val)
 
 Set the first element of `x` to `val`.
 """
-function setfirst!(x, val)
-    if can_grow_first(x)
-        @inbounds setindex!(x, val, firstindex(x))
-    else
-        throw(MethodError(setfirst!, (x, val)))
-    end
+function setfirst!(x::AbstractVector{T}, val::T) where {T}
+    !can_setfirst(x) || throw(MethodError(setfirst!, (x, val)))
+    setindex!(x, val, firstindex(x))
+    return x
 end
+setfirst!(x::AbstractVector{T}, val) where {T} = setfirst!(x, convert(T, val))
+setfirst!(r::LinMRange{T}, val::T) where {T} = (setfield!(r, :start, val); r)
+setfirst!(r::StepMRange{T,S}, val::T) where {T,S} = (setfield!(r, :start, val); r)
+setfirst!(r::UnitMRange{T}, val::T) where {T} = (setfield!(r, :start, val); r)
+
+"""
+    can_setlast(x) -> Bool
+
+Returns `true` if the last element of `x` can be set. If `x` is a range then
+changing the first element will also change the length of `x`.
+"""
+can_setlast(::X) where {X} = can_setlast(X)
+can_setlast(::Type{X}) where {X} = false
+can_setlast(::Type{T}) where {T<:LinMRange} = true
+can_setlast(::Type{T}) where {T<:StepMRange} = true
+can_setlast(::Type{T}) where {T<:UnitMRange} = true
+can_setlast(::Type{T}) where {T<:OneToMRange} = true
 
 """
     setlast!(x, val)
 
 Set the last element of `x` to `val`.
 """
-function setlast!(x, val)
-    can_grow_last(x) || throw(MethodError(setlast!, (x, val)))
-    @inbounds return setindex!(x, val, lastindex(x))
+function setlast!(x::AbstractVector{T}, val::T) where {T}
+    !can_setlast(x) || throw(MethodError(setlast!, (x, val)))
+    setindex!(x, val, lastindex(x))
+    return x
 end
+setlast!(x::AbstractVector{T}, val) where {T} = setlast!(x, convert(T, val))
+setlast!(r::LinMRange{T}, val::T) where {T} = (setfield!(r, :stop, val); r)
+setlast!(r::StepMRange{T,S}, val::T) where {T,S} = (setfield!(r, :stop, val); r)
+setlast!(r::UnitMRange{T}, val::T) where {T} = (setfield!(r, :stop, val); r)
+setlast!(r::OneToMRange{T}, val::T) where {T} = (setfield!(r, :stop, val); r)
 
 
 """
@@ -54,21 +78,85 @@ has_step(::Type{T}) where {T<:AbstractRange} = true
 
 """
     can_setstep(x) -> Bool
+
+Returns `true` if type of `x` has `step` field that can be set.
 """
 can_setstep(::X) where {X} = can_setstep(X)
 can_setstep(::Type{X}) where {X} = false
+can_setstep(::Type{T}) where {T<:StepMRange} = true
+can_setstep(::Type{T}) where {T<:StepMRangeLen} = true
 
 """
     setstep!(x, val)
 
 Sets the `step` of `x` to `val`.
 """
-function setstep!(x, val)
-    if can_setstep(x)
-        setproperty!(x, :step, val)
-    else
-        throw(MethodError(setstep!, (x, val)))
-    end
+function setstep! end
+function setstep!(r::StepMRange{T,S}, val::S) where {T,S}
+    setfield!(r, :step, val)
+    setlast!(r, Base.steprange_last(first(r), val, last(r)))
+    return r
 end
+setstep!(r::StepMRange{T,S}, val) where {T,S} = setstep!(r, convert(S, val))
+setstep!(r::StepMRangeLen{T,R,S}, val::S) where {T,R,S} = (setfield!(r, :step, val); r)
+setstep!(r::StepMRangeLen{T,R,S}, val) where {T,R,S} = setstep!(r, convert(S, val))
+
+"""
+    can_setlength(x) -> Bool
+
+Returns `true` if type of `x` can have its length set independent of changing
+its first or last position.
+"""
+can_setlength(::T) where {T} = can_setlength(T)
+can_setlength(::Type{T}) where {T} = false
+can_setlength(::Type{T}) where {T<:LinMRange} = true
+can_setlength(::Type{T}) where {T<:StepMRangeLen} = true
+
+
+
+"""
+    setlength!(x, len)
+
+Change the length of `x` while maintaining it's first and last positions.
+"""
+setlength!(x::AbstractRange, val) = setlength!(x, Int(val))
+
+function setlength!(r::LinMRange, len::Int)
+    len >= 0 || throw(ArgumentError("setlength!($r, $len): negative length"))
+    if len == 1
+        start == stop || throw(ArgumentError("setlength!($r, $len): endpoints differ"))
+        setfield!(r, :len, 1)
+        setfield!(r, :lendiv, 1)
+        return r
+    end
+    setfield!(r, :len, len)
+    setfield!(r, :lendiv, max(len - 1, 1))
+    return r
+end
+
+function setlength!(r::StepMRangeLen, len::Int)
+    len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
+    1 <= r.offset <= max(1,len) || throw(ArgumentError("StepMRangeLen: offset must be in [1,$len], got $offset"))
+    setfield!(r, :len, val)
+end
+
+"""
+    setref!(x)
+
+Set the reference field of an instance of `StepMRangeLen`.
+"""
+setref!(r::StepMRangeLen{T,R,S}, val::R) where {T,R,S} = (setfield!(r, :step, val); r)
+setref!(r::StepMRangeLen{T,R,S}, val) where {T,R,S} = setref!(r, convert(R, val))
+
+"""
+    setoffset!(x)
+
+Set the offset field of an instance of `StepMRangeLen`.
+"""
+function setoffset!(r::StepMRangeLen, val::Int)
+    1 <= val <= max(1,r.len) || throw(ArgumentError("StepMRangeLen: offset must be in [1,$len], got $offset"))
+    setfield!(r, :offset, val)
+end
+setoffset!(r::StepMRangeLen, val) = setoffset!(r, Int(val))
 
 

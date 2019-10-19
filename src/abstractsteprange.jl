@@ -32,6 +32,14 @@ function Base.length(r::AbstractStepRange{T}) where {T}
     return start_step_stop_to_length(T, first(r), step(r), last(r))
 end
 
+"""
+    StepSRange
+
+A static range with elements of type `T` with spacing of type `S`. The step
+between each element is constant, and the range is defined in terms of a
+`start` and `stop` of type `T` and a `step` of type `S`. Neither `T` nor `S`
+should be floating point types.
+"""
 struct StepSRange{T,Ts,F,S,L} <: AbstractStepRange{T,Ts}
 
     function StepSRange{T,Ts}(start::T, step::Ts, stop::T) where {T,Ts}
@@ -51,8 +59,6 @@ function Base.getproperty(r::StepSRange, s::Symbol)
     end
 end
 
-isstatic(::Type{X}) where {X<:StepSRange} = true
-
 Base.first(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = F
 
 Base.step(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = S
@@ -61,6 +67,11 @@ Base.last(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = L
 
 """
     StepMRange
+
+A mutable range with elements of type `T` with spacing of type `S`. The step
+between each element is constant, and the range is defined in terms of a
+`start` and `stop` of type `T` and a `step` of type `S`. Neither `T` nor `S`
+should be floating point types.
 """
 mutable struct StepMRange{T,S} <: AbstractStepRange{T,S}
     start::T
@@ -77,15 +88,6 @@ Base.first(r::StepMRange) = getfield(r, :start)
 Base.step(r::StepMRange) = getfield(r, :step)
 
 Base.last(r::StepMRange) = getfield(r, :stop)
-
-setfirst!(r::StepMRange, val) = setfield!(r, :start, val)
-setstep!(r::StepMRange, val) = setfield!(r, :step, val)
-setlast!(r::StepMRange, val) = setfield!(r, :stop, val)
-
-can_growfirst(::Type{T}) where {T<:StepMRange} = true
-can_setstep(::Type{T}) where {T<:StepMRange} = true
-can_growlast(::Type{T}) where {T<:StepMRange} = true
-
 function Base.intersect(r::AbstractUnitRange{<:Integer}, s::AbstractStepRange{<:Integer})
     if isempty(s)
         range(first(r), length=0)

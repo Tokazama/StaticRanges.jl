@@ -1,28 +1,21 @@
+"""
+    AbstractLinRange
 
+Supertype for mutable or static ranges with `len` linearly spaced elements
+between its `start` and `stop`.
+"""
 abstract type AbstractLinRange{T} <: AbstractRange{T} end
 
 Base.firstindex(::AbstractLinRange) = 1
 
-function Base.unsafe_getindex(r::AbstractLinRange, i::Integer)
-    return Base.lerpi(i-1, lendiv(r), first(r), last(r))
-end
-
 Base.step(r::AbstractLinRange) = (last(r)-first(r)) / lendiv(r)
 
-function Base.getproperty(r::AbstractLinRange, s::Symbol)
-    if s === start
-        return first(r)
-    elseif s === :stop
-        return last(r)
-    elseif s === :len
-        return length(r)
-    elseif s === :lendiv
-        return lendiv(r)
-    else
-        error("type $(typeof(r)) has no property $s")
-    end
-end
+"""
+    LinSRange
 
+A static range with len linearly spaced elements between its start and stop.
+The size of the spacing is controlled by len, which must be an Int.
+"""
 struct LinSRange{T,B,E,L,D} <: AbstractLinRange{T}
     function LinSRange{T}(start, stop, len) where T
         len >= 0 || throw(ArgumentError("srange($start, stop=$stop, length=$len): negative length"))
@@ -38,6 +31,20 @@ function LinSRange(start, stop, len::Integer)
     return LinSRange{typeof((stop-start)/len)}(start, stop, len)
 end
 
+function Base.getproperty(r::LinSRange, s::Symbol)
+    if s === start
+        return first(r)
+    elseif s === :stop
+        return last(r)
+    elseif s === :len
+        return length(r)
+    elseif s === :lendiv
+        return lendiv(r)
+    else
+        error("type $(typeof(r)) has no property $s")
+    end
+end
+
 Base.first(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = B
 
 Base.last(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = E
@@ -46,6 +53,12 @@ Base.length(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = L
 
 lendiv(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = D
 
+"""
+    LinMRange
+
+A mutable range with len linearly spaced elements between its start and stop.
+The size of the spacing is controlled by len, which must be an Int.
+"""
 mutable struct LinMRange{T} <: AbstractLinRange{T}
     start::T
     stop::T
@@ -58,14 +71,13 @@ mutable struct LinMRange{T} <: AbstractLinRange{T}
             start == stop || throw(ArgumentError("mrange($start, stop=$stop, length=$len): endpoints differ"))
             return new(start, stop, 1, 1)
         end
-        new(start, stop, len, max(len-1,1))
+        return new(start, stop, len, max(len-1,1))
     end
 end
 
 function LinMRange(start, stop, len::Integer)
     return LinMRange{typeof((stop-start)/len)}(start, stop, len)
 end
-
 
 Base.first(r::LinMRange) = getfield(r, :start)
 
@@ -74,6 +86,7 @@ Base.last(r::LinMRange) = getfield(r, :stop)
 Base.length(r::LinMRange) = getfield(r, :len)
 
 lendiv(r::LinMRange) = getfield(r, :lendiv)
+
 
 for (F,f) in ((:M,:m), (:S,:s))
     LR = Symbol(:Lin, F, :Range)

@@ -18,27 +18,30 @@ export
     UnitMRange,
     OneToSRange,
     OneToMRange,
+    # methods
     mrange,
-    srange
+    srange,
+    setfirst!,
+    setstep!,
+    setlast!
 
 include("twiceprecision.jl")
-include("traits.jl")
 include("onetorange.jl")
 include("staticunitrange.jl")
 include("abstractsteprange.jl")
 include("abstractlinrange.jl")
 include("abstractsteprangelen.jl")
 
+include("traits.jl")
 const SRange{T} = Union{OneToSRange{T},UnitSRange{T},StepSRange{T},LinSRange{T},StepSRangeLen{T}}
 
 isstatic(::Type{T}) where {T<:SRange} = true
 
-IsStaticTrait(::Type{T}) where {T<:SRange} = IsStatic
-
 const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},StepMRangeLen{T}}
+
 include("promotion.jl")
 include("range.jl")
-include("initialize.jl")
+#include("initialize.jl")
 
 include("broadcast.jl")
 include("operators.jl")

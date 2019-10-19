@@ -4,6 +4,27 @@ function Base.getindex(r::Union{AbstractStepRangeLen,AbstractLinRange}, i::Integ
     unsafe_getindex(r, i)
 end
 
+
+###
+### AbstractStepRangeLen
+###
+function _getindex_hiprec(r::AbstractStepRangeLen, i::Integer)  # without rounding by T
+    u = i - _offset(r)
+    return _ref(r) + u * step(r)
+end
+
+function _getindex_hiprec(
+    r::AbstractStepRangeLen{<:Any,<:TwicePrecision,<:TwicePrecision},
+    i::Integer
+   )
+    u = i - _offset(r)
+    shift_hi, shift_lo = u * step_hp(r).hi, u * step_hp(r).lo
+    x_hi, x_lo = add12(_ref(r).hi, shift_hi)
+    x_hi, x_lo = add12(x_hi, x_lo + (shift_lo + _ref(r).lo))
+    return TwicePrecision(x_hi, x_lo)
+end
+
+
 function Base.getindex(
     r::AbstractStepRangeLen{T,TwicePrecision{T},TwicePrecision{T}},
     s::OrdinalRange{<:Integer}
@@ -57,4 +78,31 @@ function Base.unsafe_getindex(r::StepSRangeLen{T,R,S}, i::Integer) where {T,R,S}
 end
 function Base.unsafe_getindex(r::StepMRangeLen{T,R,S}, i::Integer) where {T,R,S}
     return T(_ref(r) + (i - _offset(r)) * step_hp(r))
+end
+
+###
+### AbstractLinRange
+###
+function Base.unsafe_getindex(r::AbstractLinRange, i::Integer)
+    return Base.lerpi(i-1, lendiv(r), first(r), last(r))
+end
+
+
+###
+### StaticUnitRange
+###
+_in_unit_range(v::StaticUnitRange, val, i::Integer) = i > 0 && val <= last(v) && val >= first(v)
+
+function Base.getindex(v::StaticUnitRange{T}, i::Integer) where T
+    Base.@_inline_meta
+    val = convert(T, first(v) + (i - 1))
+    @boundscheck _in_unit_range(v, val, i) || throw(BoundsError(v, i))
+    val
+end
+
+function Base.getindex(v::StaticUnitRange{T}, i::Integer) where {T<:Base.OverflowSafe}
+    Base.@_inline_meta
+    val = v.start + (i - 1)
+    @boundscheck _in_unit_range(v, val, i) ||  throw(BoundsError(v, i))
+    val % T
 end

@@ -6,28 +6,28 @@ end
 
 Base.isempty(r::Union{AbstractLinRange,AbstractStepRangeLen}) = length(r) == 0
 
-function Base.:(==)(
-    r::StepMRangeLen{T,R,S},
-    s::StepMRangeLen{T,R,S}
-   ) where {T,R,S}
+###
+### ==(r1, r2)
+###
+function Base.:(==)(r::StepMRangeLen{T,R,S}, s::StepMRangeLen{T,R,S}) where {T,R,S}
     (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
 end
 
-function Base.:(==)(
-    r::StepSRangeLen{T,R,S},
-    s::StepSRangeLen{T,R,S}
-   ) where {T,R,S}
+function Base.:(==)(r::StepSRangeLen{T,R,S}, s::StepSRangeLen{T,R,S}) where {T,R,S}
     (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
 end
 
-function Base.:(==)(
-    r::AbstractLinRange{T},
-    s::AbstractLinRange{T}
-   ) where {T}
+function Base.:(==)(r::AbstractLinRange{T}, s::AbstractLinRange{T}) where {T}
     (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
 end
 
-#####
+###
+### +(r1, r2)
+###
+Base.:(+)(r1::AbstractStepRangeLen, r2::AbstractRange) = _add(r1, r2)
+Base.:(+)(r1::AbstractRange, r2::AbstractStepRangeLen) = _add(r1, r2)
+Base.:(+)(r1::AbstractStepRangeLen, r2::AbstractStepRangeLen) = _add(r1, r2)
+
 _add(r1, r2) = +(promote(r1, r2)...)
 
 function _add(r1::StepMRangeLen{T,S}, r2::StepMRangeLen{T,S}) where {T,S}
@@ -74,6 +74,58 @@ end
 _add(r1::StepSRangeLen{T,R,S}, r2::Union{OneToSRange,UnitSRange,StepSRange,LinSRange}) where {T,R,S} = +(r1, StepSRangeLen{T,R,S}(r2))
 _add(r2::Union{OneToSRange,UnitSRange,StepSRange,LinSRange}, r1::StepSRangeLen{T,R,S}) where {T,R,S} = +(r1, StepSRangeLen{T,R,S}(r2))
 
+function Base.sum(r::AbstractStepRangeLen)
+    l = length(r)
+    # Compute the contribution of step over all indices.
+    # Indexes on opposite side of r.offset contribute with opposite sign,
+    #    r.step * (sum(1:np) - sum(1:nn))
+    np, nn = l - r.offset, r.offset - 1  # positive, negative
+    # To prevent overflow in sum(1:n), multiply its factors by the step
+    sp, sn = sumpair(np), sumpair(nn)
+    tp = Base._tp_prod(r.step, sp[1], sp[2])
+    tn = Base._tp_prod(r.step, sn[1], sn[2])
+    s_hi, s_lo = add12(tp.hi, -tn.hi)
+    s_lo += tp.lo - tn.lo
+    # Add in contributions of ref
+    ref = r.ref * l
+    sm_hi, sm_lo = add12(s_hi, ref.hi)
+    return add12(sm_hi, sm_lo + ref.lo)[1]
+end
+
+###
+### -(r1, r2)
+###
+Base.:(-)(r1::AbstractStepRangeLen, r2::AbstractRange) = -(promote(r1, r2)...)
+Base.:(-)(r1::AbstractRange, r2::AbstractStepRangeLen) = -(promote(r1, r2)...)
+Base.:(-)(r1::AbstractStepRangeLen, r2::AbstractStepRangeLen) = -(promote(r1, r2)...)
+
+function Base.:(-)(r::AbstractStepRangeLen)
+    return similar_type(r)(-_ref(r), -step(r), length(r), _offset(r))
+end
+Base.:(-)(r1::StepMRangeLen{T,R,S}, r2::StepMRangeLen{T,R,S}) where {T,R,S} = +(r1, -r2)
+Base.:(-)(r1::StepSRangeLen{T,R,S}, r2::StepSRangeLen{T,R,S}) where {T,R,S} = +(r1, -r2)
+
+
+###
+### *(r1, r2)
+###
+Base.:(*)(r::AbstractStepRangeLen{T,TwicePrecision{T}}, x::Real) where {T<:Real} = x*r
+function Base.:(*)(x::Real, r::StepMRangeLen{T,TwicePrecision{T}}) where {T<:Real}
+    return StepMRangeLen(x * _ref(r), Base.twiceprecision(x * step(r), nbitslen(r)), length(r), _offset(r))
+end
+function Base.:(*)(x::Real, r::StepSRangeLen{T,TwicePrecision{T}}) where {T<:Real}
+    return StepSRangeLen(x * _ref(r), Base.twiceprecision(x * step(r), nbitslen(r)), length(r), _offset(r))
+end
+
+###
+### /(r1, r2)
+###
+function Base.:(/)(r::StepMRangeLen{T,TwicePrecision{T}}, x::Real) where {T<:Real}
+    return StepMRangeLen(_ref(r)/x, Base.twiceprecision(step(r)/x, Base.nbitslen(r)), length(r), _offset(r))
+end
+function Base.:(/)(r::StepSRangeLen{T,TwicePrecision{T}}, x::Real) where {T<:Real}
+    return StepSRangeLen(_ref(r)/x, Base.twiceprecision(step(r)/x, Base.nbitslen(r)), length(r), _offset(r))
+end
 #=
         function $f(r1::LinRange{T}, r2::LinRange{T}) where T
             len = r1.len

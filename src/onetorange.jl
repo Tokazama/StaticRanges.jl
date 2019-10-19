@@ -70,7 +70,6 @@ end
 
 Base.last(r::OneToMRange) = getfield(r, :stop)
 
-
 function OneToMRange{T}(r::AbstractRange) where {T<:Integer}
     first(r) == 1 || (Base.@_noinline_meta; throw(ArgumentError("first element must be 1, got $(first(r))")))
     step(r)  == 1 || (Base.@_noinline_meta; throw(ArgumentError("step must be 1, got $(step(r))")))
@@ -81,9 +80,6 @@ OneToMRange{T}(r::Union{OneToRange,OneTo}) where {T<:Integer} = OneTo{T}(last(r)
 OneToMRange(stop::T) where {T<:Integer} = OneToMRange{T}(stop)
 OneToMRange(r::AbstractRange{T}) where {T<:Integer} = OneToMRange{T}(r)
 
-can_growlast(::Type{T}) where {T<:OneToMRange} = true
-
-setlast!(r::OneToMRange, val) = setfield!(r, :stop, val)
 
 
 Base.show(io::IO, r::OneToMRange) = print(io, "OneToMRange(", last(r), ")")

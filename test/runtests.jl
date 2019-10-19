@@ -1,4 +1,7 @@
 using Test, StaticRanges, Dates
+using StaticRanges: can_setfirst, can_setlast, can_setstep, has_step
+
+include("mutate.jl")
 
 for frange in (mrange, srange)
     @testset "$frange" begin

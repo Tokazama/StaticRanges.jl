@@ -10,46 +10,9 @@ end
 function StepRangeLen{T,R,S}(r::AbstractStepRangeLen) where {T,R,S}
     return StepRangeLen{T,R,S}(convert(R, r.ref), convert(S, r.step), length(r), r.offset)
 end
-Base.:(-)(r1::AbstractStepRangeLen, r2::AbstractRange) = -(promote(r1, r2)...)
-Base.:(-)(r1::AbstractRange, r2::AbstractStepRangeLen) = -(promote(r1, r2)...)
-Base.:(-)(r1::AbstractStepRangeLen, r2::AbstractStepRangeLen) = -(promote(r1, r2)...)
-
 Base.first(r::AbstractStepRangeLen) = unsafe_getindex(r, 1)
 Base.last(r::AbstractStepRangeLen) = unsafe_getindex(r, length(r))
 
-function _getindex_hiprec(r::AbstractStepRangeLen, i::Integer)  # without rounding by T
-    u = i - _offset(r)
-    return _ref(r) + u * step(r)
-end
-
-function _getindex_hiprec(
-    r::AbstractStepRangeLen{<:Any,<:TwicePrecision,<:TwicePrecision},
-    i::Integer
-   )
-    u = i - _offset(r)
-    shift_hi, shift_lo = u * step_hp(r).hi, u * step_hp(r).lo
-    x_hi, x_lo = add12(_ref(r).hi, shift_hi)
-    x_hi, x_lo = add12(x_hi, x_lo + (shift_lo + _ref(r).lo))
-    return TwicePrecision(x_hi, x_lo)
-end
-
-function Base.sum(r::AbstractStepRangeLen)
-    l = length(r)
-    # Compute the contribution of step over all indices.
-    # Indexes on opposite side of r.offset contribute with opposite sign,
-    #    r.step * (sum(1:np) - sum(1:nn))
-    np, nn = l - r.offset, r.offset - 1  # positive, negative
-    # To prevent overflow in sum(1:n), multiply its factors by the step
-    sp, sn = sumpair(np), sumpair(nn)
-    tp = Base._tp_prod(r.step, sp[1], sp[2])
-    tn = Base._tp_prod(r.step, sn[1], sn[2])
-    s_hi, s_lo = add12(tp.hi, -tn.hi)
-    s_lo += tp.lo - tn.lo
-    # Add in contributions of ref
-    ref = r.ref * l
-    sm_hi, sm_lo = add12(s_hi, ref.hi)
-    return add12(sm_hi, sm_lo + ref.lo)[1]
-end
 
 function Base.show(io::IO, r::AbstractStepRangeLen)
     print(io, typeof(r).name, "(", first(r), ":", step(r), ":", last(r), ")")
@@ -70,6 +33,13 @@ end
 
 """
     StepSRangeLen
+
+A static range `r` where `r[i]` produces values of type `T` (in the second form,
+`T` is deduced automatically), parameterized by a `ref`erence value, a `step`,
+and the `len`gth. By default `ref` is the starting value `r[1]`, but
+alternatively you can supply it as the value of `r[offset]` for some other
+index `1 <= offset <= len`. In conjunction with `TwicePrecision` this can be
+used to implement ranges that are free of roundoff error.
 """
 struct StepSRangeLen{T,Tr,Ts,R,S,L,F} <: AbstractStepRangeLen{T,R,S} end
 
@@ -139,37 +109,6 @@ Base.length(r::StepMRangeLen) = getfield(r, :len)
 _offset(r::StepMRangeLen) = getfield(r, :offset)
 _ref(r::StepMRangeLen) = getfield(r, :ref)
 
-Base.:(+)(r1::AbstractStepRangeLen, r2::AbstractRange) = _add(r1, r2)
-Base.:(+)(r1::AbstractRange, r2::AbstractStepRangeLen) = _add(r1, r2)
-Base.:(+)(r1::AbstractStepRangeLen, r2::AbstractStepRangeLen) = _add(r1, r2)
-
-Base.:(*)(r::AbstractStepRangeLen{T,TwicePrecision{T}}, x::Real) where {T<:Real} = x*r
-function Base.:(*)(x::Real, r::StepMRangeLen{T,TwicePrecision{T}}) where {T<:Real}
-    return StepMRangeLen(x * _ref(r), Base.twiceprecision(x * step(r), nbitslen(r)), length(r), _offset(r))
-end
-function Base.:(*)(x::Real, r::StepSRangeLen{T,TwicePrecision{T}}) where {T<:Real}
-    return StepSRangeLen(x * _ref(r), Base.twiceprecision(x * step(r), nbitslen(r)), length(r), _offset(r))
-end
-
-function Base.:(/)(r::StepMRangeLen{T,TwicePrecision{T}}, x::Real) where {T<:Real}
-    return StepMRangeLen(_ref(r)/x, Base.twiceprecision(step(r)/x, Base.nbitslen(r)), length(r), _offset(r))
-end
-function Base.:(/)(r::StepSRangeLen{T,TwicePrecision{T}}, x::Real) where {T<:Real}
-    return StepSRangeLen(_ref(r)/x, Base.twiceprecision(step(r)/x, Base.nbitslen(r)), length(r), _offset(r))
-end
-
-#=
-function Base.:(+)(r1::StepMRangeLen, r2::StepMRangeLen)
-    return StepMRangeLen(first(r1)+first(r2), step(r1)+step(r2), len)
-end
-
-  MethodError: no method matching StepMRangeLen{Float32,Float64,Float64}(::Float64, ::Float32, ::Int64, ::Int64)
-
-function Base.:(+)(r1::StepMRangeLen, r2::StepMRangeLen)
-    return StepMRangeLen(first(r1)+first(r2), step(r1)+step(r2), len)
-end
-=#
-
 
 for (F,f) in ((:M,:m), (:S,:s))
     SR = Symbol(:Step, F, :RangeLen)
@@ -178,19 +117,6 @@ for (F,f) in ((:M,:m), (:S,:s))
     _CSRL = Symbol(:__convert, :S, F, :RL)
     floatfrange = Symbol(:float, f, :range)
     @eval begin
-        function Base.:(-)(r::$(SR){T,R,S}) where {T,R,S}
-            return $(SR){T,R,S}(-_ref(r), -step(r), length(r), _offset(r))
-        end
-
-        Base.:(-)(r1::$(SR){T,R,S}, r2::$(SR){T,R,S}) where {T,R,S} = +(r1, -r2)
-
-
-
-        #=
-r1 = StepSRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64},StaticRanges.TPVal{Float64,1.0,0.0}(),StaticRanges.TPVal{Float64,0.09999999999999964,3.552713678800501e-16}(),11,1}
-r2 = StepSRange{Int64,Int64,1,2,21}
-        =#
-
         $(SR){T,R,S}(r::$(SR){T,R,S}) where {T,R,S} = r
         function $(SR){T,R,S}(r::$(SR)) where {T,R,S}
             return $(SR){T,R,S}(
@@ -237,9 +163,7 @@ r2 = StepSRange{Int64,Int64,1,2,21}
         function (::Type{<:$(SR){Float64}})(r::$(SR))
             return $(CSRL)($(SR){Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
         end
-        function $(SR){T}(r::$(SR)) where {T<:IEEEFloat}
-            return $(CSRL)($(SR){T,Float64,Float64}, r)
-        end
+        $(SR){T}(r::$(SR)) where {T<:IEEEFloat} = $(CSRL)($(SR){T,Float64,Float64}, r)
 
 
         function $(SR){T}(r::AbstractRange) where {T<:IEEEFloat}
