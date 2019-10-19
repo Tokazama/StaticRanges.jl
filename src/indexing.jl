@@ -24,24 +24,27 @@ function _getindex_hiprec(
     return TwicePrecision(x_hi, x_lo)
 end
 
-
-function Base.getindex(
-    r::AbstractStepRangeLen{T,TwicePrecision{T},TwicePrecision{T}},
-    s::OrdinalRange{<:Integer}
-   ) where {T}
-    @boundscheck checkbounds(r, s)
-    soffset = 1 + round(Int, (_offset(r) - first(s))/step(s))
-    soffset = clamp(soffset, 1, length(s))
-    ioffset = first(s) + (soffset-1)*step(s)
-    if step(s) == 1 || length(s) < 2
-        newstep = step_hp(r)
-    else
-        newstep = Base.twiceprecision(step_hp(r)*step(s), Base.nbitslen(T, length(s), soffset))
-    end
-    if ioffset == _offset(r)
-        return similar_type(r)(_ref(r), newstep, length(s), max(1,soffset))
-    else
-        return similar_type(r)(_ref(r) + (ioffset-_offset(r))*step_hp(r), newstep, length(s), max(1,soffset))
+for RT in (:StepMRangeLen,:StepSRangeLen)
+    @eval begin
+        function Base.getindex(
+            r::$(RT){T,TwicePrecision{T},TwicePrecision{T}},
+            s::OrdinalRange{<:Integer}
+           ) where {T}
+            @boundscheck checkbounds(r, s)
+            soffset = 1 + round(Int, (_offset(r) - first(s))/step(s))
+            soffset = clamp(soffset, 1, length(s))
+            ioffset = first(s) + (soffset-1)*step(s)
+            if step(s) == 1 || length(s) < 2
+                newstep = step_hp(r)
+            else
+                newstep = Base.twiceprecision(step_hp(r)*step(s), Base.nbitslen(T, length(s), soffset))
+            end
+            if ioffset == _offset(r)
+                return similar_type(r)(_ref(r), newstep, length(s), max(1,soffset))
+            else
+                return similar_type(r)(_ref(r) + (ioffset-_offset(r))*step_hp(r), newstep, length(s), max(1,soffset))
+            end
+        end
     end
 end
 
@@ -87,6 +90,21 @@ function Base.unsafe_getindex(r::AbstractLinRange, i::Integer)
     return Base.lerpi(i-1, lendiv(r), first(r), last(r))
 end
 
+function Base.getindex(r::AbstractLinRange, s::OrdinalRange{<:Integer})
+    Base.@_inline_meta
+    @boundscheck checkbounds(r, s)
+    vfirst = unsafe_getindex(r, first(s))
+    vlast  = unsafe_getindex(r, last(s))
+    return LinMRange(vfirst, vlast, length(s))
+end
+
+function Base.getindex(r::LinSRange, s::Union{OneToSRange{T},UnitSRange{T},StepSRange{T}}) where {T<:Integer}
+    Base.@_inline_meta
+    @boundscheck checkbounds(r, s)
+    vfirst = unsafe_getindex(r, first(s))
+    vlast  = unsafe_getindex(r, last(s))
+    return LinMRange(vfirst, vlast, length(s))
+end
 
 ###
 ### StaticUnitRange
@@ -103,6 +121,6 @@ end
 function Base.getindex(v::StaticUnitRange{T}, i::Integer) where {T<:Base.OverflowSafe}
     Base.@_inline_meta
     val = v.start + (i - 1)
-    @boundscheck _in_unit_range(v, val, i) ||  throw(BoundsError(v, i))
+    @boundscheck _in_unit_range(v, val, i) || throw(BoundsError(v, i))
     val % T
 end

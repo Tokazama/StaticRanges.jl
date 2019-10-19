@@ -42,9 +42,8 @@ A static range that parallels `OneTo` in behavior.
 """
 struct OneToSRange{T<:Integer,E} <: OneToRange{T} end
 
-function OneToSRange{T}(stop::T) where {T<:Integer}
-    OneToSRange{T,max(zero(T), stop)}()
-end
+OneToSRange{T}(stop::T) where {T<:Integer} = OneToSRange{T,max(zero(T), stop)}()
+OneToSRange(stop::T) where {T<:Integer} = OneToSRange{T,max(zero(T), stop)}()
 
 function Base.getproperty(r::OneToSRange, s::Symbol)
     if s === :stop

@@ -106,19 +106,21 @@ for frange in (mrange, srange)
                 @test findall(in(span), r) == 1:6
             end
         end
+
         @testset "findfirst" begin
             @test findfirst(isequal(7), frange(1, step=2, stop=10)) == 4
             @test findfirst(==(7), frange(1, step=2, stop=10)) == 4
             @test findfirst(==(10), frange(1, step=2, stop=10)) == nothing
             @test findfirst(==(11), frange(1, step=2, stop=10)) == nothing
         end
-        @testset "reverse" begin
-            @test reverse(reverse(1:10)) == 1:10
-            @test reverse(reverse(typemin(Int):typemax(Int))) == typemin(Int):typemax(Int)
-            @test reverse(reverse(typemin(Int):2:typemax(Int))) == typemin(Int):2:typemax(Int)
-        end
-        @testset "intersect" begin
 
+        @testset "reverse" begin
+            @test reverse(reverse(frange(1, 10))) == 1:10
+            @test reverse(reverse(frange(typemin(Int), typemax(Int)))) == typemin(Int):typemax(Int)
+            @test reverse(reverse(frange(typemin(Int), step=2, stop=typemax(Int)))) == typemin(Int):2:typemax(Int)
+        end
+
+        @testset "intersect" begin
             @test intersect(frange(1, 5), frange(2, 3)) == 2:3
             @test intersect(frange(-3, 5), frange(2, 8)) == 2:5
             @test intersect(frange(-8, -3), frange(-8, -3)) == -8:-3
@@ -578,33 +580,124 @@ for frange in (mrange, srange)
             @test r1 + r3 == convert(StepRangeLen{Float64}, r3) + r1
             @test r3 + r3 == 2 * r3
         end
+
+        # avoiding intermediate overflow (#5065)
+        @test length(frange(1, step=4, stop=typemax(Int))) == div(typemax(Int),4) + 1
+
+        @testset "Inexact errors on 32 bit architectures. #22613" begin
+            @test first(frange(log(0.2), stop=log(10.0), length=10)) == log(0.2)
+            @test last(frange(log(0.2), stop=log(10.0), length=10)) == log(10.0)
+            # not used internally for StaticRanges
+            #@test length(Base.floatrange(-3e9, 1.0, 1, 1.0)) == 1
+        end
+
+        # issue #7426
+        @test [frange(typemax(Int), step=1, stop=typemax(Int));] == [typemax(Int)]
+
+        @testset "issue #7387" begin
+            for r in (frange(0, 1), frange(0.0, 1.0))
+                local r
+                @test [r .+ im;] == [r;] .+ im
+                @test [r .- im;] == [r;] .- im
+                @test [r * im;] == [r;] * im
+                @test [r / im;] == [r;] / im
+            end
+        end
+
+        # near-equal ranges
+        @test frange(0.0, step=0.1, stop=1.0) != 0.0f0:0.1f0:1.0f0
+
+        #issue #7484
+        let r7484 = frange(0.1, step=0.1, stop=1)
+            @test [reverse(r7484);] == reverse([r7484;])
+        end
+
+        # issue #2959
+        @test frange(1.0, 1.5) == 1.0:1.0:1.5 == 1.0:1.0
+
+        @testset "comparing UnitRanges and OneTo" begin
+            @test frange(1, step=2, stop=10) == 1:2:10 != 1:3:10 != 1:3:13 != frange(2, step=3, stop=13) == 2:3:11 != frange(2, 11)
+            @test frange(1, step=1, stop=10) == 1:10 == 1:10 == OneToMRange(10) == OneToSRange(10)
+            @test 1:10 != frange(2, 10) != 2:11 != Base.OneTo(11)
+            @test OneToMRange(10) != OneToSRange(11) != frange(1, 10)
+        end
+
+        @testset "issue #7114" begin
+            let r = frange(-0.004532318104333742, step=1.2597349521122731e-5, stop=0.008065031416788989)
+                @test length(r[1:end-1]) == length(r) - 1
+                @test isa(r[1:2:end],AbstractRange) && length(r[1:2:end]) == div(length(r)+1, 2)
+                @test r[3:5][2] ≈ r[4]
+                @test r[5:-2:1][2] ≈ r[3]
+                @test_throws BoundsError r[0:10]
+                @test_throws BoundsError r[1:10000]
+            end
+
+            let r = frange(1/3, stop=5/7, length=6)
+                @test length(r) == 6
+                @test r[1] == 1/3
+                @test abs(r[end] - 5/7) <= eps(5/7)
+            end
+
+            let r = frange(0.25, stop=0.25, length=1)
+                @test length(r) == 1
+                @test_throws ArgumentError frange(0.25, stop=0.5, length=1)
+            end
+        end
+
+        # issue #6364
+        @test length((frange(1, 64))*(pi/5)) == 64
+
+
+        # Preservation of high precision upon addition
+        let r = range(-0.1, step=0.1, stop=0.3) + broadcast(+, -0.3:0.1:0.1, 1e-12)
+            @test r[3] == 1e-12
+        end
+
+        @testset "range with 1 or 0 elements (whose step length is NaN)" begin
+            @test issorted(frange(1, stop=1, length=0))
+            @test issorted(frange(1, stop=1, length=1))
+        end
+        @testset "indexing range with empty range (#4309)" begin
+            @test frange(3, 6)[5:4] == 7:6
+            @test_throws BoundsError frange(3, 6)[5:5]
+            @test_throws BoundsError frange(3, 6)[5]
+            @test frange(0, step=2, stop=10)[7:6] == 12:2:10
+            @test_throws BoundsError (0:2:10)[7:7]
+        end
+        # indexing with negative ranges (#8351)
+        for a=AbstractRange[3:6, frange(0, step=2, stop=10)], b=AbstractRange[frange(0, 1), frange(2, step=-1, stop=0)]
+            @test_throws BoundsError a[b]
+        end
+        @testset "sort/sort!/partialsort" begin
+            @test sort(frange(1, 2)) == UnitRange(1,2)
+            @test sort!(frange(1, 2)) == UnitRange(1,2)
+            @test sort(frange(1, 10), rev=true) == 10:-1:1
+            @test sort(frange(-3, 3), by=abs) == [0,-1,1,-2,2,-3,3]
+            @test partialsort(frange(1, 10), 4) == 4
+        end
     end
 end
 
+@testset "LinMRange" begin
+    # issue #20380
+    let r = LinMRange(1,4,4)
+        @test isa(r[1:4], LinMRange)
+    end
+end
+
+@testset "LinSRange" begin
+    let r = LinSRange(1,4,4)
+        @test isa(r[OneToSRange(4)], LinMRange)
+    end
+end
 
 
 #=
-    @testset "sort/sort!/partialsort" begin
-        @test sort(UnitRange(1,2)) == UnitRange(1,2)
-        @test sort!(UnitRange(1,2)) == UnitRange(1,2)
-        @test sort(1:10, rev=true) == 10:-1:1
-        @test sort(-3:3, by=abs) == [0,-1,1,-2,2,-3,3]
-        @test partialsort(1:10, 4) == 4
-    end
+
 
 end
 # TODO
-@testset "indexing range with empty range (#4309)" begin
-    @test (3:6)[5:4] == 7:6
-    @test_throws BoundsError (3:6)[5:5]
-    @test_throws BoundsError (3:6)[5]
-    @test (0:2:10)[7:6] == 12:2:10
-    @test_throws BoundsError (0:2:10)[7:7]
-end
-# indexing with negative ranges (#8351)
-for a=AbstractRange[3:6, 0:2:10], b=AbstractRange[0:1, 2:-1:0]
-    @test_throws BoundsError a[b]
-end
+
 
         function loop_range_values(::Type{T}) where T
             for a = frange(-5, 25)
@@ -630,9 +723,6 @@ end
             end
         end
 
-# avoiding intermediate overflow (#5065)
-@test length(1:4:typemax(Int)) == div(typemax(Int),4) + 1
-
 @testset "overflow in length" begin
     Tset = Int === Int64 ? (Int,UInt,Int128,UInt128) :
                            (Int,UInt,Int64,UInt64,Int128, UInt128)
@@ -654,23 +744,8 @@ end
 end
 
 
-@testset "Inexact errors on 32 bit architectures. #22613" begin
-    @test first(range(log(0.2), stop=log(10.0), length=10)) == log(0.2)
-    @test last(range(log(0.2), stop=log(10.0), length=10)) == log(10.0)
-    @test length(Base.floatrange(-3e9, 1.0, 1, 1.0)) == 1
-end
 
-# issue #20380
-let r = LinRange(1,4,4)
-    @test isa(r[1:4], LinRange)
-end
 
-@testset "range with 1 or 0 elements (whose step length is NaN)" begin
-    @test issorted(range(1, stop=1, length=0))
-    @test issorted(range(1, stop=1, length=1))
-end
-# near-equal ranges
-@test 0.0:0.1:1.0 != 0.0f0:0.1f0:1.0f0
 
 # comparing and hashing ranges
 @testset "comparing and hashing ranges" begin
@@ -693,62 +768,6 @@ end
     end
 end
 
-@testset "comparing UnitRanges and OneTo" begin
-    @test 1:2:10 == 1:2:10 != 1:3:10 != 1:3:13 != 2:3:13 == 2:3:11 != 2:11
-    @test 1:1:10 == 1:10 == 1:10 == Base.OneTo(10) == Base.OneTo(10)
-    @test 1:10 != 2:10 != 2:11 != Base.OneTo(11)
-    @test Base.OneTo(10) != Base.OneTo(11) != 1:10
-end
-# issue #2959
-@test 1.0:1.5 == 1.0:1.0:1.5 == 1.0:1.0
 #@test 1.0:(.3-.1)/.1 == 1.0:2.0
 
-# issue #6364
-@test length((1:64)*(pi/5)) == 64
-
-
-
-@testset "issue #7114" begin
-    let r = frange(-0.004532318104333742, step=1.2597349521122731e-5, stop=0.008065031416788989)
-        @test length(r[1:end-1]) == length(r) - 1
-        @test isa(r[1:2:end],AbstractRange) && length(r[1:2:end]) == div(length(r)+1, 2)
-        @test r[3:5][2] ≈ r[4]
-        @test r[5:-2:1][2] ≈ r[3]
-        @test_throws BoundsError r[0:10]
-        @test_throws BoundsError r[1:10000]
-    end
-
-    let r = range(1/3, stop=5/7, length=6)
-        @test length(r) == 6
-        @test r[1] == 1/3
-        @test abs(r[end] - 5/7) <= eps(5/7)
-    end
-
-    let r = range(0.25, stop=0.25, length=1)
-        @test length(r) == 1
-        @test_throws ArgumentError range(0.25, stop=0.5, length=1)
-    end
-end
-
-# issue #7426
-@test [typemax(Int):1:typemax(Int);] == [typemax(Int)]
-
-#issue #7484
-let r7484 = 0.1:0.1:1
-    @test [reverse(r7484);] == reverse([r7484;])
-end
-
-@testset "issue #7387" begin
-    for r in (0:1, 0.0:1.0)
-        local r
-        @test [r .+ im;] == [r;] .+ im
-        @test [r .- im;] == [r;] .- im
-        @test [r * im;] == [r;] * im
-        @test [r / im;] == [r;] / im
-    end
-end
-# Preservation of high precision upon addition
-let r = (-0.1:0.1:0.3) + broadcast(+, -0.3:0.1:0.1, 1e-12)
-    @test r[3] == 1e-12
-end
 =#

@@ -1,3 +1,14 @@
+Base.reverse(r::StepSRange) = srange(last(r), step=-step(r), stop=first(r))
+Base.reverse(r::StepMRange) = mrange(last(r), step=-step(r), stop=first(r))
+
+function Base.reverse(r::AbstractStepRangeLen)
+    # If `r` is empty, `length(r) - r.offset + 1 will be nonpositive hence
+    # invalid. As `reverse(r)` is also empty, any offset would work so we keep
+    # `r.offset`
+    offset = isempty(r) ? _offset(r) : length(r) - _offset(r) + 1
+    return similar_type(r)(_ref(r), -step_hp(r), length(r), offset)
+end
+
 function Base.iterate(r::Union{AbstractLinRange,AbstractStepRangeLen}, i::Int=1)
     Base.@_inline_meta
     length(r) < i && return nothing
@@ -41,11 +52,11 @@ end
 function _add(r1::StepMRangeLen{T,TwicePrecision{T}}, r2::StepMRangeLen{T,TwicePrecision{T}}) where {T}
     len = length(r1)
     (len == length(r2) || throw(DimensionMismatch("argument dimensions must match")))
-    if _offset(r1) == _offset(r2)
-        imid = _offset(r1)
-        ref = _ref(r1) + _ref(r2)
+    if r1.offset == r2.offset
+        imid = r1.offset
+        ref = r1.ref + r2.ref
     else
-        imid = round(Int, (_offset(r1)+_offset(r2))/2)
+        imid = round(Int, (r1.offset + r2.offset)/2)
         ref1mid = _getindex_hiprec(r1, imid)
         ref2mid = _getindex_hiprec(r2, imid)
         ref = ref1mid + ref2mid

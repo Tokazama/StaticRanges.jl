@@ -22,15 +22,6 @@ end
 Base.nbitslen(r::AbstractStepRangeLen) = nbitslen(eltype(r), length(r), r.offset)
 
 
-function Base.reverse(r::AbstractStepRangeLen)
-    # If `r` is empty, `length(r) - r.offset + 1 will be nonpositive hence
-    # invalid. As `reverse(r)` is also empty, any offset would work so we keep
-    # `r.offset`
-    offset = isempty(r) ? _offset(r) : length(r) - _offset(r) + 1
-    return similar_type(r)(_ref(r), -step(r), length(r), offset)
-end
-
-
 """
     StepSRangeLen
 
@@ -136,6 +127,7 @@ for (F,f) in ((:M,:m), (:S,:s))
         end
 
         $(SR){T,R,S}(r::AbstractRange) where {T,R,S} = $(SR){T,R,S}(R(first(r)), S(step(r)), length(r))
+        $(SR){T,R,S}(r::StepRangeLen) where {T,R,S} = $(SR){T,R,S}(R(r.ref), S(r.step), r.len, r.offset)
         $(SR){T}(r::AbstractRange) where {T} = $(SR)(T(first(r)), T(step(r)), length(r))
         $(SR)(r::AbstractRange) = $(SR){eltype(r)}(r)
 
