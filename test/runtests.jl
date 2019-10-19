@@ -172,14 +172,16 @@ for frange in (mrange, srange)
             @test intersect(frange(1, 3), 2) == intersect(2, frange(1, 3)) == frange(2, 2)
             @test intersect(frange(1.0, 3.0), 2) == intersect(2, frange(1.0, 3.0)) == [2.0]
 
-            @testset "Support StepRange with a non-numeric step" begin
-                start = Date(1914, 7, 28)
-                stop = Date(1918, 11, 11)
+            if VERSION > v"1.2"
+                @testset "Support StepRange with a non-numeric step" begin
+                    start = Date(1914, 7, 28)
+                    stop = Date(1918, 11, 11)
 
-                @test intersect(frange(start, step=Day(1), stop=stop), start:Day(1):stop) == start:Day(1):stop
-                @test intersect(start:Day(1):stop, start:Day(5):stop) == start:Day(5):stop
-                @test intersect(start-Day(10):Day(1):stop-Day(10), start:Day(5):stop) ==
-                                start:Day(5):stop-Day(10)-mod(stop-start, Day(5))
+                    @test intersect(frange(start, step=Day(1), stop=stop), start:Day(1):stop) == start:Day(1):stop
+                    @test intersect(start:Day(1):stop, start:Day(5):stop) == start:Day(5):stop
+                    @test intersect(start-Day(10):Day(1):stop-Day(10), start:Day(5):stop) ==
+                                    start:Day(5):stop-Day(10)-mod(stop-start, Day(5))
+                end
             end
         end
         @testset "issubset" begin
