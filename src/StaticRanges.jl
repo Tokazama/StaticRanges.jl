@@ -2,7 +2,7 @@ module StaticRanges
 
 import Base: OneTo, TwicePrecision, el_same, unsafe_getindex, nbitslen, rat,
              IEEEFloat, floatrange, sumpair, add12, twiceprecision, step_hp,
-             truncbits
+             truncbits, Fix1, Fix2
 
 using Base.Broadcast: DefaultArrayStyle
 
@@ -11,7 +11,6 @@ using StaticArrays
 export
     StepSRangeLen,
     StepMRangeLen,
-    StaticLinRange,
     LinSRange,
     LinMRange,
     StepSRange,
@@ -48,6 +47,7 @@ include("range.jl")
 include("broadcast.jl")
 include("operators.jl")
 include("indexing.jl")
+include("find.jl")
 
 end
 

@@ -17,7 +17,7 @@ end
 
 
 function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRangeLen)
-    if isstatic(x)
+    if isstatic(r)
         return StepMRangeLen(-r.ref, -r.step, length(r), r.offset)
     else
         return StepMRangeLen(-r.ref, -r.step, length(r), r.offset)
