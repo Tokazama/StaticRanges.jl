@@ -52,4 +52,22 @@
             end
         end
     end
+
+    @testset "setlength!" begin
+        @test @inferred(setlength!(LinMRange(1, 10, 5), 10)) == LinMRange(1, 10, 10)
+        @test @inferred(setlength!(LinMRange(1, 10, 5), UInt32(10))) == LinMRange(1, 10, 10)
+
+        @test @inferred(setlength!(StepMRangeLen(1, 1, 10), 11)) == StepMRangeLen(1, 1, 11)
+        @test @inferred(setlength!(StepMRangeLen(1, 1, 10), UInt32(11))) == StepMRangeLen(1, 1, 11)
+    end
+
+    @testset "setref!" begin
+        @test @inferred(setref!(StepMRangeLen(1, 1, 10), 2)) == StepMRangeLen(2, 1, 10)
+        @test @inferred(setref!(StepMRangeLen(1, 1, 10), UInt32(2))) == StepMRangeLen(2, 1, 10)
+    end
+
+    @testset "setoffset!" begin
+        @test @inferred(setoffset!(StepMRangeLen(1, 1, 10), 2)) == StepMRangeLen(1, 1, 10, 2)
+        @test @inferred(setoffset!(StepMRangeLen(1, 1, 10), UInt32(2))) == StepMRangeLen(1, 1, 10, 2)
+    end
 end

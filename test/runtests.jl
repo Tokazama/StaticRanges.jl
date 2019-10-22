@@ -115,13 +115,6 @@ for frange in (mrange, srange)
             end
         end
 
-        @testset "findfirst" begin
-            @test findfirst(isequal(7), frange(1, step=2, stop=10)) == 4
-            @test findfirst(==(7), frange(1, step=2, stop=10)) == 4
-            @test findfirst(==(10), frange(1, step=2, stop=10)) == nothing
-            @test findfirst(==(11), frange(1, step=2, stop=10)) == nothing
-        end
-
         @testset "reverse" begin
             @test reverse(reverse(frange(1, 10))) == 1:10
             @test reverse(reverse(frange(typemin(Int), typemax(Int)))) == typemin(Int):typemax(Int)

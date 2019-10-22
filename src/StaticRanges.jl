@@ -24,7 +24,10 @@ export
     srange,
     setfirst!,
     setstep!,
-    setlast!
+    setlast!,
+    setlength!,
+    setref!,
+    setoffset!
 
 include("twiceprecision.jl")
 include("onetorange.jl")
@@ -50,4 +53,3 @@ include("indexing.jl")
 include("find.jl")
 
 end
-

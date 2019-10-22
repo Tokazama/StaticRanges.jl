@@ -137,7 +137,8 @@ end
 function setlength!(r::StepMRangeLen, len::Int)
     len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
     1 <= r.offset <= max(1,len) || throw(ArgumentError("StepMRangeLen: offset must be in [1,$len], got $offset"))
-    setfield!(r, :len, val)
+    setfield!(r, :len, len)
+    return r
 end
 
 """
@@ -145,7 +146,7 @@ end
 
 Set the reference field of an instance of `StepMRangeLen`.
 """
-setref!(r::StepMRangeLen{T,R,S}, val::R) where {T,R,S} = (setfield!(r, :step, val); r)
+setref!(r::StepMRangeLen{T,R,S}, val::R) where {T,R,S} = (setfield!(r, :ref, val); r)
 setref!(r::StepMRangeLen{T,R,S}, val) where {T,R,S} = setref!(r, convert(R, val))
 
 """
@@ -156,5 +157,6 @@ Set the offset field of an instance of `StepMRangeLen`.
 function setoffset!(r::StepMRangeLen, val::Int)
     1 <= val <= max(1,r.len) || throw(ArgumentError("StepMRangeLen: offset must be in [1,$len], got $offset"))
     setfield!(r, :offset, val)
+    return r
 end
 setoffset!(r::StepMRangeLen, val) = setoffset!(r, Int(val))
