@@ -1,5 +1,7 @@
 using Test, StaticRanges, Dates
-using StaticRanges: can_setfirst, can_setlast, can_setstep, has_step
+using StaticRanges: can_setfirst, can_setlast, can_setstep, has_step, can_setlength
+
+
 
 include("mutate.jl")
 include("find.jl")

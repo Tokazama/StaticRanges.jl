@@ -1,4 +1,7 @@
 
+# TODO: this should be in ArrayInterface
+ArrayInterface.can_setindex(::Type{X}) where {X<:AbstractRange} = false
+
 """
     isstatic(x) -> Bool
 
@@ -15,7 +18,7 @@ Returns `true` if the first element of `x` can be set. If `x` is a range then
 changing the first element will also change the length of `x`.
 """
 can_setfirst(::X) where {X} = can_setfirst(X)
-can_setfirst(::Type{X}) where {X} = false
+can_setfirst(::Type{X}) where {X} = can_setindex(X)
 # TODO figure out how to make this possible
 #can_setfirst(::Type{T}) where {T<:StepMRangeLen} = true
 can_setfirst(::Type{T}) where {T<:LinMRange} = true
@@ -28,7 +31,7 @@ can_setfirst(::Type{T}) where {T<:UnitMRange} = true
 Set the first element of `x` to `val`.
 """
 function setfirst!(x::AbstractVector{T}, val::T) where {T}
-    !can_setfirst(x) || throw(MethodError(setfirst!, (x, val)))
+    can_setfirst(x) || throw(MethodError(setfirst!, (x, val)))
     setindex!(x, val, firstindex(x))
     return x
 end
@@ -44,7 +47,7 @@ Returns `true` if the last element of `x` can be set. If `x` is a range then
 changing the first element will also change the length of `x`.
 """
 can_setlast(::X) where {X} = can_setlast(X)
-can_setlast(::Type{X}) where {X} = false
+can_setlast(::Type{X}) where {X} = can_setindex(X)
 can_setlast(::Type{T}) where {T<:LinMRange} = true
 can_setlast(::Type{T}) where {T<:StepMRange} = true
 can_setlast(::Type{T}) where {T<:UnitMRange} = true
@@ -56,7 +59,7 @@ can_setlast(::Type{T}) where {T<:OneToMRange} = true
 Set the last element of `x` to `val`.
 """
 function setlast!(x::AbstractVector{T}, val::T) where {T}
-    !can_setlast(x) || throw(MethodError(setlast!, (x, val)))
+    can_setlast(x) || throw(MethodError(setlast!, (x, val)))
     setindex!(x, val, lastindex(x))
     return x
 end
@@ -97,6 +100,7 @@ function setstep!(r::StepMRange{T,S}, val::S) where {T,S}
     setlast!(r, Base.steprange_last(first(r), val, last(r)))
     return r
 end
+setstep!(x::AbstractVector{T}, val) where {T} = setstep!(x, convert(T, val))
 setstep!(r::StepMRange{T,S}, val) where {T,S} = setstep!(r, convert(S, val))
 setstep!(r::StepMRangeLen{T,R,S}, val::S) where {T,R,S} = (setfield!(r, :step, val); r)
 setstep!(r::StepMRangeLen{T,R,S}, val) where {T,R,S} = setstep!(r, convert(S, val))
@@ -124,7 +128,7 @@ setlength!(x::AbstractRange, val) = setlength!(x, Int(val))
 function setlength!(r::LinMRange, len::Int)
     len >= 0 || throw(ArgumentError("setlength!($r, $len): negative length"))
     if len == 1
-        start == stop || throw(ArgumentError("setlength!($r, $len): endpoints differ"))
+        r.start == r.stop || throw(ArgumentError("setlength!($r, $len): endpoints differ"))
         setfield!(r, :len, 1)
         setfield!(r, :lendiv, 1)
         return r
