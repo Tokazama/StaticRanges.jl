@@ -32,7 +32,7 @@ function LinSRange(start, stop, len::Integer)
 end
 
 function Base.getproperty(r::LinSRange, s::Symbol)
-    if s === start
+    if s === :start
         return first(r)
     elseif s === :stop
         return last(r)

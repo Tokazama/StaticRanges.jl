@@ -5,6 +5,7 @@ using StaticRanges: can_setfirst, can_setlast, can_setstep, has_step, can_setlen
 
 include("mutate.jl")
 include("find.jl")
+include("range_interface.jl")
 
 for frange in (mrange, srange)
     @testset "$frange" begin
