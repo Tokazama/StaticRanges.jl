@@ -53,6 +53,8 @@ Base.length(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = L
 
 lendiv(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = D
 
+LinSRange{T}(r::AbstractRange) where {T} = LinSRange{T}(first(r), last(r), length(r))
+
 """
     LinMRange
 
@@ -87,6 +89,7 @@ Base.length(r::LinMRange) = getfield(r, :len)
 
 lendiv(r::LinMRange) = getfield(r, :lendiv)
 
+LinMRange{T}(r::AbstractRange) where {T}= LinMRange{T}(first(r), last(r), length(r))
 
 for (F,f) in ((:M,:m), (:S,:s))
     LR = Symbol(:Lin, F, :Range)
@@ -96,7 +99,7 @@ for (F,f) in ((:M,:m), (:S,:s))
         Base.:(-)(r::$(LR)) = $(LR)(-firs(r), -last(r), length(r))
 
        $(LR){T}(r::$(LR){T}) where {T} = r
-        $(LR){T}(r::AbstractRange) where {T} = $(LR){T}(first(r), last(r), length(r))
+        #$(LR){T}(r::AbstractRange) where {T} = $(LR){T}(first(r), last(r), length(r))
         $(LR)(r::AbstractRange{T}) where {T} = $(LR){T}(r)
 
         Base.reverse(r::$(LR)) = $(LR)(last(r), first(r), length(r))
