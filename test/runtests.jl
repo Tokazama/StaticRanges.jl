@@ -1,11 +1,13 @@
 using Test, StaticRanges, Dates
 using StaticRanges: can_setfirst, can_setlast, can_setstep, has_step, can_setlength
+using Base: OneTo
 
 
 
 include("mutate.jl")
 include("find.jl")
 include("range_interface.jl")
+include("promotion.jl")
 
 for frange in (mrange, srange)
     @testset "$frange" begin

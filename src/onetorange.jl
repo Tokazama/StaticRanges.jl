@@ -50,6 +50,7 @@ struct OneToSRange{T<:Integer,E} <: OneToRange{T} end
 
 OneToSRange{T}(stop::T) where {T<:Integer} = OneToSRange{T,max(zero(T), stop)}()
 OneToSRange(stop::T) where {T<:Integer} = OneToSRange{T,max(zero(T), stop)}()
+OneToSRange{T}(r::OneTo) where {T} = OneToSRange{T}(T(last(r)))
 
 function Base.getproperty(r::OneToSRange, s::Symbol)
     if s === :stop
@@ -78,12 +79,13 @@ Base.last(r::OneToMRange) = getfield(r, :stop)
 function OneToMRange{T}(r::AbstractRange) where {T<:Integer}
     first(r) == 1 || (Base.@_noinline_meta; throw(ArgumentError("first element must be 1, got $(first(r))")))
     step(r)  == 1 || (Base.@_noinline_meta; throw(ArgumentError("step must be 1, got $(step(r))")))
-    return MOneTo(max(zero(T), last(r)))
+    return OneToMRange(max(zero(T), last(r)))
 end
-OneToMRange{T}(r::Union{OneToRange{T},OneTo{T}}) where {T<:Integer} = r
-OneToMRange{T}(r::Union{OneToRange,OneTo}) where {T<:Integer} = OneTo{T}(last(r))
+OneToMRange{T}(r::OneToRange{T}) where {T<:Integer} = r
+OneToMRange{T}(r::OneToRange) where {T<:Integer} = OneTo{T}(last(r))
 OneToMRange(stop::T) where {T<:Integer} = OneToMRange{T}(stop)
 OneToMRange(r::AbstractRange{T}) where {T<:Integer} = OneToMRange{T}(r)
+#OneToMRange{T}(r::OneTo) where {T} = OneToMRange{T}(T(last(r)))
 
 Base.show(io::IO, r::OneToRange) = print(io, typeof(r).name, "(", last(r), ")")
 
