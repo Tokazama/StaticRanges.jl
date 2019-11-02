@@ -22,8 +22,6 @@ for (F,f) in ((:M,:m), (:S,:s))
             return $(_frange)(start, step, stop, length)
         end
 
-        $(_frange)(start, step, stop, length) = $(_frange)(start, step, stop, length)
-
         # Range from start to stop: range(a, [step=s,] stop=b), no length
         $(_frange)(start, step,      stop, ::Nothing) = $(fcolon)(start, step, stop)
         $(_frange)(start, ::Nothing, stop, ::Nothing) = $(fcolon)(start, stop)
@@ -141,9 +139,7 @@ for (F,f) in ((:M,:m), (:S,:s))
 
         function $(_frange)(start::T, ::Nothing, stop::T, len::Integer) where {T<:IEEEFloat}
             len < 2 && return $(flinspace1)(T, start, stop, len)
-            if start == stop
-                return $(stepfrangelen_hp)(T, start, zero(T), 0, len, 1)
-            end
+            start == stop && $(stepfrangelen_hp)(T, start, zero(T), 0, len, 1)
             # Attempt to find exact rational approximations
             start_n, start_d = rat(start)
             stop_n, stop_d = rat(stop)

@@ -11,16 +11,22 @@ include("promotion.jl")
 
 for frange in (mrange, srange)
     @testset "$frange" begin
-        #= cannot infer a static parameter from construction
-        @testset "colon" begin
-            @inferred(frange(10, step=1, stop=0))
-            @inferred(frange(1, step=.2, stop=2))
-            @inferred(frange(1., step=.2, stop=2.))
-            @inferred(frange(2, step=-.2, stop=1))
-            @inferred(frange(1, 0))
-            @inferred(frange(0.0, -0.5))
+
+        @test_throws ArgumentError frange(1)
+        @test_throws ArgumentError frange(1, step=1)
+        @test_throws ArgumentError frange(nothing)
+        @test_throws ArgumentError frange(nothing, length=1)
+        if frange == mrange
+            # cannot infer a static parameter from construction
+            @testset "colon" begin
+                @inferred(frange(10, step=1, stop=0))
+                @inferred(frange(1, step=.2, stop=2))
+                @inferred(frange(1., step=.2, stop=2.))
+                @inferred(frange(2, step=-.2, stop=1))
+                @inferred(frange(1, 0))
+                @inferred(frange(0.0, -0.5))
+            end
         end
-        =#
         @testset "indexing" begin
             L32 = frange(Int32(1), stop=Int32(4), length=4)
             L64 = frange(Int64(1), stop=Int64(4), length=4)
