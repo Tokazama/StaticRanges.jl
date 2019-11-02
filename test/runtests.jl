@@ -16,6 +16,7 @@ for frange in (mrange, srange)
         @test_throws ArgumentError frange(1, step=1)
         @test_throws ArgumentError frange(nothing)
         @test_throws ArgumentError frange(nothing, length=1)
+        @test_throws ArgumentError frange(1, step=1, stop=1, length=1)
         if frange == mrange
             # cannot infer a static parameter from construction
             @testset "colon" begin
@@ -700,6 +701,53 @@ for frange in (mrange, srange)
             @test sort(frange(-3, 3), by=abs) == [0,-1,1,-2,2,-3,3]
             @test partialsort(frange(1, 10), 4) == 4
         end
+
+        if frange == mrange
+            # this works with `srange` but takes way too long to run.
+            function loop_range_values(::Type{T}) where T
+                for a = -5:25,
+                    s = [-5:-1; 1:25; ],
+                    d = 1:25,
+                    n = -1:15
+
+                    denom = convert(T, d)
+                    strt = convert(T, a)/denom
+                    Δ     = convert(T, s)/denom
+                    stop  = convert(T, (a + (n - 1) * s)) / denom
+                    vals  = T[a:s:(a + (n - 1) * s); ] ./ denom
+                    r = strt:Δ:stop
+                    @test [r;] == vals
+                    @test [frange(strt, stop=stop, length=length(r));] == vals
+                    n = length(r)
+                    @test [r[1:n];] == [r;]
+                    @test [r[2:n];] == [r;][2:end]
+                    @test [r[1:3:n];] == [r;][1:3:n]
+                    @test [r[2:2:n];] == [r;][2:2:n]
+                    @test [r[n:-1:2];] == [r;][n:-1:2]
+                    @test [r[n:-2:1];] == [r;][n:-2:1]
+                end
+            end
+
+            @testset "issue #7420 for type $T" for T = (Float32, Float64,) # BigFloat),
+                loop_range_values(T)
+            end
+        end
+
+        @testset "overflow in length" begin
+            Tset = Int === Int64 ? (Int,UInt,Int128,UInt128) :
+                                   (Int,UInt,Int64,UInt64,Int128, UInt128)
+            for T in Tset
+                @test_throws OverflowError length(zero(T):typemax(T))
+                @test_throws OverflowError length(typemin(T):typemax(T))
+                @test_throws OverflowError length(zero(T):one(T):typemax(T))
+                @test_throws OverflowError length(typemin(T):one(T):typemax(T))
+                if T <: Signed
+                    @test_throws OverflowError length(-one(T):typemax(T)-one(T))
+                    @test_throws OverflowError length(-one(T):one(T):typemax(T)-one(T))
+                end
+            end
+        end
+
     end
 end
 
@@ -723,45 +771,6 @@ end
 end
 # TODO
 
-
-        function loop_range_values(::Type{T}) where T
-            for a = frange(-5, 25)
-                s = [-5:-1; 1:25; ],
-                d = frange(1, 25),
-                n = frange(-1, 15)
-
-                denom = convert(T, d)
-                strt = convert(T, a)/denom
-                Δ     = convert(T, s)/denom
-                stop  = convert(T, (a + (n - 1) * s)) / denom
-                vals  = T[a:s:(a + (n - 1) * s); ] ./ denom
-                r = strt:Δ:stop
-                @test [r;] == vals
-                @test [range(strt, stop=stop, length=length(r));] == vals
-                n = length(r)
-                @test [r[1:n];] == [r;]
-                @test [r[2:n];] == [r;][2:end]
-                @test [r[1:3:n];] == [r;][1:3:n]
-                @test [r[2:2:n];] == [r;][2:2:n]
-                @test [r[n:-1:2];] == [r;][n:-1:2]
-                @test [r[n:-2:1];] == [r;][n:-2:1]
-            end
-        end
-
-@testset "overflow in length" begin
-    Tset = Int === Int64 ? (Int,UInt,Int128,UInt128) :
-                           (Int,UInt,Int64,UInt64,Int128, UInt128)
-    for T in Tset
-        @test_throws OverflowError length(zero(T):typemax(T))
-        @test_throws OverflowError length(typemin(T):typemax(T))
-        @test_throws OverflowError length(zero(T):one(T):typemax(T))
-        @test_throws OverflowError length(typemin(T):one(T):typemax(T))
-        if T <: Signed
-            @test_throws OverflowError length(-one(T):typemax(T)-one(T))
-            @test_throws OverflowError length(-one(T):one(T):typemax(T)-one(T))
-        end
-    end
-end
 
 
 @testset "issue #7420 for type $T" for T = (Float32, Float64,) # BigFloat),
