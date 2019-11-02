@@ -26,6 +26,8 @@ for (frange, oneto) in ((mrange, OneToMRange),(srange ,OneToSRange))
                 @test i == (k += 1)
             end
             @test intersect(r, oneto(2)) == oneto(2)
+            @test intersect(r, OneTo(2)) == oneto(2)
+            @test intersect(OneTo(2), r) == oneto(2)
             @test intersect(r, 0:5) == 1:3
             @test intersect(r, 2) == intersect(2, r) == frange(2, 2)
             @test findall(in(r), r) == findall(in(frange(1, length(r))), r) ==
@@ -35,6 +37,15 @@ for (frange, oneto) in ((mrange, OneToMRange),(srange ,OneToSRange))
             str = String(take!(io))
             @test str == "$(oneto)(3)"
         end
+
+        @test oneto{Int}(oneto(10)) == oneto(10)
+        @test oneto{UInt}(oneto(10)) == oneto(UInt(10))
+        @test intersect(oneto(2), OneTo(2)) == oneto(2)
+        @test intersect(OneTo(2), oneto(2)) == oneto(2)
+
+        @test issubset(oneto(2), OneTo(2)) == true
+        @test issubset(OneTo(2), oneto(2)) == true
+
         let r = oneto(7)
             @test findall(in(frange(2, (length(r) - 1))), r) == frange(2, (length(r) - 1))
             @test findall(in(r), frange(2, (length(r) - 1))) == frange(1, (length(r) - 2))

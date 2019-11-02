@@ -98,7 +98,7 @@ for (F,f) in ((:M,:m), (:S,:s))
     @eval begin
         Base.:(-)(r::$(LR)) = $(LR)(-firs(r), -last(r), length(r))
 
-       $(LR){T}(r::$(LR){T}) where {T} = r
+        $(LR){T}(r::$(LR){T}) where {T} = r
         #$(LR){T}(r::AbstractRange) where {T} = $(LR){T}(first(r), last(r), length(r))
         $(LR)(r::AbstractRange{T}) where {T} = $(LR){T}(r)
 
