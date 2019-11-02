@@ -108,6 +108,7 @@ end
 for S in (:OneTo,:UnitRange,:StepRange,:LinRange,:StepRangeLen)
     for M in (:OneToMRange,:UnitMRange,:StepMRange,:LinMRange,:StepMRangeLen)
         @eval begin
+            #=
             function Base.promote_rule(a::Type{A}, b::Type{B}) where {A<:$S,B<:$M}
                 return promote_rule(lower_rangetype(a), b)
             end
@@ -115,6 +116,9 @@ for S in (:OneTo,:UnitRange,:StepRange,:LinRange,:StepRangeLen)
             function Base.promote_rule(b::Type{B}, a::Type{A}) where {A<:$S,B<:$M}
                 return promote_rule(lower_rangetype(a), b)
             end
+            =#
+            Base.promote_rule(a::Type{<:$S}, b::Type{<:$M}) = promote_rule(lower_rangetype(a), b)
+            Base.promote_rule(b::Type{<:$M}, a::Type{<:$S}) = promote_rule(lower_rangetype(a), b)
         end
     end
 end
@@ -212,6 +216,7 @@ Base.promote_rule(::Type{<:UnitSRange{T1}}, ::Type{<:LinSRange{T2}}) where {T1,T
 ### OneToRange
 ###
 
+Base.promote_rule(a::Type{LinRange{T}}, ::Type{OR}) where {T,OR<:OneToMRange} = promote_rule(LinMRange{T},LinMRange{eltype(OR)})
 Base.promote_rule(a::Type{<:OneToSRange{T1,Any}}, b::Type{<:OneToSRange{T2,Any}}) where {T1,T2} = OneToSRange{promote_type(T1,T2)}
 Base.promote_rule(a::Type{OneToMRange{T1}}, b::Type{OneToMRange{T2}}) where {T1,T2} = OneToMRange{promote_type(T1,T2)}
 

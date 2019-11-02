@@ -46,11 +46,20 @@ Base.mod(i::Integer, r::OneToRange) = Base.mod1(i, last(r))
 
 A static range that parallels `OneTo` in behavior.
 """
-struct OneToSRange{T<:Integer,E} <: OneToRange{T} end
+struct OneToSRange{T<:Integer,E} <: OneToRange{T}
+    OneToSRange{T}(stop::T) where {T} = new{T,max(zero(T), stop)}()
+end
 
-OneToSRange{T}(stop::T) where {T<:Integer} = OneToSRange{T,max(zero(T), stop)}()
-OneToSRange(stop::T) where {T<:Integer} = OneToSRange{T,max(zero(T), stop)}()
-OneToSRange{T}(r::OneTo) where {T} = OneToSRange{T}(T(last(r)))
+function OneToSRange{T}(r::AbstractRange) where {T<:Integer}
+    first(r) == 1 || (Base.@_noinline_meta; throw(ArgumentError("first element must be 1, got $(first(r))")))
+    step(r)  == 1 || (Base.@_noinline_meta; throw(ArgumentError("step must be 1, got $(step(r))")))
+    return OneToSRange(last(r))
+end
+OneToSRange{T,<:Any}(r::OneToSRange{T}) where {T<:Integer} = r
+OneToSRange{T}(r::OneToRange) where {T<:Integer} = OneToSRange{T}(last(r))
+OneToSRange(stop::T) where {T<:Integer} = OneToSRange{T}(stop)
+OneToSRange{T}(stop) where {T} = OneToSRange{T}(T(stop))
+OneToSRange(r::AbstractRange{T}) where {T<:Integer} = OneToSRange{T}(r)
 
 function Base.getproperty(r::OneToSRange, s::Symbol)
     if s === :stop
@@ -79,10 +88,10 @@ Base.last(r::OneToMRange) = getfield(r, :stop)
 function OneToMRange{T}(r::AbstractRange) where {T<:Integer}
     first(r) == 1 || (Base.@_noinline_meta; throw(ArgumentError("first element must be 1, got $(first(r))")))
     step(r)  == 1 || (Base.@_noinline_meta; throw(ArgumentError("step must be 1, got $(step(r))")))
-    return OneToMRange(max(zero(T), last(r)))
+    return OneToMRange(last(r))
 end
-OneToMRange{T}(r::OneToRange{T}) where {T<:Integer} = r
-OneToMRange{T}(r::OneToRange) where {T<:Integer} = OneTo{T}(last(r))
+OneToMRange{T}(r::OneToMRange{T}) where {T<:Integer} = r
+OneToMRange{T}(r::OneToRange) where {T<:Integer} = OneToMRange{T}(last(r))
 OneToMRange(stop::T) where {T<:Integer} = OneToMRange{T}(stop)
 OneToMRange(r::AbstractRange{T}) where {T<:Integer} = OneToMRange{T}(r)
 #OneToMRange{T}(r::OneTo) where {T} = OneToMRange{T}(T(last(r)))

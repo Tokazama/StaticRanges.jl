@@ -8,6 +8,7 @@ include("mutate.jl")
 include("find.jl")
 include("range_interface.jl")
 include("promotion.jl")
+include("onetorange.jl")
 
 for frange in (mrange, srange)
     @testset "$frange" begin
@@ -748,6 +749,37 @@ for frange in (mrange, srange)
             end
         end
 
+        # comparing and hashing ranges
+        @testset "comparing and hashing ranges" begin
+            Rs = AbstractRange[]
+            for r in (frange(1, 1),
+                      frange(1, step=1, stop=1),
+                      frange(1, 2),
+                      frange(1, step=1, stop=2),
+                      map(Int32, frange(1, step=3, stop=17)),
+                      map(Int64, frange(1, step=3, stop=17)),
+                      frange(1, 0),
+                      frange(1, step=-1, stop=0),
+                      frange(17, 0, step=-3),
+                      frange(0.0, step=0.1, stop=1.0),
+                      map(Float32, frange(0.0, step=0.1, stop=1.0)),
+                      map(Float32, ifelse(frange == mrange, LinMRange(0.0, 1.0, 11), LinSRange(0.0, 1.0, 11))),
+                      frange(1.0, step=eps(), stop=1.0) .+ 10eps(),
+                      frange(9007199254740990., step=1.0, stop=9007199254740994),
+                      frange(0, stop=1, length=20),
+                      map(Float32, frange(0, stop=1, length=20)))
+                local r
+                ar = Vector(r)
+                @test r == ar
+                @test isequal(r,ar)
+                @test hash(r) == hash(ar)
+                for s in Rs
+                    as = Vector(s)
+                    @test isequal(r,s) == (hash(r)==hash(s))
+                    @test (r==s) == (ar==as)
+                end
+            end
+        end
     end
 end
 
@@ -767,40 +799,6 @@ end
 
 #=
 
-
-end
-# TODO
-
-
-
-@testset "issue #7420 for type $T" for T = (Float32, Float64,) # BigFloat),
-    loop_range_values(T)
-end
-
-
-
-
-
-# comparing and hashing ranges
-@testset "comparing and hashing ranges" begin
-    Rs = AbstractRange[1:1, 1:1:1, 1:2, 1:1:2,
-                       map(Int32,1:3:17), map(Int64,1:3:17), 1:0, 1:-1:0, 17:-3:0,
-                       0.0:0.1:1.0, map(Float32,0.0:0.1:1.0),map(Float32,LinRange(0.0, 1.0, 11)),
-                       1.0:eps():1.0 .+ 10eps(), 9007199254740990.:1.0:9007199254740994,
-                       range(0, stop=1, length=20), map(Float32, range(0, stop=1, length=20))]
-    for r in Rs
-        local r
-        ar = Vector(r)
-        @test r == ar
-        @test isequal(r,ar)
-        @test hash(r) == hash(ar)
-        for s in Rs
-            as = Vector(s)
-            @test isequal(r,s) == (hash(r)==hash(s))
-            @test (r==s) == (ar==as)
-        end
-    end
-end
 
 #@test 1.0:(.3-.1)/.1 == 1.0:2.0
 
