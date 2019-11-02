@@ -4,6 +4,7 @@ using Base: OneTo
 
 
 
+include("twiceprecision.jl")
 include("mutate.jl")
 include("find.jl")
 include("range_interface.jl")
@@ -734,6 +735,10 @@ end
 end
 
 
+@testset "AbstractStepRangeLen" begin
+    @test StaticRanges.floatmrange(1.0, 1.0, 10, 2.0) == Base.floatrange(1.0, 1.0, 10, 2.0)
+    @test StaticRanges.floatsrange(1.0, 1.0, 10, 2.0) == Base.floatrange(1.0, 1.0, 10, 2.0)
+end
 #=
 
 

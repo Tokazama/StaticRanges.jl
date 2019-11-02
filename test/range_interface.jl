@@ -71,6 +71,7 @@
                 end
                 @testset "lendiv-property" begin
                     @test getproperty(r, :lendiv) == 9
+                    @test StaticRanges.lendiv(r) == 9
                 end
                 @testset "len-property" begin
                     @test getproperty(r, :len) == 10

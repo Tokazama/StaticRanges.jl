@@ -13,4 +13,9 @@ using StaticRanges: TPVal
 
     @test eltype(tpval) == eltype(tp)
     @test eltype(typeof(tpval)) == eltype(tp)
+
+    @test StaticRanges.tp2val(1) == 1
+    @test StaticRanges.tp2val(tp) == tpval
+    @test Int(tpval) == Int(tp)
+    @test convert(Int, tpval) == Int(tp)
 end
