@@ -116,8 +116,6 @@ can_setlength(::Type{T}) where {T} = false
 can_setlength(::Type{T}) where {T<:LinMRange} = true
 can_setlength(::Type{T}) where {T<:StepMRangeLen} = true
 
-
-
 """
     setlength!(x, len)
 
@@ -164,3 +162,26 @@ function setoffset!(r::StepMRangeLen, val::Int)
     return r
 end
 setoffset!(r::StepMRangeLen, val) = setoffset!(r, Int(val))
+
+"""
+    isforward(x) -> Bool
+
+Returns `true` if `x` is sorted forward.
+"""
+isforward(x) = issorted(x)
+isforward(::ForwardOrdering) = true
+isforward(::Ordering) = false
+isforward(::Union{AbstractUnitRange,LinRange,AbstractLinRange}) = true
+isforward(x::AbstractRange) = step(x) > 0
+
+"""
+    isreverse(x) -> Bool
+
+Returns `true` if `x` is sorted in reverse.
+"""
+isreverse(x) = issorted(x, order=Reverse)
+isreverse(::ReverseOrdering) = true
+isreverse(::Ordering) = false
+isreverse(::Union{AbstractUnitRange,LinRange,AbstractLinRange}) = false
+isreverse(x::AbstractRange) = step(x) < 0
+

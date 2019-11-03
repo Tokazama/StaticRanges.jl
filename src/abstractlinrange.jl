@@ -23,7 +23,7 @@ struct LinSRange{T,B,E,L,D} <: AbstractLinRange{T}
             start == stop || throw(ArgumentError("srange($start, stop=$stop, length=$len): endpoints differ"))
             return new{T,start, stop, 1, 1}()
         end
-        return new{T, start, stop, len, max(len-1,1)}()
+        return new{T, T(start), T(stop), len, max(len-1,1)}()
     end
 end
 

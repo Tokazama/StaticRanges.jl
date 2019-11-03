@@ -87,7 +87,7 @@ end
 ### AbstractLinRange
 ###
 function Base.unsafe_getindex(r::AbstractLinRange, i::Integer)
-    return Base.lerpi(i-1, lendiv(r), first(r), last(r))
+    return Base.lerpi(i-1, r.lendiv, r.start, r.stop)
 end
 
 function Base.getindex(r::AbstractLinRange, s::OrdinalRange{<:Integer})
