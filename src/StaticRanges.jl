@@ -40,13 +40,10 @@ include("abstractsteprange.jl")
 include("abstractlinrange.jl")
 include("abstractsteprangelen.jl")
 
-include("traits.jl")
 const SRange{T} = Union{OneToSRange{T},UnitSRange{T},StepSRange{T},LinSRange{T},StepSRangeLen{T}}
-
-isstatic(::Type{T}) where {T<:SRange} = true
-
 const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},StepMRangeLen{T}}
 
+include("traits.jl")
 include("promotion.jl")
 include("range.jl")
 #include("initialize.jl")

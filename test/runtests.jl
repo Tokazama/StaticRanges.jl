@@ -1,8 +1,7 @@
 using Test, StaticRanges, Dates
-using StaticRanges: can_setfirst, can_setlast, can_setstep, has_step, can_setlength
+using StaticRanges: can_setfirst, can_setlast, can_setstep, has_step, can_setlength,
+    isstatic, isforward, isreverse
 using Base: OneTo
-
-
 
 include("twiceprecision.jl")
 include("mutate.jl")

@@ -27,7 +27,7 @@ end
                     (StepMRangeLen(1, 3, 5), StepSRangeLen(1, 3, 5), StepRangeLen(1, 3, 5))
                    )
         @testset "Type: $(typeof(b))" begin
-            for i in (m[1] - step(m), m[1], m[2], m[3], m[4], m[5], m[5] + step(m))
+            for i in (m[1] - step(m), m[1], m[2], m[3], m[4], m[5], m[5] + step(m), m[5] + 2step(m))
                 @testset "Number: $i" begin
                     for f in (<, >, <=, >=, ==)
                         @testset "Comparison: $f" begin

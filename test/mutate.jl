@@ -1,4 +1,6 @@
 
+using Base.Order
+
 @testset "Mutable interface" begin
 
     @testset "can_setfirst" begin
@@ -103,5 +105,28 @@
     @testset "setoffset!" begin
         @test @inferred(setoffset!(StepMRangeLen(1, 1, 10), 2)) == StepMRangeLen(1, 1, 10, 2)
         @test @inferred(setoffset!(StepMRangeLen(1, 1, 10), UInt32(2))) == StepMRangeLen(1, 1, 10, 2)
+    end
+
+    @testset "isstatic" begin
+        @test @inferred(isstatic(Any[])) == false
+        @test @inferred(isstatic(UnitSRange(1, 10))) == true
+    end
+
+    @testset "isstatic" begin
+        @test @inferred(isstatic(Any[])) == false
+        @test @inferred(isstatic(UnitSRange(1, 10))) == true
+    end
+
+    @testset "isforward" begin
+        @test @inferred(isforward([1, 2, 3])) == true
+        @test @inferred(isforward(Forward)) == true
+        @test @inferred(isforward(Reverse)) == false
+        @test @inferred(isforward(UnitSRange(1, 10))) == true
+    end
+    @testset "isreverse" begin
+        @test @inferred(isreverse([1, 2, 3])) == false
+        @test @inferred(isreverse(Forward)) == false
+        @test @inferred(isreverse(Reverse)) == true
+        @test @inferred(isreverse(UnitSRange(1, 10))) == false
     end
 end
