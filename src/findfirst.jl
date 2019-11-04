@@ -12,23 +12,23 @@ function Base.findfirst(
 end
 
 function Base.findfirst(
-    f::Fix2{Union{typeof(<),typeof(isless)}},
+    f::Fix2{<:Union{typeof(<),typeof(isless)}},
     r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen}
    )
     if isforward(r)
         return first(r) < f.x ? firstindex(r) : nothing
     elseif isreverse(r)
-        if last(r) < f.x || f.x < first(r)
+        idx = unsafe_findvalue(f.x, r)
+        if firstindex(r) > idx
+            return 1
+        elseif lastindex(r) < idx
             return nothing
-        else 
-            idx = unsafe_findvalue(f.x, r)
-            if f(@inbounds(r[idx]))
-                return idx
-            elseif idx != firstindex(r)
-                return idx - 1
-            else
-                return nothing
-            end
+        elseif f(@inbounds(r[idx]))
+            return idx
+        elseif idx != lastindex(r)
+            return idx + 1
+        else
+            return nothing
         end
     else  # step(r) == 0
         return nothing  # FIXME on empty ranges
