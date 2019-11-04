@@ -1,13 +1,4 @@
-
-function findvalue(val, r::AbstractRange)
-    idx = unsafe_findvalue(val, r)
-    @boundscheck if (firstindex(r) > idx > lastindex(r)) || @inbounds(r[idx] == val)
-        return nothing
-    end
-    return n
-end
-
-# usnafe_findvalue doesn't confirm that the integer is in bounds or r[idx] == val
+# unsafe_findvalue doesn't confirm that the integer is in bounds or r[idx] == val
 unsafe_findvalue(val, r::Union{OneToRange,OneTo}) = round(Integer, val)
 
 function unsafe_findvalue(val, r::Union{StaticUnitRange,UnitRange})
@@ -28,4 +19,8 @@ Base.in(x::Integer, r::OneToRange{<:Integer}) = (1 <= x) & (x <= last(r))
 
 function Base.count(f::Function, r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
     return length(findall(f, r))
+end
+
+function Base.filter(f::Function, r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
+    return @inbounds(r[findall(f, r)])
 end
