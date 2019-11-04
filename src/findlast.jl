@@ -1,9 +1,13 @@
 function Base.findlast(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
-    idx = unsafe_findvalue(f.x, r)
-    @boundscheck if (firstindex(r) > idx || idx > lastindex(r)) || @inbounds(!f(r[idx]))
+    if isempty(r)
         return nothing
+    else
+        idx = unsafe_findvalue(f.x, r)
+        @boundscheck if (firstindex(r) > idx || idx > lastindex(r)) || @inbounds(!f(r[idx]))
+            return nothing
+        end
+        return idx
     end
-    return idx
 end
 
 function Base.findlast(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
@@ -23,7 +27,7 @@ function Base.findlast(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r::Union{OneT
     elseif isreverse(r)
         return last(r) < f.x ? lastindex(r) : nothing
     else  # step(r) == 0
-        return nothing  # FIXME on empty ranges
+        return nothing
     end
 end
 
@@ -44,7 +48,7 @@ function Base.findlast(f::Fix2{typeof(<=)}, r::Union{OneToRange,StaticUnitRange,
     elseif isreverse(r)
         return f(last(r)) ? lastindex(r) : nothing
     else  # step(r) == 0
-        return nothing  # FIXME on empty ranges
+        return nothing
     end
 end
 
@@ -65,7 +69,7 @@ function Base.findlast(f::Fix2{typeof(>)}, r::Union{OneToRange,StaticUnitRange,A
             end
         end
     else  # step(r) == 0
-        return nothing  # FIXME on empty ranges
+        return nothing
     end
 end
 
@@ -89,6 +93,6 @@ function Base.findlast(
             end
         end
     else  # step(r) == 0
-        return nothing  # FIXME on empty ranges
+        return nothing
     end
 end

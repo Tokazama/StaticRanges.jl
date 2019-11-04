@@ -22,5 +22,6 @@ function Base.count(f::Function, r::Union{OneToRange,StaticUnitRange,AbstractLin
 end
 
 function Base.filter(f::Function, r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
+    isempty(r) && return Int[]
     return @inbounds(r[findall(f, r)])
 end

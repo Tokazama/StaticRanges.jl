@@ -96,7 +96,7 @@ for (F,f) in ((:M,:m), (:S,:s))
     frange = Symbol(f, :range)
 
     @eval begin
-        Base.:(-)(r::$(LR)) = $(LR)(-firs(r), -last(r), length(r))
+        Base.:(-)(r::$(LR)) = $(LR)(-first(r), -last(r), length(r))
 
         $(LR){T}(r::$(LR){T}) where {T} = r
         #$(LR){T}(r::AbstractRange) where {T} = $(LR){T}(first(r), last(r), length(r))
@@ -105,8 +105,8 @@ for (F,f) in ((:M,:m), (:S,:s))
         Base.reverse(r::$(LR)) = $(LR)(last(r), first(r), length(r))
 
         function Base.:(-)(r1::$(LR){T}, r2::$(LR){T}) where T
-            len = _len(r1)
-            (len == _len(r2) ||
+            len = length(r1)
+            (len == length(r2) ||
              throw(DimensionMismatch("argument dimensions must match")))
             return $(LR){T}(
                 convert(T, -(first(r1), first(r2))),
@@ -116,8 +116,8 @@ for (F,f) in ((:M,:m), (:S,:s))
         end
 
         function Base.:(+)(r1::$(LR){T}, r2::$(LR){T}) where T
-            len = _len(r1)
-            (len == _len(r2) ||
+            len = length(r1)
+            (len == length(r2) ||
              throw(DimensionMismatch("argument dimensions must match")))
             return $(LR){T}(
                 convert(T, +(first(r1), first(r2))),

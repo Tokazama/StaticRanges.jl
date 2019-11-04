@@ -720,16 +720,22 @@ end
 
 include("intersect.jl")
 
-@testset "LinMRange" begin
-    # issue #20380
-    let r = LinMRange(1,4,4)
-        @test isa(r[1:4], LinMRange)
-    end
-end
-
-@testset "LinSRange" begin
-    let r = LinSRange(1,4,4)
-        @test isa(r[OneToSRange(4)], LinMRange)
+@testset "LinRange" begin
+    for R in (LinMRange,LinSRange)
+        @testset "LinMRange" begin
+            r = R(1, 4, 4)
+            b = LinRange(1, 4, 4)
+            @test reverse(r) == reverse(b)
+            @test R(r) == r
+            @test R(1:4) == r
+            @test -(r) == -(b)
+            @test -(r, R(2, 5, 4)) == -(b, LinRange(2, 5, 4))
+            @test +(r, R(2, 5, 4)) == +(b, LinRange(2, 5, 4))
+            # issue #20380
+            let r = R(1,4,4)
+                @test isa(r[UnitSRange(1, 4)], StaticRanges.AbstractLinRange)
+            end
+        end
     end
 end
 

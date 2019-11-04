@@ -168,7 +168,7 @@ Returns `true` if `x` is sorted forward.
 isforward(x) = issorted(x)
 isforward(::ForwardOrdering) = true
 isforward(::Ordering) = false
-isforward(::Union{AbstractUnitRange,LinRange,AbstractLinRange}) = true
+isforward(::AbstractUnitRange) = true
 isforward(x::AbstractRange) = step(x) > 0
 
 """
@@ -179,6 +179,6 @@ Returns `true` if `x` is sorted in reverse.
 isreverse(x) = issorted(x, order=Reverse)
 isreverse(::ReverseOrdering) = true
 isreverse(::Ordering) = false
-isreverse(::Union{AbstractUnitRange,LinRange,AbstractLinRange}) = false
+isreverse(::AbstractUnitRange) = false
 isreverse(x::AbstractRange) = step(x) < 0
 

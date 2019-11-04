@@ -65,4 +65,40 @@ end
             end
         end
     end
+
+    @testset "Find with empty range" begin
+        for i in (0, 1)
+            @testset "Number: $i" begin
+                for f in (<, >, <=, >=, ==)
+                    m, s, b = LinMRange(1, 1, 0), LinSRange(1, 1, 0), LinRange(1, 1, 0)
+                    @testset "findfirst" begin
+                        @test findfirst(f(i), m) == findfirst(f(i), s)
+                        @test findfirst(f(i), s) == findfirst(f(i), s)
+                    end
+
+                    @testset "findlast" begin
+                        @test findlast(f(i), m) == findlast(f(i), b)
+                        @test findlast(f(i), s) == findlast(f(i), b)
+                    end
+
+                    @testset "findall" begin
+                        @test findall(f(i), m) == findall(f(i), b)
+                        @test findall(f(i), s) == findall(f(i), b)
+                    end
+                    @testset "count" begin
+                        @test count(f(i), m) == count(f(i), b)
+                        @test count(f(i), s) == count(f(i), b)
+                    end
+
+                    # FIXME - filter AbstractLinRange doesn't come out as
+                    # expected because getindex results in inexact values
+                    # in both base and AbstractLinRange.
+                    @testset "filter" begin
+                        @test filter(f(i), m) == filter(f(i), b)
+                        @test filter(f(i), s) == filter(f(i), b)
+                    end
+                end
+            end
+        end
+    end
 end
