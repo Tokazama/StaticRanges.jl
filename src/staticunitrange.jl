@@ -29,6 +29,8 @@ struct UnitSRange{T,F,L} <: StaticUnitRange{T}
     end
 end
 
+UnitSRange{T}(r::AbstractUnitRange) where {T<:Real} = UnitSRange{T}(first(r), last(r))
+
 Base.first(::UnitSRange{T,F,L}) where {T,F,L} = F
 Base.last(::UnitSRange{T,F,L}) where {T,F,L} = L
 
@@ -58,6 +60,8 @@ mutable struct UnitMRange{T<:Real} <: StaticUnitRange{T}
     end
 end
 
+UnitMRange{T}(r::AbstractUnitRange) where {T<:Real} = UnitMRange{T}(first(r), last(r))
+
 Base.first(r::UnitMRange) = getfield(r, :start)
 Base.last(r::UnitMRange) = getfield(r, :stop)
 
@@ -67,7 +71,6 @@ for (F,f) in ((:M,:m), (:S,:s))
     @eval begin
         Base.AbstractUnitRange{T}(r::R) where {T,R<:$(UR)} = $(UR){T}(r)
         $(UR)(start::T, stop::T) where {T<:Real} = $(UR){T}(start, stop)
-        $(UR){T}(r::AbstractUnitRange) where {T<:Real} = $(UR){T}(first(r), last(r))
         $(UR)(r::AbstractUnitRange) = $(UR)(first(r), last(r))
 
         $(UR){T}(r::$(UR){T}) where {T<:Real} = r

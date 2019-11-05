@@ -37,6 +37,7 @@ for frange in (mrange, srange)
         #@test intersect(0:6:24, 6+0*(0:4:24)) == 6:6:6
         #@test intersect(12+0*(0:6:24), 0:4:24) == AbstractRange(12, 0, 5)
         #@test isempty(intersect(6+0*(0:6:24), 0:4:24))
+        @test intersect(frange(2, step=1, stop=1), frange(2, step=1, stop=1)) == intersect(range(2, step=1, stop=1), range(2, step=1, stop=1))
         @test intersect(frange(-10, step=3, stop=24), frange(-10, step=3, stop=24)) == -10:3:23
         @test isempty(intersect(frange(-11, step=3, stop=24), frange(-10, step=3, stop=24)))
         @test intersect(frange(typemin(Int), step=2, stop=typemax(Int)), 1:10) == 2:2:10

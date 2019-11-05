@@ -8,19 +8,32 @@ bstyle = Base.Broadcast.DefaultArrayStyle{1}()
                        (LinMRange(1, 10, 10),    LinRange(1, 10, 10),    LinSRange(1, 10, 10)),
                        (StepMRangeLen(1., 1., 10), StepRangeLen(1., 1., 10), StepSRangeLen(1., 1., 10))
                       )
-        @test broadcasted(bstyle, +, mr) == broadcast(+, sr) == broadcast(+, br)
-        @test broadcasted(bstyle, -, mr) == broadcast(-, sr) == broadcast(-, br)
+        @test broadcasted(bstyle, +, mr) == broadcast(+, br)
+        @test broadcasted(bstyle, +, sr) == broadcast(+, br)
 
-        @test broadcasted(bstyle, +, 1, mr) == broadcast(+, 1, sr) == broadcast(+, 1, br)
-        @test broadcasted(bstyle, -, 1, mr) == broadcast(-, 1, sr) == broadcast(-, 1, br)
+        @test broadcasted(bstyle, -, mr) ==  broadcast(-, br)
+        @test broadcasted(bstyle, -, sr) ==  broadcast(-, br)
 
-        @test broadcasted(bstyle, +, mr, 1) == broadcast(+, sr, 1) == broadcast(+, br, 1)
-        @test broadcasted(bstyle, -, mr, 1) == broadcast(-, sr, 1) == broadcast(-, br, 1)
+        @test broadcasted(bstyle, +, 1, mr) == broadcast(+, 1, br)
+        @test broadcasted(bstyle, +, 1, sr) == broadcast(+, 1, br)
 
-        @test broadcasted(bstyle, *, 1, mr) == broadcast(*, 1, sr) == broadcast(*, 1, br)
-        @test broadcasted(bstyle, *, mr, 1) == broadcast(*, sr, 1) == broadcast(*, br, 1)
+        @test broadcasted(bstyle, -, 1, mr) == broadcast(-, 1, br)
+        @test broadcasted(bstyle, -, 1, sr) == broadcast(-, 1, br)
 
-        @test broadcasted(bstyle, \, 1, mr) == broadcast(\, 1, sr) == broadcast(\, 1, br)
+        @test broadcasted(bstyle, +, mr, 1) == broadcast(+, br, 1)
+        @test broadcasted(bstyle, +, sr, 1) == broadcast(+, br, 1)
+
+        @test broadcasted(bstyle, -, mr, 1)  == broadcast(-, br, 1)
+        @test broadcasted(bstyle, -, sr, 1)  == broadcast(-, br, 1)
+
+        @test broadcasted(bstyle, *, 1, mr) == broadcast(*, 1, br)
+        @test broadcasted(bstyle, *, 1, sr) == broadcast(*, 1, br)
+
+        @test broadcasted(bstyle, *, mr, 1) == broadcast(*, br, 1)
+        @test broadcasted(bstyle, *, sr, 1) == broadcast(*, br, 1)
+
+        @test broadcasted(bstyle, \, 1, mr) == broadcast(\, 1, br)
+        @test broadcasted(bstyle, \, 1, sr) == broadcast(\, 1, br)
 
         @test /(mr, 2) == /(sr, 2) == /(br, 2)
 

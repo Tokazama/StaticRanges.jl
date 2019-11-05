@@ -38,6 +38,7 @@ for (frange, oneto) in ((mrange, OneToMRange),(srange ,OneToSRange))
             show(io, r)
             str = String(take!(io))
             @test str == "$(oneto)(3)"
+            @test in(1, r) == true
         end
 
         @test oneto{Int}(oneto(10)) == oneto(10)

@@ -1,6 +1,6 @@
 using Test, StaticRanges, Dates
 using StaticRanges: can_setfirst, can_setlast, can_setstep, has_step, can_setlength,
-    isstatic, isforward, isreverse
+    isstatic, isforward, isreverse, stephi, steplo, refhi, reflo
 using Base: OneTo
 
 include("twiceprecision.jl")
@@ -20,6 +20,7 @@ include("onetorange.jl")
             @test isa(rfloat, R)
             @test R{Int}(r) === r
             @test R{Float64}(r) == R(1., 10.)
+            @test R(UnitRange(UInt(1), UInt(10))) == R(UInt(1), UInt(10))
             @test first(r) == r.start
             @test last(r) == r.stop
             @test_throws ErrorException r.notfield
@@ -32,11 +33,25 @@ end
         @testset "$R" begin
             r = R(1, 1, 10)
             @test R(1:10) == 1:1:10
+            @test eltype(R(UInt(1), UInt(1), UInt(10))) == UInt
             @test R{Int,Int}(r) === r
             @test eltype(R{UInt,UInt}(r)) == UInt
             @test first(r) == r.start
             @test last(r) == r.stop
             @test_throws ErrorException r.notfield
+        end
+    end
+end
+
+@testset "StepRangeLen" begin
+    for frange in (mrange, srange)
+        @testset "$frange" begin
+            r = frange(1.0, step=1, stop=10.0)
+            rb = range(1.0, step=1, stop=10.0)
+            @test stephi(r) == stephi(r)
+            @test steplo(r) == steplo(r)
+            @test refhi(r) == refhi(r)
+            @test reflo(r) == reflo(r)
         end
     end
 end

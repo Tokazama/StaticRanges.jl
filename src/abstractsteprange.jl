@@ -96,8 +96,6 @@ Base.last(r::StepMRange) = getfield(r, :stop)
 function Base.intersect(r::AbstractUnitRange{<:Integer}, s::AbstractStepRange{<:Integer})
     if isempty(s)
         range(first(r), length=0)
-    elseif step(s) == 0
-        intersect(first(s), r)
     elseif step(s) < 0
         intersect(r, reverse(s))
     else
