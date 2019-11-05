@@ -8,6 +8,7 @@ include("mutate.jl")
 include("find.jl")
 include("range_interface.jl")
 include("promotion.jl")
+include("broadcast.jl")
 include("onetorange.jl")
 
 for frange in (mrange, srange)
@@ -731,6 +732,12 @@ include("intersect.jl")
             @test -(r) == -(b)
             @test -(r, R(2, 5, 4)) == -(b, LinRange(2, 5, 4))
             @test +(r, R(2, 5, 4)) == +(b, LinRange(2, 5, 4))
+
+            @test R(1,1,1) == LinRange(1, 1, 1)
+
+            @test R{Float64}(r) == LinRange{Float64}(r)
+
+            @test_throws ErrorException r.notfield
             # issue #20380
             let r = R(1,4,4)
                 @test isa(r[UnitSRange(1, 4)], StaticRanges.AbstractLinRange)

@@ -4,40 +4,12 @@ Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractStepRangeLen) =
 Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractLinRange) = r
 
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRange)
-    if isstatic(x)
-        return srange(-first(r), step=-step(r), length=length(r))
-    else
-        return mrange(-first(r), step=-step(r), length=length(r))
-    end
-end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepMRange)
-    return mrange(-first(r), step=-step(r), length=length(r))
-end
-
-
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRangeLen)
-    if isstatic(r)
-        return StepMRangeLen(-r.ref, -r.step, length(r), r.offset)
-    else
-        return StepMRangeLen(-r.ref, -r.step, length(r), r.offset)
-    end
-end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepMRangeLen)
-    return StepMRangeLen(-r.ref, -r.step, length(r), r.offset)
-end
-
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinSRange)
-    if isstatic(x)
-        return LinSRange(-r.start, -r.stop, length(r))
-    else
-        return LinMRange(-r.start, -r.stop, length(r))
-    end
-end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinMRange)
-    return LinMRange(-r.start, -r.stop, length(r))
-end
-
+Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRange) = srange(-first(r), step=-step(r), length=length(r))
+Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepMRange) = mrange(-first(r), step=-step(r), length=length(r))
+Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRangeLen) = StepSRangeLen(-r.ref, -r.step, length(r), r.offset)
+Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepMRangeLen) = StepMRangeLen(-r.ref, -r.step, length(r), r.offset)
+Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinSRange) = LinSRange(-r.start, -r.stop, length(r))
+Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinMRange) = LinMRange(-r.start, -r.stop, length(r))
 
 function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Real, r::UnitSRange)
     if isstatic(x)
@@ -349,7 +321,7 @@ function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::Lin
     return LinMRange(x \ r.start, x \ r.stop, r.len)
 end
 
-#=
+#= TODO
 Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(big), r::UnitRange) = big(r.start):big(last(r))
 Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(big), r::StepRange) = big(r.start):big(r.step):big(last(r))
 Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(big), r::StepRangeLen) = StepRangeLen(big(r.ref), big(r.step), length(r), r.offset)
