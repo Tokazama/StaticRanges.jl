@@ -35,7 +35,8 @@ bstyle = Base.Broadcast.DefaultArrayStyle{1}()
         @test broadcasted(bstyle, \, 1, mr) == broadcast(\, 1, br)
         @test broadcasted(bstyle, \, 1, sr) == broadcast(\, 1, br)
 
-        @test /(mr, 2) == /(sr, 2) == /(br, 2)
+        @test /(mr, 2) == /(br, 2)
+        @test /(sr, 2) == /(br, 2)
 
         @test -(mr, (2 .* br)) == -(br, (2 .* br))
         @test -(sr, (2 .* br)) == -(br, (2 .* br))
