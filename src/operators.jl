@@ -35,13 +35,11 @@ end
 ###
 ### +(r1, r2)
 ###
-Base.:(+)(r1::AbstractStepRangeLen, r2::AbstractRange) = _add(r1, r2)
-Base.:(+)(r1::AbstractRange, r2::AbstractStepRangeLen) = _add(r1, r2)
-Base.:(+)(r1::AbstractStepRangeLen, r2::AbstractStepRangeLen) = _add(r1, r2)
+Base.:(+)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::AbstractRange) = +(promote(r1, r2)...)
+Base.:(+)(r1::AbstractRange, r2::Union{AbstractStepRangeLen,AbstractLinRange}) =  +(promote(r1, r2)...)
+Base.:(+)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::Union{AbstractStepRangeLen,AbstractLinRange}) = +(promote(r1, r2)...)
 
-_add(r1, r2) = +(promote(r1, r2)...)
-
-function _add(r1::StepMRangeLen{T,S}, r2::StepMRangeLen{T,S}) where {T,S}
+function Base.:(+)(r1::StepMRangeLen{T,S}, r2::StepMRangeLen{T,S}) where {T,S}
     len = length(r1)
     (len == length(r2) ||
         throw(DimensionMismatch("argument dimensions must match")))
@@ -49,7 +47,7 @@ function _add(r1::StepMRangeLen{T,S}, r2::StepMRangeLen{T,S}) where {T,S}
 end
 
 
-function _add(r1::StepMRangeLen{T,TwicePrecision{T}}, r2::StepMRangeLen{T,TwicePrecision{T}}) where {T}
+function Base.:(+)(r1::StepMRangeLen{T,TwicePrecision{T}}, r2::StepMRangeLen{T,TwicePrecision{T}}) where {T}
     len = length(r1)
     (len == length(r2) || throw(DimensionMismatch("argument dimensions must match")))
     if r1.offset == r2.offset
@@ -65,7 +63,7 @@ function _add(r1::StepMRangeLen{T,TwicePrecision{T}}, r2::StepMRangeLen{T,TwiceP
     return StepMRangeLen{T,typeof(ref),typeof(step)}(ref, step, len, imid)
 end
 
-function _add(r1::StepSRangeLen{T,TwicePrecision{T}}, r2::StepSRangeLen{T,TwicePrecision{T}}) where {T}
+function Base.:(+)(r1::StepSRangeLen{T,TwicePrecision{T}}, r2::StepSRangeLen{T,TwicePrecision{T}}) where {T}
     len = length(r1)
     (len == length(r2) ||
         throw(DimensionMismatch("argument dimensions must match")))
@@ -82,8 +80,8 @@ function _add(r1::StepSRangeLen{T,TwicePrecision{T}}, r2::StepSRangeLen{T,TwiceP
     return StepSRangeLen{T,typeof(ref),typeof(step)}(ref, step, len, imid)
 end
 
-_add(r1::StepSRangeLen{T,R,S}, r2::Union{OneToSRange,UnitSRange,StepSRange,LinSRange}) where {T,R,S} = +(r1, StepSRangeLen{T,R,S}(r2))
-_add(r2::Union{OneToSRange,UnitSRange,StepSRange,LinSRange}, r1::StepSRangeLen{T,R,S}) where {T,R,S} = +(r1, StepSRangeLen{T,R,S}(r2))
+#_add(r1::StepSRangeLen{T,R,S}, r2::Union{OneToSRange,UnitSRange,StepSRange,LinSRange}) where {T,R,S} = +(r1, StepSRangeLen{T,R,S}(r2))
+#_add(r2::Union{OneToSRange,UnitSRange,StepSRange,LinSRange}, r1::StepSRangeLen{T,R,S}) where {T,R,S} = +(r1, StepSRangeLen{T,R,S}(r2))
 
 function Base.sum(r::AbstractStepRangeLen)
     l = length(r)
@@ -106,9 +104,9 @@ end
 ###
 ### -(r1, r2)
 ###
-Base.:(-)(r1::AbstractStepRangeLen, r2::AbstractRange) = -(promote(r1, r2)...)
-Base.:(-)(r1::AbstractRange, r2::AbstractStepRangeLen) = -(promote(r1, r2)...)
-Base.:(-)(r1::AbstractStepRangeLen, r2::AbstractStepRangeLen) = -(promote(r1, r2)...)
+Base.:(-)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::AbstractRange) = -(promote(r1, r2)...)
+Base.:(-)(r1::AbstractRange, r2::Union{AbstractStepRangeLen,AbstractLinRange}) =  -(promote(r1, r2)...)
+Base.:(-)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::Union{AbstractStepRangeLen,AbstractLinRange}) = -(promote(r1, r2)...)
 
 function Base.:(-)(r::AbstractStepRangeLen)
     return similar_type(r)(-_ref(r), -step(r), length(r), _offset(r))
@@ -137,3 +135,20 @@ end
 function Base.:(/)(r::StepSRangeLen{T,TwicePrecision{T}}, x::Real) where {T<:Real}
     return StepSRangeLen(_ref(r)/x, Base.twiceprecision(step(r)/x, Base.nbitslen(r)), length(r), _offset(r))
 end
+
+for (frange,R) in ((mrange, :StepMRange), (srange, :StepSRange))
+    for f in (:+, :-)
+        @eval begin
+            Base.$(f)(r1::$R, r2::OrdinalRange) = $(f)(promote(r1, r2)...)
+            Base.$(f)(r1::OrdinalRange, r2::$R) =  $(f)(promote(r1, r2)...)
+            function Base.$(f)(r1::$R, r2::$R)
+                r1l = length(r1)
+                (r1l == length(r2) ||
+                 throw(DimensionMismatch("argument dimensions must match: length of r1 is $r1l, length of r2 is $(length(r2))")))
+                $(frange)($f(first(r1), first(r2)), step=$f(step(r1), step(r2)), length=r1l)
+            end
+
+        end
+    end
+end
+

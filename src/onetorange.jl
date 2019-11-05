@@ -15,9 +15,9 @@ Base.step(::OneToRange{T}) where {T} = one(T)
 
 Base.lastindex(r::OneToRange) = Int(last(r))
 
-Base.length(r::OneToRange{T}) where {T<:Union{Int,Int64}} = T(last(r))
+Base.length(r::OneToRange) = _unsafe_length(r)
 
-Base.unsafe_length(r::OneToRange) = Integer(last(r) - zero(last(r)))
+_unsafe_length(r::OneToRange) = Integer(last(r) - zero(last(r)))
 
 Base.intersect(r::OneToRange, s::OneToRange) = OneTo(min(last(r),last(s)))
 Base.intersect(r::OneToRange, s::OneTo) = OneTo(min(last(r),last(s)))

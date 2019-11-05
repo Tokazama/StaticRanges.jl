@@ -11,6 +11,61 @@ include("promotion.jl")
 include("broadcast.jl")
 include("onetorange.jl")
 
+@testset "UnitRange" begin
+    for R in (UnitMRange, UnitSRange)
+        @testset "$R" begin
+            r = R(1, 10)
+            rfloat = AbstractUnitRange{Float64}(r)
+            @test eltype(rfloat) == Float64
+            @test isa(rfloat, R)
+            @test R{Int}(r) === r
+            @test R{Float64}(r) == R(1., 10.)
+            @test first(r) == r.start
+            @test last(r) == r.stop
+            @test_throws ErrorException r.notfield
+        end
+    end
+end
+
+@testset "StepRange" begin
+    for R in (StepMRange, StepSRange)
+        @testset "$R" begin
+            r = R(1, 1, 10)
+            @test R(1:10) == 1:1:10
+            @test R{Int,Int}(r) === r
+            @test eltype(R{UInt,UInt}(r)) == UInt
+            @test first(r) == r.start
+            @test last(r) == r.stop
+            @test_throws ErrorException r.notfield
+        end
+    end
+end
+
+@testset "LinRange" begin
+    for R in (LinMRange,LinSRange)
+        @testset "$R" begin
+            r = R(1, 4, 4)
+            b = LinRange(1, 4, 4)
+            @test reverse(r) == reverse(b)
+            @test R(r) == r
+            @test R(1:4) == r
+            @test -(r) == -(b)
+            @test -(r, R(2, 5, 4)) == -(b, LinRange(2, 5, 4))
+            @test +(r, R(2, 5, 4)) == +(b, LinRange(2, 5, 4))
+
+            @test R(1,1,1) == LinRange(1, 1, 1)
+
+            @test R{Float64}(r) == LinRange{Float64}(r)
+
+            @test_throws ErrorException r.notfield
+            # issue #20380
+            let r = R(1,4,4)
+                @test isa(r[UnitSRange(1, 4)], StaticRanges.AbstractLinRange)
+            end
+        end
+    end
+end
+
 for frange in (mrange, srange)
     @testset "$frange" begin
 
@@ -721,30 +776,6 @@ end
 
 include("intersect.jl")
 
-@testset "LinRange" begin
-    for R in (LinMRange,LinSRange)
-        @testset "LinMRange" begin
-            r = R(1, 4, 4)
-            b = LinRange(1, 4, 4)
-            @test reverse(r) == reverse(b)
-            @test R(r) == r
-            @test R(1:4) == r
-            @test -(r) == -(b)
-            @test -(r, R(2, 5, 4)) == -(b, LinRange(2, 5, 4))
-            @test +(r, R(2, 5, 4)) == +(b, LinRange(2, 5, 4))
-
-            @test R(1,1,1) == LinRange(1, 1, 1)
-
-            @test R{Float64}(r) == LinRange{Float64}(r)
-
-            @test_throws ErrorException r.notfield
-            # issue #20380
-            let r = R(1,4,4)
-                @test isa(r[UnitSRange(1, 4)], StaticRanges.AbstractLinRange)
-            end
-        end
-    end
-end
 
 
 @testset "AbstractStepRangeLen" begin

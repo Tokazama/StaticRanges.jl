@@ -65,7 +65,7 @@ for (F,f) in ((:M,:m), (:S,:s))
     UR = Symbol(:Unit, F, :Range)
     frange = Symbol(f, :range)
     @eval begin
-        Base.AbstractUnitRange{T}(r::$(UR)) where {T} = $(UR){T}(r)
+        Base.AbstractUnitRange{T}(r::R) where {T,R<:$(UR)} = $(UR){T}(r)
         $(UR)(start::T, stop::T) where {T<:Real} = $(UR){T}(start, stop)
         $(UR){T}(r::AbstractUnitRange) where {T<:Real} = $(UR){T}(first(r), last(r))
         $(UR)(r::AbstractUnitRange) = $(UR)(first(r), last(r))

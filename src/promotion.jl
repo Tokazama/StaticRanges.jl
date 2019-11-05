@@ -104,6 +104,9 @@ for S in (:OneTo,:UnitRange,:StepRange,:LinRange,:StepRangeLen)
     end
 end
 
+# Necessary to avoid ambiguities
+Base.promote_rule(a::Type{StepRangeLen{T,R,S}}, b::Type{<:StepMRangeLen}) where {T,R,S} = promote_rule(lower_rangetype(a), b)
+
 function Base.promote_rule(a::Type{StepRangeLen{T,R,S}}, b::Type{StepMRangeLen{T,R,S}}) where {T,R,S}
     return StepMRangeLen{T,R,S}
 end
@@ -178,6 +181,7 @@ end
 Base.promote_rule(a::Type{LinMRange{T1}}, ::Type{StepMRange{T2,Ts2}}) where {T1,T2,Ts2} = promote_rule(a, LinMRange{T2})
 
 Base.promote_rule(a::Type{StepMRangeLen{T1,R,S1}}, ::Type{StepMRange{T2,S2}}) where {T1,T2,R,S1,S2} = promote_rule(a, StepMRangeLen{T2,T2,T2})
+Base.promote_rule(a::Type{<:StepSRangeLen{T1,R,S1}}, ::Type{<:StepSRange{T2,S2}}) where {T1,T2,R,S1,S2} = promote_rule(a, StepMRangeLen{T2,T2,T2})
 Base.promote_rule(a::Type{<:LinSRange{T1}}, ::Type{<:StepSRange{T2,Ts2}}) where {T1,T2,Ts2} = promote_rule(a, LinSRange{T2})
 
 ###
