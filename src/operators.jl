@@ -151,4 +151,12 @@ for (frange,R) in ((mrange, :StepMRange), (srange, :StepSRange))
         end
     end
 end
-
+#= TODO
+float(r::StepRange) = float(r.start):float(r.step):float(last(r))
+float(r::UnitRange) = float(r.start):float(last(r))
+float(r::StepRangeLen{T}) where {T} =
+    StepRangeLen{typeof(float(T(r.ref)))}(float(r.ref), float(r.step), length(r), r.offset)
+function float(r::LinRange)
+    LinRange(float(r.start), float(r.stop), length(r))
+end
+=#

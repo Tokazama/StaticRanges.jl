@@ -19,10 +19,6 @@ Base.length(r::OneToRange) = _unsafe_length(r)
 
 _unsafe_length(r::OneToRange) = Integer(last(r) - zero(last(r)))
 
-Base.intersect(r::OneToRange, s::OneToRange) = OneTo(min(last(r),last(s)))
-Base.intersect(r::OneToRange, s::OneTo) = OneTo(min(last(r),last(s)))
-Base.intersect(r::OneTo, s::OneToRange) = OneTo(min(last(r),last(s)))
-
 Base.issubset(r::OneToRange, s::OneTo) = last(r) <= last(s)
 Base.issubset(r::OneToRange, s::OneToRange) = last(r) <= last(s)
 Base.issubset(r::OneTo, s::OneToRange) = last(r) <= last(s)

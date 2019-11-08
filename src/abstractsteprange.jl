@@ -70,6 +70,11 @@ Base.step(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = S
 
 Base.last(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = L
 
+function (::Type{<:StepSRange{T1,T2} where T1})(r::AbstractRange) where {T2}
+    return StepSRange{eltype(r),T2}(r)
+end
+
+
 """
     StepMRange
 
@@ -88,74 +93,15 @@ mutable struct StepMRange{T,S} <: AbstractStepRange{T,S}
     end
 end
 
+function (::Type{StepMRange{T1,T2} where T1})(r::AbstractRange) where {T2}
+    return StepMRange{eltype(r),T2}(r)
+end
+
 Base.first(r::StepMRange) = getfield(r, :start)
 
 Base.step(r::StepMRange) = getfield(r, :step)
 
 Base.last(r::StepMRange) = getfield(r, :stop)
-function Base.intersect(r::AbstractUnitRange{<:Integer}, s::AbstractStepRange{<:Integer})
-    if isempty(s)
-        range(first(r), length=0)
-    elseif step(s) < 0
-        intersect(r, reverse(s))
-    else
-        sta = first(s)
-        ste = step(s)
-        sto = last(s)
-        lo = first(r)
-        hi = last(r)
-        i0 = max(sta, lo + mod(sta - lo, ste))
-        i1 = min(sto, hi - mod(hi - sta, ste))
-        i0:ste:i1
-    end
-end
-
-function Base.intersect(r::AbstractStepRange{<:Integer}, s::AbstractUnitRange{<:Integer})
-    if step(r) < 0
-        return reverse(intersect(s, reverse(r)))
-    else
-        return intersect(s, r)
-    end
-end
-
-Base.intersect(r::AbstractStepRange, s::StepRange) = _intersect(r, s)
-Base.intersect(r::StepRange, s::AbstractStepRange) = _intersect(r, s)
-Base.intersect(r::AbstractStepRange, s::AbstractStepRange) = _intersect(r, s)
-
-function _intersect(r, s)
-    if isempty(r) || isempty(s)
-        return range(first(r), step=step(r), length=0)
-    elseif step(s) < zero(step(s))
-        return intersect(r, reverse(s))
-    elseif step(r) < zero(step(r))
-        return reverse(intersect(reverse(r), s))
-    end
-
-    start1 = first(r)
-    step1 = step(r)
-    stop1 = last(r)
-    start2 = first(s)
-    step2 = step(s)
-    stop2 = last(s)
-    a = lcm(step1, step2)
-
-    g, x, y = gcdx(step1, step2)
-
-    if !iszero(rem(start1 - start2, g))
-        # Unaligned, no overlap possible.
-        return range(start1, step=a, length=0)
-    end
-
-    z = div(start1 - start2, g)
-    b = start1 - x * z * step1
-    # Possible points of the intersection of r and s are
-    # ..., b-2a, b-a, b, b+a, b+2a, ...
-    # Determine where in the sequence to start and stop.
-    m = max(start1 + mod(b - start1, a), start2 + mod(b - start2, a))
-    n = min(stop1 - mod(stop1 - b, a), stop2 - mod(stop2 - b, a))
-    range(m, step=a, stop=n)
-end
-
 for (F,f) in ((:M,:m), (:S,:s))
     SR = Symbol(:Step, F, :Range)
     frange = Symbol(f, :range)
@@ -178,10 +124,6 @@ for (F,f) in ((:M,:m), (:S,:s))
                 convert(T2, step(r)),
                 convert(T1, last(r))
                )
-        end
-
-        function (::Type{<:$(SR){T1,T2} where T1})(r::AbstractRange) where {T2}
-            return $(SR){eltype(r),T2}(r)
         end
 
         function Base.:(-)(r::$(SR))

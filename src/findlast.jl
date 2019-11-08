@@ -1,4 +1,11 @@
-function Base.findlast(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
+
+function Base.findlast(f::Function, x::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
+    return find_last(f, x)
+end
+
+find_last(f, x) = find_last(f, x, order(x))
+
+function find_last(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, r, ::Ordering)
     if isempty(r)
         return nothing
     else
@@ -10,89 +17,74 @@ function Base.findlast(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, r::Union{On
     end
 end
 
-function Base.findlast(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
-    if isforward(r)
+# <, isless
+function find_last(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r, ::ForwardOrdering)
+    idx = unsafe_findvalue(f.x, r)
+    if lastindex(r) < idx
+        return lastindex(r)
+    elseif firstindex(r) > idx
+        return nothing
+    elseif f(@inbounds(r[idx]))
+        return idx
+    elseif idx != firstindex(r)
+        return idx - 1
+    else
+        return nothing
+    end
+end
+find_last(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r, ::ReverseOrdering) = last(r) < f.x ? lastindex(r) : nothing
+find_last(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r, ::UnorderedOrdering) = nothing
+
+# <=
+function find_last(f::Fix2{typeof(<=)}, r, ::ForwardOrdering)
+    if f(last(r))
+        return lastindex(r)
+    elseif first(r) > f.x
+        return nothing
+    else
         idx = unsafe_findvalue(f.x, r)
-        if lastindex(r) < idx
-            return lastindex(r)
-        elseif firstindex(r) > idx
-            return nothing
-        elseif f(@inbounds(r[idx]))
+        if f(@inbounds(r[idx]))
             return idx
         elseif idx != firstindex(r)
             return idx - 1
-        else
-            return nothing
         end
-    elseif isreverse(r)
-        return last(r) < f.x ? lastindex(r) : nothing
-    else  # step(r) == 0
+    end
+end
+find_last(f::Fix2{typeof(<=)}, r, ::ReverseOrdering) = f(last(r)) ? lastindex(r) : nothing
+find_last(f::Fix2{typeof(<=)}, r, ::UnorderedOrdering) = nothing
+
+# >
+find_last(f::Fix2{typeof(>)}, r, ::ForwardOrdering) = last(r) > f.x ? lastindex(r) : nothing
+find_last(f::Fix2{typeof(>)}, r, ::UnorderedOrdering) = nothing
+function find_last(f::Fix2{typeof(>)}, r, ::ReverseOrdering)
+    if last(r) > f.x
+        return lastindex(r)
+    elseif first(r) < f.x
         return nothing
+    else
+        idx = unsafe_findvalue(f.x, r)
+        if f(@inbounds(r[idx]))
+            return idx
+        elseif idx != firstindex(r)
+            return idx - 1
+        end
     end
 end
 
-function Base.findlast(f::Fix2{typeof(<=)}, r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
-    if isforward(r)
-        if f(last(r))
-            return lastindex(r)
-        elseif first(r) > f.x
-            return nothing
-        else
-            idx = unsafe_findvalue(f.x, r)
-            if f(@inbounds(r[idx]))
-                return idx
-            elseif idx != firstindex(r)
-                return idx - 1
-            end
-        end
-    elseif isreverse(r)
-        return f(last(r)) ? lastindex(r) : nothing
-    else  # step(r) == 0
+# >=
+find_last(f::Fix2{typeof(>=)}, r, ::ForwardOrdering) = last(r) >= f.x ? lastindex(r) : nothing
+find_last(f::Fix2{typeof(>=)}, r, ::UnorderedOrdering) = nothing
+function find_last(f::Fix2{typeof(>=)}, r, ::ReverseOrdering)
+    if first(r) < f.x
         return nothing
-    end
-end
-
-function Base.findlast(f::Fix2{typeof(>)}, r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
-    if isforward(r)
-        return last(r) > f.x ? lastindex(r) : nothing
-    elseif isreverse(r)
-        if last(r) > f.x
-            return lastindex(r)
-        elseif first(r) < f.x
-            return nothing
+    elseif last(r) > f.x 
+        return lastindex(r)
+    else
+        idx = unsafe_findvalue(f.x, r)
+        if f(@inbounds(r[idx]))
+            return idx
         else
-            idx = unsafe_findvalue(f.x, r)
-            if f(@inbounds(r[idx]))
-                return idx
-            elseif idx != firstindex(r)
-                return idx - 1
-            end
+            return idx - 1
         end
-    else  # step(r) == 0
-        return nothing
-    end
-end
-
-function Base.findlast(
-    f::Fix2{typeof(>=)},
-    r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen}
-   )
-    if isforward(r)
-        return last(r) >= f.x ? lastindex(r) : nothing
-    elseif isreverse(r)
-        if first(r) < f.x
-            return nothing
-        elseif last(r) > f.x 
-            return lastindex(r)
-        else
-            idx = unsafe_findvalue(f.x, r)
-            if f(@inbounds(r[idx]))
-                return idx
-            else
-                return idx - 1
-            end
-        end
-    else  # step(r) == 0
-        return nothing
     end
 end

@@ -31,7 +31,19 @@ export
     setlast!,
     setlength!,
     setref!,
-    setoffset!
+    setoffset!,
+    find_first,
+    find_last,
+    find_all,
+    find_max,
+    find_min,
+    # Traits
+    is_within,
+    is_before,
+    is_after,
+    is_ordered,
+    is_contiguous,
+    order
 
 include("twiceprecision.jl")
 include("onetorange.jl")
@@ -46,6 +58,7 @@ const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},
 include("traits.jl")
 include("promotion.jl")
 include("range.jl")
+include("intersect.jl")
 #include("initialize.jl")
 
 include("broadcast.jl")
