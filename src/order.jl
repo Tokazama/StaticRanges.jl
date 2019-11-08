@@ -87,8 +87,8 @@ Returns the index of the maximum value for `x`. Differes from `findmax` by
 accounting for any sorting.
 """
 find_max(x) = find_max(x, order(x))
-find_max(x, ::ForwardOrdering) = lastindex(x)
-find_max(x, ::ReverseOrdering) = firstindex(x)
+find_max(x, ::ForwardOrdering) = (last(x), lastindex(x))
+find_max(x, ::ReverseOrdering) = (first(x), firstindex(x))
 find_max(x, ::UnorderedOrdering) = findmax(x)
 
 """
@@ -98,8 +98,8 @@ Returns the index of the minimum value for `x`. Differes from `findmin` by
 accounting for any sorting.
 """
 find_min(x) = find_min(x, order(x))
-find_min(x, ::ForwardOrdering) = firstindex(x)
-find_min(x, ::ReverseOrdering) = lastindex(x)
+find_min(x, ::ForwardOrdering) = (first(x), firstindex(x))
+find_min(x, ::ReverseOrdering) = (last(x), lastindex(x))
 find_min(x, ::UnorderedOrdering) = findmin(x)
 
 """

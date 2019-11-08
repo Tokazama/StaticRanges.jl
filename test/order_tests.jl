@@ -52,9 +52,7 @@
     @testset "max_of_group_min" begin
         @test @inferred(max_of_group_min(1:10, 3.0:-1.0:1.0)) == max(minimum(1:10), minimum(3.0:-1.0:1.0))
     end
-end
 
-@testset "Order traits" begin
     x = 1:10
     y = 10:-2:1
     z = [1.5, 1.7, 3.3]
@@ -101,9 +99,11 @@ end
 
     @testset "is_ordered" begin
         @test @inferred(is_ordered(x)) == true
+        @test @inferred(is_ordered(typeof(x))) == true
         @test @inferred(is_ordered(y)) == true
         @test @inferred(is_ordered(z)) == true
         @test @inferred(is_ordered(a)) == false
+        @test @inferred(is_ordered(typeof(a))) == false
     end
 
     @testset "is_within" begin
@@ -115,6 +115,20 @@ end
             @test @inferred(is_within(x, xo, y, yo)) == true
             @test @inferred(is_within(y, yo, x, xo)) == false
         end
+    end
+
+    @testset "find_max" begin
+        @test find_max(x) == findmax(x)
+        @test find_max(y) == findmax(y)
+        @test find_max(z) == findmax(z)
+        @test find_max(a) == findmax(a)
+    end
+
+    @testset "find_min" begin
+        @test find_min(x) == findmin(x)
+        @test find_min(y) == findmin(y)
+        @test find_min(z) == findmin(z)
+        @test find_min(a) == findmin(a)
     end
 
     @testset "is_contiguous" begin
