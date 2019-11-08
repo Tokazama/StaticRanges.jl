@@ -8,6 +8,7 @@ using StaticRanges: TPVal
     @test TwicePrecision(TPVal(tp)) == tp
     @test TPVal{Int}(tp) == TPVal{Int,1,0}()
     @test TPVal{Float64}(tp) == TPVal{Float64,1.0,0.0}()
+    @test convert(TwicePrecision{Float64}, TPVal{Int,1,0}()) == TwicePrecision(1.0)
 
     tpval = TPVal(tp)
 

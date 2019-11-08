@@ -49,18 +49,7 @@ end
     end
 end
 
-@testset "StepRangeLen" begin
-    for frange in (mrange, srange)
-        @testset "$frange" begin
-            r = frange(1.0, step=1, stop=10.0)
-            rb = range(1.0, step=1, stop=10.0)
-            @test stephi(r) == stephi(r)
-            @test steplo(r) == steplo(r)
-            @test refhi(r) == refhi(r)
-            @test reflo(r) == reflo(r)
-        end
-    end
-end
+include("steprangelen_test.jl")
 
 @testset "LinRange" begin
     for R in (LinMRange,LinSRange)

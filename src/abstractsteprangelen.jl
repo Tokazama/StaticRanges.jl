@@ -6,11 +6,7 @@ identically to `StepRangeLen`.
 """
 abstract type AbstractStepRangeLen{T,R,S} <: AbstractRange{T} end
 
-function StepRangeLen{T}(r::AbstractStepRangeLen) where {T}
-    return StepRangeLen{T}(r.ref, r.step, length(r), r.offset)
-end
-
-function StepRangeLen{T,R,S}(r::AbstractStepRangeLen) where {T,R,S}
+function Base.StepRangeLen{T,R,S}(r::AbstractStepRangeLen) where {T,R,S}
     return StepRangeLen{T,R,S}(convert(R, r.ref), convert(S, r.step), length(r), r.offset)
 end
 Base.first(r::AbstractStepRangeLen) = unsafe_getindex(r, 1)
@@ -45,7 +41,7 @@ function StepSRangeLen{T,R1,S1}(ref::R2, step::S2, len::Integer, offset::Integer
     return StepSRangeLen{T,R1,S1}(R1(ref), S1(step), len, offset)
 end
 
-function (::Type{StepSRangeLen{Float64}})(r::AbstractRange)
+function (::Type{<:StepSRangeLen{Float64}})(r::AbstractRange)
     return _convertSSRL(StepSRangeLen{Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
 end
 
@@ -108,7 +104,6 @@ Base.step(r::StepMRangeLen{T}) where {T} = T(step_hp(r))
 Base.length(r::StepMRangeLen) = getfield(r, :len)
 _offset(r::StepMRangeLen) = getfield(r, :offset)
 _ref(r::StepMRangeLen) = getfield(r, :ref)
-
 
 "stephi(x::AbstractStepRangeLen) - Returns the `hi` component of a twice precision step"
 stephi(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts<:TwicePrecision,R,S} = gethi(S)
