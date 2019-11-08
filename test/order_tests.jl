@@ -29,6 +29,14 @@
         @test @inferred(eqmin(3:11, 2:10)) == false
     end
 
+    @testset "cmpmin" begin
+        @test @inferred(cmpmin(0:10, 3.0:-1.0:1.0)) == -1
+    end
+
+    @testset "cmpmax" begin
+        @test @inferred(cmpmax(1:10, 3.0:-1.0:1.0)) == 1
+    end
+
     @testset "group_max" begin
         @test @inferred(group_max(1:10, [1,4, 20], 3.0:-1.0:1.0)) == 20
     end
@@ -38,9 +46,11 @@
     end
 
     @testset "min_of_group_max" begin
+        @test @inferred(min_of_group_max(1:10, 3.0:-1.0:1.0)) == min(maximum(1:10), maximum(3.0:-1.0:1.0))
     end
 
     @testset "max_of_group_min" begin
+        @test @inferred(max_of_group_min(1:10, 3.0:-1.0:1.0)) == max(minimum(1:10), minimum(3.0:-1.0:1.0))
     end
 end
 
@@ -75,18 +85,18 @@ end
         @test @inferred(is_after(4:-1:3, 2:-1:1)) == true
     end
 
-    @testset "isforward" begin
-        @test @inferred(isforward(x)) == true
-        @test @inferred(isforward(y)) == false
-        @test @inferred(isforward(z)) == true
-        @test @inferred(isforward(a)) == false
+    @testset "is_forward" begin
+        @test @inferred(is_forward(x)) == true
+        @test @inferred(is_forward(y)) == false
+        @test @inferred(is_forward(z)) == true
+        @test @inferred(is_forward(a)) == false
     end
 
-    @testset "isreverse" begin
-        @test @inferred(isreverse(x)) == false
-        @test @inferred(isreverse(y)) == true
-        @test @inferred(isreverse(z)) == false
-        @test @inferred(isreverse(a)) == false
+    @testset "is_reverse" begin
+        @test @inferred(is_reverse(x)) == false
+        @test @inferred(is_reverse(y)) == true
+        @test @inferred(is_reverse(z)) == false
+        @test @inferred(is_reverse(a)) == false
     end
 
     @testset "is_ordered" begin
@@ -118,6 +128,7 @@ end
     @testset "next_type" begin
         @test next_type("a") == "b"
         @test next_type(:a) == :b
+        @test next_type('a') == 'b'
         @test next_type(1) == 2
         @test next_type(1.0) == nextfloat(1.0)
         @test next_type("") == ""
@@ -126,9 +137,23 @@ end
     @testset "prev_type" begin
         @test prev_type("b") == "a"
         @test prev_type(:b) == :a
+        @test prev_type('b') == 'a'
         @test prev_type(1) == 0
         @test prev_type(nextfloat(1.0)) == prevfloat(nextfloat(1.0))
         @test prev_type("") == ""
+    end
+
+    @testset "is_forward" begin
+        @test @inferred(is_forward([1, 2, 3])) == true
+        @test @inferred(is_forward(Forward)) == true
+        @test @inferred(is_forward(Reverse)) == false
+        @test @inferred(is_forward(UnitSRange(1, 10))) == true
+    end
+    @testset "is_reverse" begin
+        @test @inferred(is_reverse([1, 2, 3])) == false
+        @test @inferred(is_reverse(Forward)) == false
+        @test @inferred(is_reverse(Reverse)) == true
+        @test @inferred(is_reverse(UnitSRange(1, 10))) == false
     end
 end
 

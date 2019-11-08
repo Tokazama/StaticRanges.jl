@@ -21,15 +21,15 @@ Base.isempty(r::Union{AbstractLinRange,AbstractStepRangeLen}) = length(r) == 0
 ### ==(r1, r2)
 ###
 function Base.:(==)(r::StepMRangeLen{T,R,S}, s::StepMRangeLen{T,R,S}) where {T,R,S}
-    (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
+    return (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
 end
 
 function Base.:(==)(r::StepSRangeLen{T,R,S}, s::StepSRangeLen{T,R,S}) where {T,R,S}
-    (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
+    return (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
 end
 
 function Base.:(==)(r::AbstractLinRange{T}, s::AbstractLinRange{T}) where {T}
-    (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
+    return (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
 end
 
 ###
@@ -151,6 +151,7 @@ for (frange,R) in ((mrange, :StepMRange), (srange, :StepSRange))
         end
     end
 end
+
 #= TODO
 float(r::StepRange) = float(r.start):float(r.step):float(last(r))
 float(r::UnitRange) = float(r.start):float(last(r))

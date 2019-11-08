@@ -1,6 +1,6 @@
 using Test, StaticRanges, Dates
-using StaticRanges: can_setfirst, can_setlast, can_setstep, has_step, can_setlength,
-    isstatic, isforward, isreverse, stephi, steplo, refhi, reflo, eqmax, eqmin,
+using StaticRanges: can_set_first, can_set_last, can_set_step, has_step, can_set_length,
+    stephi, steplo, refhi, reflo, eqmax, eqmin,
     ltmax, ltmin, gtmax, gtmin, group_max, group_min, min_of_group_max,
     max_of_group_min, ordmin, ordmax, next_type, prev_type, Unordered
 

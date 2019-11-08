@@ -149,9 +149,6 @@ function _find_step_in(sx::T, xo::O, sy::T, yo::O) where {T<:Rational,O<:Orderin
     end
 end
 
-
-
-
 ###
 ### findin
 ###
