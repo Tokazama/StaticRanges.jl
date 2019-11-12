@@ -6,6 +6,7 @@
         @test @inferred(can_set_first(LinMRange)) == true
         @test @inferred(can_set_first(StepMRange)) == true
         @test @inferred(can_set_first(UnitMRange)) == true
+        @test @inferred(can_set_first(StepMRangeLen)) == true
     end
 
     @testset "can_set_last" begin
@@ -29,6 +30,9 @@
         @test @inferred(can_set_length(1:10)) == false
         @test @inferred(can_set_length(LinMRange)) == true
         @test @inferred(can_set_length(StepMRangeLen)) == true
+        @test @inferred(can_set_length(StepMRange)) == true
+        @test @inferred(can_set_length(UnitMRange)) == true
+        @test @inferred(can_set_length(OneToMRange)) == true
     end
 
     for (r1,b,v,r2) in ((UnitMRange(1,3), true, 2, UnitMRange(2,3)),
@@ -98,6 +102,7 @@
         @test @inferred(set_length!(LinMRange(1,1,0), 1)) == LinMRange(1,1,1)
         @test @inferred(set_length!(StepMRangeLen(1, 1, 10), 11)) == StepMRangeLen(1, 1, 11)
         @test @inferred(set_length!(StepMRangeLen(1, 1, 10), UInt32(11))) == StepMRangeLen(1, 1, 11)
+        @test @inferred(set_length!(StepMRange(1, 1, 10), UInt32(11))) == StepMRange(1, 1, 11)
     end
 
     @testset "set_ref!" begin

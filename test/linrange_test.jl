@@ -12,6 +12,9 @@
 
             @test R(1,1,1) == LinRange(1, 1, 1)
 
+            @test intersect(r, r[2]) == intersect(b, b[2])
+            @test intersect(r, r[2]) == intersect(b, b[2])
+
             @test R{Float64}(r) == LinRange{Float64}(r)
 
             @test_throws ErrorException r.notfield
@@ -28,6 +31,9 @@
                 @test r == LinMRange(2, 10, 4)
 
                 setproperty!(r, :len, 9)
+                @test r == LinMRange(2, 10, 9)
+
+                setproperty!(r, :lendiv, 8)
                 @test r == LinMRange(2, 10, 9)
 
                 @test_throws ErrorException setproperty!(r, :anything, 3)

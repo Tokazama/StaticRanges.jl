@@ -3,6 +3,7 @@
     for R in (UnitMRange, UnitSRange)
         @testset "$R" begin
             r = R(1, 10)
+            b = UnitRange(1, 10)
             rfloat = AbstractUnitRange{Float64}(r)
             @test eltype(rfloat) == Float64
             @test isa(rfloat, R)
@@ -12,6 +13,10 @@
             @test R(UnitRange(UInt(1), UInt(10))) == R(UInt(1), UInt(10))
             @test first(r) == r.start
             @test last(r) == r.stop
+
+            @test intersect(r, r[2]) == intersect(b, b[2])
+            @test intersect(r, r[2]) == intersect(b, b[2])
+
             @test_throws ErrorException r.notfield
             if R == UnitMRange
                 setproperty!(r, :start, 2)

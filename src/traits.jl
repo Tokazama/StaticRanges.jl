@@ -178,15 +178,19 @@ end
 
 Change the length of `x` while maintaining it's first and last positions.
 """
-set_lendiv!(r::StepMRangeLen, d) = set_lendiv!(r, Int(d))
-function set_lendiv!(r::StepMRangeLen, d::Int)
+set_lendiv!(r::LinMRange, d) = set_lendiv!(r, Int(d))
+function set_lendiv!(r::LinMRange, d::Int)
     d >= 0 || throw(ArgumentError("set_length!($r, $len): negative length"))
-    if (d + 1) == 1
+    #=
+    we don't do this because on the off chance the user is intentionally
+    setting lendiv we can't know if they want the length also set to 1 or 2
+    if d == 1
         r.start == r.stop || throw(ArgumentError("set_length!($r, $len): endpoints differ"))
         setfield!(r, :len, 1)
         setfield!(r, :lendiv, 1)
         return r
     end
+    =#
     setfield!(r, :len, d + 1)
     setfield!(r, :lendiv, d)
     return r
