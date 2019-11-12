@@ -65,6 +65,16 @@ UnitMRange{T}(r::AbstractUnitRange) where {T<:Real} = UnitMRange{T}(first(r), la
 Base.first(r::UnitMRange) = getfield(r, :start)
 Base.last(r::UnitMRange) = getfield(r, :stop)
 
+function Base.setproperty!(r::UnitMRange, s::Symbol, val)
+    if s === :start
+        return set_first!(r, val)
+    elseif s === :stop
+        return set_last!(r, val)
+    else
+        error("type $(typeof(r)) has no property $s")
+    end
+end
+
 for (F,f) in ((:M,:m), (:S,:s))
     UR = Symbol(:Unit, F, :Range)
     frange = Symbol(f, :range)

@@ -125,6 +125,21 @@ reflo(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr<:TwicePrecision,Ts,R,S,L,F} 
 reflo(r::StepMRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.lo
 reflo(r::StepRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.lo
 
+function Base.setproperty!(r::StepMRangeLen, s::Symbol, val)
+    if s === :ref
+        return set_ref!(r, val)
+    elseif s === :step
+        return set_step!(r, val)
+    elseif s === :len
+        return set_length!(r, val)
+    elseif s === :offset
+        return set_offset!(r, val)
+    else
+        error("type $(typeof(r)) has no property $s")
+    end
+end
+
+
 for (F,f) in ((:M,:m), (:S,:s))
     SR = Symbol(:Step, F, :RangeLen)
     frange = Symbol(f, :range)

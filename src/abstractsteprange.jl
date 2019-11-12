@@ -132,6 +132,18 @@ for (F,f) in ((:M,:m), (:S,:s))
     end
 end
 
+function Base.setproperty!(r::StepMRange, s::Symbol, val)
+    if s === :start
+        return set_first!(r, val)
+    elseif s === :step
+        return set_step!(r, val)
+    elseif s === :stop
+        return set_last!(r, val)
+    else
+        error("type $(typeof(r)) has no property $s")
+    end
+end
+
 function Base.show(io::IO, r::StepMRange)
     print(io, "StepMRange(", first(r), ":", step(r), ":", last(r), ")")
 end

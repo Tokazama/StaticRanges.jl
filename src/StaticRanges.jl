@@ -30,8 +30,6 @@ export
     set_step!,
     set_last!,
     set_length!,
-    set_ref!,
-    set_offset!,
     find_first,
     find_last,
     find_all,

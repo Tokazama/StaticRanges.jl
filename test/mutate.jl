@@ -1,6 +1,4 @@
 
-using Base.Order
-
 @testset "Mutable interface" begin
 
     @testset "can_set_first" begin
@@ -14,6 +12,7 @@ using Base.Order
         @test @inferred(can_set_last(LinRange)) == false
         @test @inferred(can_set_last(LinMRange)) == true
         @test @inferred(can_set_last(StepMRange)) == true
+        @test @inferred(can_set_last(StepMRangeLen)) == true
         @test @inferred(can_set_last(UnitMRange)) == true
         @test @inferred(can_set_last(OneToMRange)) == true
     end
@@ -36,14 +35,15 @@ using Base.Order
                         (StepMRange(1,1,4), true, 2, StepMRange(2,1,4)),
                         (StepSRange(1,1,4), false, nothing, nothing),
                         (LinMRange(1,3,3), true, 2, LinMRange(2,3,3)),
-                        (StepMRangeLen(1,1,3), false, nothing, nothing),
+                        (StepMRangeLen(1,1,3), true, 2, StepMRangeLen(2,1,3)),
                         (StepSRangeLen(1,1,3), false, nothing, nothing),
                         ([1,2,3], true, 2, [2,2,3]))
         @testset "set_first-$(r1)" begin
             x = @inferred(can_set_first(r1))
             @test x == b
             if x
-                @test @inferred(set_first!(r1, v)) == r2
+                set_first!(r1, v)
+                @test r1 == r2
             end
         end
     end
@@ -54,6 +54,7 @@ using Base.Order
                         (StepMRange(1,1,4), true, 5, StepMRange(1,1,5)),
                         (StepSRange(1,1,4), false, nothing, nothing),
                         (LinMRange(1,3,3), true, 4, LinMRange(1,4,3)),
+                        (StepMRangeLen(1,1,3), true, 4, StepMRangeLen(1,1,4)),
                         ([1,2,3], true, 2, [1,2,2]))
         @testset "set_last-$(r1)" begin
             x = @inferred(can_set_last(r1))
@@ -71,6 +72,9 @@ using Base.Order
             @test @inferred(has_step([])) == false
             @test @inferred(has_step(Vector)) == false
         end
+        @test_throws ErrorException set_step!(OneToMRange(10), 2)
+        @test_throws ErrorException set_step!(UnitMRange(1, 10), 2)
+
 
         for (r1,b,v,r2) in ((UnitMRange(1,3), false, nothing, nothing),
                             (StepMRange(1,1,4), true, 2, StepMRange(1,2,4)),
@@ -92,7 +96,6 @@ using Base.Order
         @test @inferred(set_length!(LinMRange(1, 10, 5), 10)) == LinMRange(1, 10, 10)
         @test @inferred(set_length!(LinMRange(1, 10, 5), UInt32(10))) == LinMRange(1, 10, 10)
         @test @inferred(set_length!(LinMRange(1,1,0), 1)) == LinMRange(1,1,1)
-
         @test @inferred(set_length!(StepMRangeLen(1, 1, 10), 11)) == StepMRangeLen(1, 1, 11)
         @test @inferred(set_length!(StepMRangeLen(1, 1, 10), UInt32(11))) == StepMRangeLen(1, 1, 11)
     end

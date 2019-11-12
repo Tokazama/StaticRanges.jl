@@ -91,6 +91,20 @@ lendiv(r::LinMRange) = getfield(r, :lendiv)
 
 LinMRange{T}(r::AbstractRange) where {T}= LinMRange{T}(first(r), last(r), length(r))
 
+function Base.setproperty!(r::LinMRange, s::Symbol, val)
+    if s === :start
+        return set_first!(r, val)
+    elseif s === :stop
+        return set_last!(r, val)
+    elseif s === :len
+        return set_length!(r, val)
+    elseif s === :lendiv
+        return set_lendiv!(r, val)
+    else
+        error("type $(typeof(r)) has no property $s")
+    end
+end
+
 for (F,f) in ((:M,:m), (:S,:s))
     LR = Symbol(:Lin, F, :Range)
     frange = Symbol(f, :range)
@@ -101,8 +115,6 @@ for (F,f) in ((:M,:m), (:S,:s))
         $(LR){T}(r::$(LR){T}) where {T} = r
         #$(LR){T}(r::AbstractRange) where {T} = $(LR){T}(first(r), last(r), length(r))
         $(LR)(r::AbstractRange{T}) where {T} = $(LR){T}(r)
-
-        Base.reverse(r::$(LR)) = $(LR)(last(r), first(r), length(r))
 
         function Base.:(-)(r1::$(LR){T}, r2::$(LR){T}) where T
             len = length(r1)
