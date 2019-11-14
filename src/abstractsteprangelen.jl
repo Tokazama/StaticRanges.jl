@@ -9,13 +9,6 @@ abstract type AbstractStepRangeLen{T,R,S} <: AbstractRange{T} end
 function Base.StepRangeLen{T,R,S}(r::AbstractStepRangeLen) where {T,R,S}
     return StepRangeLen{T,R,S}(convert(R, r.ref), convert(S, r.step), length(r), r.offset)
 end
-Base.first(r::AbstractStepRangeLen) = unsafe_getindex(r, 1)
-Base.last(r::AbstractStepRangeLen) = unsafe_getindex(r, length(r))
-
-
-function Base.show(io::IO, r::AbstractStepRangeLen)
-    print(io, typeof(r).name, "(", first(r), ":", step(r), ":", last(r), ")")
-end
 
 Base.nbitslen(r::AbstractStepRangeLen) = nbitslen(eltype(r), length(r), r.offset)
 
@@ -60,12 +53,8 @@ function Base.getproperty(r::StepSRangeLen, s::Symbol)
 end
 
 # convert TPVal to TwicePrecision
-Base.step_hp(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts<:TwicePrecision,R,S} = convert(Ts, S)
-Base.step_hp(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts,R,S} = S
 _ref(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr<:TwicePrecision,Ts,R,S,L,F} = convert(Tr, R)
 
-Base.step(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = convert(T, S)
-Base.length(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = L
 _offset(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = F
 _ref(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = R
 
@@ -99,31 +88,8 @@ function StepMRangeLen{T,R1,S1}(ref::R2, step::S2, len::Integer, offset::Integer
     return StepMRangeLen{T,R1,S1}(R1(ref), S1(step), len, offset)
 end
 
-Base.step_hp(r::StepMRangeLen) = getfield(r, :step)
-Base.step(r::StepMRangeLen{T}) where {T} = T(step_hp(r))
-Base.length(r::StepMRangeLen) = getfield(r, :len)
 _offset(r::StepMRangeLen) = getfield(r, :offset)
 _ref(r::StepMRangeLen) = getfield(r, :ref)
-
-"stephi(x::AbstractStepRangeLen) - Returns the `hi` component of a twice precision step"
-stephi(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts<:TwicePrecision,R,S} = gethi(S)
-stephi(r::StepMRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.hi
-stephi(r::StepRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.hi
-
-"steplo(x::AbstractStepRangeLen) - Returns the `lo` component of a twice precision step"
-steplo(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts<:TwicePrecision,R,S} = getlo(S)
-steplo(r::StepMRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.lo
-steplo(r::StepRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.lo
-
-"refhi(x::AbstractStepRangeLen) - Returns the `hi` component of a twice precision ref"
-refhi(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr<:TwicePrecision,Ts,R,S,L,F} = gethi(R)
-refhi(r::StepMRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.hi
-refhi(r::StepRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.hi
-
-"reflo(x::AbstractStepRangeLen) - Returns the `lo` component of a twice precision ref"
-reflo(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr<:TwicePrecision,Ts,R,S,L,F} = getlo(R)
-reflo(r::StepMRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.lo
-reflo(r::StepRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.lo
 
 function Base.setproperty!(r::StepMRangeLen, s::Symbol, val)
     if s === :ref

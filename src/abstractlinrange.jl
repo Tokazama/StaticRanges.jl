@@ -8,8 +8,6 @@ abstract type AbstractLinRange{T} <: AbstractRange{T} end
 
 Base.firstindex(::AbstractLinRange) = 1
 
-Base.step(r::AbstractLinRange) = (last(r)-first(r)) / lendiv(r)
-
 """
     LinSRange
 
@@ -45,14 +43,6 @@ function Base.getproperty(r::LinSRange, s::Symbol)
     end
 end
 
-Base.first(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = B
-
-Base.last(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = E
-
-Base.length(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = L
-
-lendiv(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = D
-
 LinSRange{T}(r::AbstractRange) where {T} = LinSRange{T}(first(r), last(r), length(r))
 
 """
@@ -80,14 +70,6 @@ end
 function LinMRange(start, stop, len::Integer)
     return LinMRange{typeof((stop-start)/len)}(start, stop, len)
 end
-
-Base.first(r::LinMRange) = getfield(r, :start)
-
-Base.last(r::LinMRange) = getfield(r, :stop)
-
-Base.length(r::LinMRange) = getfield(r, :len)
-
-lendiv(r::LinMRange) = getfield(r, :lendiv)
 
 LinMRange{T}(r::AbstractRange) where {T}= LinMRange{T}(first(r), last(r), length(r))
 

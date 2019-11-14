@@ -11,6 +11,7 @@ using Base.Broadcast: DefaultArrayStyle
 
 using StaticArrays, ArrayInterface
 using ArrayInterface: can_setindex
+using StaticArrays: Dynamic
 
 export
     StepSRangeLen,
@@ -48,27 +49,33 @@ export
     is_contiguous,
     order
 
+include("uniqueness.jl")
+include("continuity.jl")
+include("order.jl")
+include("findall.jl")
+include("findlast.jl")
+include("findfirst.jl")
+
 include("twiceprecision.jl")
 include("onetorange.jl")
 include("staticunitrange.jl")
 include("abstractsteprange.jl")
 include("abstractlinrange.jl")
 include("abstractsteprangelen.jl")
-
-const SRange{T} = Union{OneToSRange{T},UnitSRange{T},StepSRange{T},LinSRange{T},StepSRangeLen{T}}
-const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},StepMRangeLen{T}}
-
+include("mutability.jl")
+include("first.jl")
+include("last.jl")
+include("step.jl")
+include("length.jl")
 include("traits.jl")
-include("order.jl")
 include("promotion.jl")
 include("range.jl")
 include("intersect.jl")
 include("broadcast.jl")
 include("operators.jl")
-include("indexing.jl")
+include("getindex.jl")
 include("findvalue.jl")
-include("findfirst.jl")
-include("findlast.jl")
-include("findall.jl")
+include("index.jl")
+include("show.jl")
 
 end

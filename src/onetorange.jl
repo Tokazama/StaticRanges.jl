@@ -1,23 +1,14 @@
-
 """
     OneToRange
 
-Supertype for `OntToSRange` and `OneToMRange`. It's subtypes should behave
+Supertype for `OneToSRange` and `OneToMRange`. It's subtypes should behave
 identically to `Base.OneTo`.
 """
 abstract type OneToRange{T<:Integer} <: AbstractUnitRange{T} end
 
 Base.firstindex(::OneToRange) = 1
 
-Base.first(::OneToRange{T}) where {T} = one(T)
-
-Base.step(::OneToRange{T}) where {T} = one(T)
-
 Base.lastindex(r::OneToRange) = Int(last(r))
-
-Base.length(r::OneToRange) = _unsafe_length(r)
-
-_unsafe_length(r::OneToRange) = Integer(last(r) - zero(last(r)))
 
 Base.issubset(r::OneToRange, s::OneTo) = last(r) <= last(s)
 Base.issubset(r::OneToRange, s::OneToRange) = last(r) <= last(s)
@@ -65,9 +56,6 @@ function Base.getproperty(r::OneToSRange, s::Symbol)
     end
 end
 
-
-Base.last(::OneToSRange{T,E}) where {T,E} = E
-
 """
     OneToMRange
 
@@ -78,8 +66,6 @@ mutable struct OneToMRange{T<:Integer} <: OneToRange{T}
 
     OneToMRange{T}(stop) where {T<:Integer} = new(max(zero(T), stop))
 end
-
-Base.last(r::OneToMRange) = getfield(r, :stop)
 
 function OneToMRange{T}(r::AbstractRange) where {T<:Integer}
     first(r) == 1 || (Base.@_noinline_meta; throw(ArgumentError("first element must be 1, got $(first(r))")))
@@ -92,12 +78,5 @@ OneToMRange(stop::T) where {T<:Integer} = OneToMRange{T}(stop)
 OneToMRange(r::AbstractRange{T}) where {T<:Integer} = OneToMRange{T}(r)
 #OneToMRange{T}(r::OneTo) where {T} = OneToMRange{T}(T(last(r)))
 
-Base.show(io::IO, r::OneToRange) = print(io, typeof(r).name, "(", last(r), ")")
-
-for (F,f) in ((:M,:m), (:S,:s))
-    OTR = Symbol(:OneTo, F, :Range)
-    frange = Symbol(f, :range)
-    @eval begin
-        Base.AbstractUnitRange{T}(r::$(OTR)) where {T} = $(OTR){T}(r)
-    end
-end
+Base.AbstractUnitRange{T}(r::OneToSRange) where {T} = OneToSRange{T}(r)
+Base.AbstractUnitRange{T}(r::OneToMRange) where {T} = OneToMRange{T}(r)

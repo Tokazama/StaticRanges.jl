@@ -1,12 +1,3 @@
-
-function Base.findall(f::Function, r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
-    return find_all(f, r)
-end
-
-function Base.findall(f::Fix2{typeof(in)}, r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
-    return find_all(f, r)
-end
-
 find_all(f, x) = find_all(f, x, order(x))
 find_all(f, x, xo) = findall(f, x)
 
@@ -41,11 +32,3 @@ function find_all(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, r, ro::Ordering)
     idx = find_first(f, r, ro)
     return isnothing(idx) ? Int[] : idx:findlast(f, r)
 end
-
-# in
-#for R in (OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen)
-#    @eval begin
-#        Base.findall(f::Function, r::$R) = find_all(f, r)
-#    end
-#end
-

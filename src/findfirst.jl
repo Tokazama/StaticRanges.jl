@@ -1,7 +1,3 @@
-function Base.findfirst(f::Function, r::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
-    return find_first(f, r)
-end
-
 find_first(f, x) = find_first(f, x, order(x))
 
 # ==, isequal

@@ -1,8 +1,3 @@
-
-function Base.findlast(f::Function, x::Union{OneToRange,StaticUnitRange,AbstractLinRange,AbstractStepRange,AbstractStepRangeLen})
-    return find_last(f, x)
-end
-
 find_last(f, x) = find_last(f, x, order(x))
 
 function find_last(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, r, ::Ordering)
