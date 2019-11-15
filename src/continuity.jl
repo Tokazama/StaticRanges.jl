@@ -10,7 +10,6 @@ struct DiscreteTrait <: Continuity end
 const Discrete = DiscreteTrait()
 
 Continuity(::T) where {T} = Continuity(T)
-Continuity(::Type{T}) where {T} = Unsupported
-Continuity(::Type{T}) where {T<:AbstractVector} = Discrete
+Continuity(::Type{T}) where {T} = Discrete
 Continuity(::Type{T}) where {T<:AbstractRange} = Continuous
 

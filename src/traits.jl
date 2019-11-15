@@ -20,6 +20,7 @@ StaticArrays.Size(::Type{OneToSRange{T,L}}) where {T,L} = Size{(Integer(L - zero
 
 StaticArrays.Size(::Type{T}) where {T<:MRange} = Size{(Dynamic(),)}()
 
+
 # TODO would be better to have this implemented in StaticArrays
 _Size(::Type{T}) where {T<:Tuple} = Size{StaticArrays.get.(Tuple(Length.(T.parameters)))}()
 

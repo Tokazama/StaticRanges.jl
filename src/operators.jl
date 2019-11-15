@@ -47,6 +47,8 @@ Base.isempty(r::Union{AbstractLinRange,AbstractStepRangeLen}) = length(r) == 0
 ###
 ### ==(r1, r2)
 ###
+Base.:(==)(r::OneToRange, s::OneToRange) = last(r) == last(s)
+
 function Base.:(==)(r::StepMRangeLen{T,R,S}, s::StepMRangeLen{T,R,S}) where {T,R,S}
     return (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
 end

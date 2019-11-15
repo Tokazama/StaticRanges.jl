@@ -99,19 +99,29 @@
         @test @inferred(is_static(UnitSRange(1, 10))) == true
     end
 
-    #= TODO as_[mutable/immutable/static]
-    as_mutable(x::OneToMRange) = x
-    as_mutable(x::Union{OneTo,OneToSRange}) = OneToMRange(last(x))
-    as_mutable(x::UnitMRange) = x
-    as_mutable(x::Union{UnitRange,UnitSRange}) = UnitMRange(first(x), last(x))
-    as_mutable(x::StepMRange) = x
-    as_mutable(x::Union{StepRange,StepSRange}) = StepMRange(first(x), step(x), last(x))
-    as_mutable(x::LinMRange) = x
-    as_mutable(x::Union{LinRange,LinSRange}) = LinMRange(first(x), last(x), length(x))
-    as_mutable(x::StepMRangeLen) = x
-    as_mutable(x::Union{StepRangeLen,StepSRangeLen}) = S
-    as_mutable(r)
-    as_immutable(r)
-    as_static(r)
-    =#
+    # as_[mutable/immutable/static]
+    for (i,m,s) in ((OneTo(4), OneToMRange(4), OneToSRange(4)),
+                    (UnitRange(1, 3), UnitMRange(1, 3), UnitSRange(1, 3)),
+                    (StepRange(1, 1, 4), StepMRange(1, 1, 4), StepSRange(1, 1, 4)),
+                    (StepRangeLen(1, 1, 4), StepMRangeLen(1, 1, 4), StepSRangeLen(1, 1, 4)),
+                    (LinRange(1, 4, 4), LinMRange(1, 4, 4), LinSRange(1, 4, 4)),
+                   )
+        @testset "as_mutable($(typeof(i).name))" begin
+            @test ismutable(as_mutable(i)) == true
+            @test ismutable(as_mutable(m)) == true
+            @test ismutable(as_mutable(s)) == true
+        end
+
+        @testset "as_immutable($(typeof(i).name))" begin
+            @test isimmutable(as_immutable(i)) == true
+            @test isimmutable(as_immutable(m)) == true
+            @test isimmutable(as_immutable(s)) == true
+        end
+
+        @testset "as_static($(typeof(i).name))" begin
+            @test is_static(as_static(i)) == true
+            @test is_static(as_static(m)) == true
+            @test is_static(as_static(s)) == true
+        end
+    end
 end

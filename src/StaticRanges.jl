@@ -25,6 +25,9 @@ export
     OneToSRange,
     OneToMRange,
     # methods
+    as_static,
+    as_mutable,
+    as_immutable,
     mrange,
     srange,
     set_first!,
@@ -48,6 +51,10 @@ export
     is_ordered,
     is_contiguous,
     order,
+    # Continuity traits
+    Continuity,
+    Continuous,
+    Discrete,
     # reexports
     Size,
     Length

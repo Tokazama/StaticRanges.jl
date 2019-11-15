@@ -8,8 +8,8 @@
                   (mrange(1.0, step=2.0, stop=10.0), 1.0:2.0:10.0),
                   (srange(UInt32(1), step=UInt32(2), stop=UInt32(10)), UInt32(1):UInt32(2):UInt32(10)),
                  )
-        @test @inferred(step(r)) == step(b)
-        @test @inferred(step_hp(r)) == step_hp(b)
+        @test @inferred(step(r)) === step(b)
+        @test @inferred(step_hp(r)) === step_hp(b)
         if b isa StepRangeLen
             @test @inferred(stephi(r)) == stephi(b)
             @test @inferred(steplo(r)) == steplo(b)

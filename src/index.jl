@@ -22,7 +22,7 @@ _is_index(x, ::Ks, ::Vs) where {Ks,Vs} = false
 """
     Index
 """
-struct Index{K,Ks,Vs} <: AbstractUnitRange{Int}
+struct Index{K,Ks<:AbstractVector{K},Vs<:AbstractUnitRange{Int}} <: AbstractUnitRange{Int}
     _keys::Ks
     _values::Vs
 
@@ -43,6 +43,9 @@ struct Index{K,Ks,Vs} <: AbstractUnitRange{Int}
             end
         end
     end
+end
+
+function Index(x::AbstractVector)
 end
 
 Base.keys(idx::Index) = getfield(idx, :_keys)

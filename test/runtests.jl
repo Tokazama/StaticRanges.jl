@@ -4,9 +4,16 @@ using StaticRanges: can_set_first, can_set_last, can_set_step, has_step, can_set
     group_min, min_of_group_max, max_of_group_min, ordmin, ordmax, next_type, prev_type,
     Unordered, set_ref!, set_offset!, set_lendiv!
 
+# Uniqueness methods
+using StaticRanges: all_unique, Uniqueness, AllUnique, NotUnique, UnkownUnique
+
+using StaticRanges: ArrayInterface.ismutable
+
 using Base: OneTo, step_hp
 using Base.Order
 
+include("continuity_tests.jl")
+include("uniqueness_tests.jl")
 include("order_tests.jl")
 include("unitrange_tests.jl")
 include("twiceprecision.jl")

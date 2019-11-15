@@ -8,7 +8,7 @@ ArrayInterface.can_setindex(::Type{X}) where {X<:AbstractRange} = false
 
 # TODO: this should be in ArrayInterface
 ArrayInterface.ismutable(::Type{X}) where {X<:AbstractRange} = false
-ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = false
+ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = true
 
 """
     is_static(x) -> Bool
@@ -70,17 +70,17 @@ type to `x`.
 as_immutable(x::OneTo) = x
 as_immutable(x::OneToRange) = OneTo(last(x))
 
-as_mutable(x::UnitRange) = x
-as_mutable(x::StaticUnitRange) = UnitRange(first(x), last(x))
+as_immutable(x::UnitRange) = x
+as_immutable(x::StaticUnitRange) = UnitRange(first(x), last(x))
 
-as_mutable(x::StepRange) = x
-as_mutable(x::AbstractStepRange) = StepRange(first(x), step(x), last(x))
+as_immutable(x::StepRange) = x
+as_immutable(x::AbstractStepRange) = StepRange(first(x), step(x), last(x))
 
-as_mutable(x::LinRange) = x
-as_mutable(x::AbstractLinRange) = LinRange(first(x), last(x), length(x))
+as_immutable(x::LinRange) = x
+as_immutable(x::AbstractLinRange) = LinRange(first(x), last(x), length(x))
 
-as_mutable(x::StepRangeLen) = x
-as_mutable(x::AbstractStepRangeLen) = StepMRangeLen(first(x), step(x), length(x), x.offset)
+as_immutable(x::StepRangeLen) = x
+as_immutable(x::AbstractStepRangeLen) = StepRangeLen(first(x), step(x), length(x), x.offset)
 
 """
     as_static(x)
@@ -102,3 +102,14 @@ as_static(x::Union{LinRange,LinMRange}) = LinSRange(first(x), last(x), length(x)
 
 as_static(x::StepSRangeLen) = x
 as_static(x::Union{StepRangeLen,StepMRangeLen}) = StepSRangeLen(first(x), step(x), length(x), x.offset)
+
+"""
+    is_dynamic(x) -> Bool
+
+Returns true if the size of `x` is dynamic/can change.
+"""
+is_dynamic(::T) where {T} = is_dynamic(T)
+is_dynamic(::Type{T}) where {T<:AbstractArray} = false
+is_dynamic(::Type{T}) where {T<:MRange} = true
+is_dynamic(::Type{T}) where {T<:Array} = true
+
