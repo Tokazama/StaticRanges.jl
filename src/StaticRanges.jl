@@ -47,7 +47,10 @@ export
     is_reverse,
     is_ordered,
     is_contiguous,
-    order
+    order,
+    # reexports
+    Size,
+    Length
 
 include("uniqueness.jl")
 include("continuity.jl")

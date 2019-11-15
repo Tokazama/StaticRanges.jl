@@ -14,7 +14,6 @@ const UnkownUnique = UnkownUniqueTrait()
 
 Uniqueness(::T) where {T} = Uniqueness(T)
 Uniqueness(::Type{T}) where {T} = UnkownUnique
-Uniqueness(::Type{T}) where {T<:AbstractVector} = UnkownUnique
 Uniqueness(::Type{T}) where {T<:AbstractRange} = AllUnique
 
 """

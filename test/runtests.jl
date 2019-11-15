@@ -8,6 +8,7 @@ using Base: OneTo
 using Base.Order
 
 include("order_tests.jl")
+include("unitrange_tests.jl")
 include("twiceprecision.jl")
 include("mutate.jl")
 include("find.jl")
@@ -23,6 +24,7 @@ include("reverse.jl")
 include("steprangelen_test.jl")
 
 include("linrange_test.jl")
+include("size_tests.jl")
 
 for frange in (mrange, srange)
     @testset "$frange" begin
