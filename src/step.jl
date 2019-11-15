@@ -1,8 +1,3 @@
-
-###
-### step(x)
-###
-
 ### OneToRange
 Base.step(::OneToRange{T}) where {T} = one(T)
 
@@ -26,29 +21,6 @@ steplo(r::StepMRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.lo
 steplo(r::StepRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.lo
 
 ### AbstractStepRange
-function start_step_stop_to_length(::Type{T}, start, step, stop) where {T}
-    if (start != stop) & ((step > zero(step)) != (stop > start))
-        return zero(Int)
-    else
-        return Int(div((stop - start) + step, step))
-    end
-end
-
-function start_step_stop_to_length(::Type{T}, start, step, stop) where {T<:Union{Int,UInt,Int64,UInt64,Int128,UInt128}}
-    if (start != stop) & ((step > zero(step)) != (stop > start))
-        return zero(T)
-    elseif step > 1
-        return (convert(Int, div(unsigned(stop - start), step)) + 1)
-    elseif step < -1
-        return (convert(Int, div(unsigned(start - stop), -step)) + 1)
-    elseif step > 0
-        return Int(div(stop - start, step) + 1)
-    else
-        return Int(div(start - stop, -step) + 1)
-    end
-end
-
-
 Base.step(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = S
 Base.step(r::StepMRange) = getfield(r, :step)
 

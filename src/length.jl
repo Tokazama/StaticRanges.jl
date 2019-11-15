@@ -15,6 +15,28 @@ Base.length(r::LinMRange) = getfield(r, :len)
 
 lendiv(r::LinMRange) = getfield(r, :lendiv)
 
+function start_step_stop_to_length(::Type{T}, start, step, stop) where {T}
+    if (start != stop) & ((step > zero(step)) != (stop > start))
+        return 0
+    else
+        return Int(div((stop - start) + step, step))
+    end
+end
+
+function start_step_stop_to_length(::Type{T}, start, step, stop) where {T<:Union{Int,UInt,Int64,UInt64,Int128,UInt128}}
+    if (start != stop) & ((step > zero(step)) != (stop > start))
+        return 0
+    elseif step > 1
+        return Int(div(unsigned(stop - start), step)) + 1
+    elseif step < -1
+        return Int(div(unsigned(start - stop), -step)) + 1
+    elseif step > 0
+        return Int(div(stop - start, step) + 1)
+    else
+        return Int(div(start - stop, -step) + 1)
+    end
+end
+
 """
     can_set_length(x) -> Bool
 

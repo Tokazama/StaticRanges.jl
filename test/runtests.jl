@@ -4,7 +4,7 @@ using StaticRanges: can_set_first, can_set_last, can_set_step, has_step, can_set
     group_min, min_of_group_max, max_of_group_min, ordmin, ordmax, next_type, prev_type,
     Unordered, set_ref!, set_offset!, set_lendiv!
 
-using Base: OneTo
+using Base: OneTo, step_hp
 using Base.Order
 
 include("order_tests.jl")
@@ -25,10 +25,11 @@ include("steprangelen_test.jl")
 
 include("linrange_test.jl")
 include("size_tests.jl")
+include("step_tests.jl")
+include("length_tests.jl")
 
 for frange in (mrange, srange)
     @testset "$frange" begin
-
         @test_throws ArgumentError frange(1)
         @test_throws ArgumentError frange(1, step=1)
         @test_throws ArgumentError frange(nothing)
@@ -77,25 +78,7 @@ for frange in (mrange, srange)
             @test isempty(frange(1, 4)[5:4])
             #@test_throws BoundsError frange(1:10)[8:-1:-2]
         end
-        @testset "length" begin
-            @test length(frange(.1, step=.1, stop=.3)) == 3
-            @test length(frange(1.1, step=1.1, stop=3.3)) == 3
-            @test length(frange(1.1, step=1.3, stop=3)) == 2
-            @test length(frange(1, step=1, stop=1.8)) == 1
-            @test length(frange(1, step=.2, stop=2)) == 6
-            @test length(frange(1., step=.2, stop=2.)) == 6
-            @test length(frange(2, step=-.2, stop=1)) == 6
-            @test length(frange(2., step=-.2, stop=1.)) == 6
-            @test length(frange(2, step=.2, stop=1)) == 0
-            @test length(frange(2., step=.2, stop=1.)) == 0
-
-            @test length(frange(1, 0)) == 0
-            @test length(frange(0.0, -0.5)) == 0
-            @test length(frange(1, step=2, stop=0)) == 0
-            @test length(frange(Char(0), Char(0x001fffff))) == 2097152
-            @test length(frange(typemax(UInt64)//one(UInt64), step=1, stop=typemax(UInt64)//one(UInt64))) == 1
-        end
-        @testset "keys/values" begin
+       @testset "keys/values" begin
             keytype_is_correct(r) = keytype(r) == eltype(keys(r))
             valtype_is_correct(r) = valtype(r) == eltype(values(r))
             @test keytype_is_correct(frange(1, 3))
@@ -514,36 +497,6 @@ for frange in (mrange, srange)
             @test [-0.2:0.05:-3*0.05;]  == [frange(-0.2, stop=-3*0.05, length=2);] == [-0.2,-3*0.05]
         end
 
-        @testset "length with typemin/typemax" begin
-            let r = frange(typemin(Int64), step=2, stop=typemax(Int64)), s = frange(typemax(Int64), step=-2, stop=typemin(Int64))
-                @test first(r) == typemin(Int64)
-                @test last(r) == (typemax(Int64)-1)
-                #@test_throws OverflowError length(r)
-
-                @test first(s) == typemax(Int64)
-                @test last(s) == (typemin(Int64)+1)
-                #@test_throws OverflowError length(s)
-            end
-
-            @test length(frange(typemin(Int64), step=3, stop=typemax(Int64))) == 6148914691236517206
-            @test length(frange(typemax(Int64), step=-3, stop=typemin(Int64))) == 6148914691236517206
-
-            #= No static type for big
-            for s in 3:100
-                @test length(frange(typemin(Int), step=s, stop=typemax(Int))) == length(big(typemin(Int)):big(s):big(typemax(Int)))
-                @test length(frange(typemax(Int), step=-s, stop=typemin(Int))) == length(big(typemax(Int)):big(-s):big(typemin(Int)))
-            end
-            =#
-
-            #= TODO
-            @test length(frange(UInt(1), step=UInt(1), stop=UInt(0))) == 0
-            @test length(frange(typemax(UInt), step=UInt(1), stop=(typemax(UInt)-1))) == 0
-            @test length(frange(typemax(UInt), step=UInt(2), stop=(typemax(UInt)-1))) == 0
-            @test length((frange(typemin(Int)+3, step=5, stop=(typemin(Int)+1)))) == 0
-
-            =#
-        end
-
         @testset "issue #6973" begin
             r1 = frange(1.0, step=0.1, stop=2.0)
             r2 = frange(1.0f0, step=0.2f0, stop=3.0f0)
@@ -555,10 +508,7 @@ for frange in (mrange, srange)
             @test r3 + r3 == 2 * r3
         end
 
-        # avoiding intermediate overflow (#5065)
-        @test length(frange(1, step=4, stop=typemax(Int))) == div(typemax(Int),4) + 1
-
-        @testset "Inexact errors on 32 bit architectures. #22613" begin
+       @testset "Inexact errors on 32 bit architectures. #22613" begin
             @test first(frange(log(0.2), stop=log(10.0), length=10)) == log(0.2)
             @test last(frange(log(0.2), stop=log(10.0), length=10)) == log(10.0)
             # not used internally for StaticRanges
@@ -618,9 +568,6 @@ for frange in (mrange, srange)
             end
         end
 
-        # issue #6364
-        @test length((frange(1, 64))*(pi/5)) == 64
-
 
         # Preservation of high precision upon addition
         let r = range(-0.1, step=0.1, stop=0.3) + broadcast(+, -0.3:0.1:0.1, 1e-12)
@@ -678,21 +625,6 @@ for frange in (mrange, srange)
 
             @testset "issue #7420 for type $T" for T = (Float32, Float64,) # BigFloat),
                 loop_range_values(T)
-            end
-        end
-
-        @testset "overflow in length" begin
-            Tset = Int === Int64 ? (Int,UInt,Int128,UInt128) :
-                                   (Int,UInt,Int64,UInt64,Int128, UInt128)
-            for T in Tset
-                @test_throws OverflowError length(zero(T):typemax(T))
-                @test_throws OverflowError length(typemin(T):typemax(T))
-                @test_throws OverflowError length(zero(T):one(T):typemax(T))
-                @test_throws OverflowError length(typemin(T):one(T):typemax(T))
-                if T <: Signed
-                    @test_throws OverflowError length(-one(T):typemax(T)-one(T))
-                    @test_throws OverflowError length(-one(T):one(T):typemax(T)-one(T))
-                end
             end
         end
 

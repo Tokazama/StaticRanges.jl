@@ -6,6 +6,7 @@ const IRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRang
 # TODO: this should be in ArrayInterface
 ArrayInterface.can_setindex(::Type{X}) where {X<:AbstractRange} = false
 
+# TODO: this should be in ArrayInterface
 ArrayInterface.ismutable(::Type{X}) where {X<:AbstractRange} = false
 ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = false
 

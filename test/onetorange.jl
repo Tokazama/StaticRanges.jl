@@ -11,7 +11,6 @@ for (frange, oneto) in ((mrange, OneToMRange),(srange ,OneToSRange))
             @test_throws ErrorException r.notfield
             @test length(r) == 3
             @test size(r) == (3,)
-            @test step(r) == 1
             @test first(r) == 1
             @test last(r) == 3
             @test minimum(r) == 1

@@ -1,4 +1,3 @@
-
 @testset "Mutable interface" begin
 
     @testset "can_set_first" begin
@@ -23,16 +22,6 @@
         @test @inferred(can_set_step(LinMRange)) == false
         @test @inferred(can_set_step(StepMRange)) == true
         @test @inferred(can_set_step(StepMRangeLen)) == true
-    end
-
-    @testset "can_set_length" begin
-        @test @inferred(can_set_length(LinRange)) == false
-        @test @inferred(can_set_length(1:10)) == false
-        @test @inferred(can_set_length(LinMRange)) == true
-        @test @inferred(can_set_length(StepMRangeLen)) == true
-        @test @inferred(can_set_length(StepMRange)) == true
-        @test @inferred(can_set_length(UnitMRange)) == true
-        @test @inferred(can_set_length(OneToMRange)) == true
     end
 
     for (r1,b,v,r2) in ((UnitMRange(1,3), true, 2, UnitMRange(2,3)),
@@ -69,7 +58,6 @@
         end
     end
 
-
     @testset "set_step!" begin
         @testset "has_step" begin
             @test @inferred(has_step(OneToMRange{Int})) == true
@@ -96,15 +84,6 @@
         end
     end
 
-    @testset "set_length!" begin
-        @test @inferred(set_length!(LinMRange(1, 10, 5), 10)) == LinMRange(1, 10, 10)
-        @test @inferred(set_length!(LinMRange(1, 10, 5), UInt32(10))) == LinMRange(1, 10, 10)
-        @test @inferred(set_length!(LinMRange(1,1,0), 1)) == LinMRange(1,1,1)
-        @test @inferred(set_length!(StepMRangeLen(1, 1, 10), 11)) == StepMRangeLen(1, 1, 11)
-        @test @inferred(set_length!(StepMRangeLen(1, 1, 10), UInt32(11))) == StepMRangeLen(1, 1, 11)
-        @test @inferred(set_length!(StepMRange(1, 1, 10), UInt32(11))) == StepMRange(1, 1, 11)
-    end
-
     @testset "set_ref!" begin
         @test @inferred(set_ref!(StepMRangeLen(1, 1, 10), 2)) == StepMRangeLen(2, 1, 10)
         @test @inferred(set_ref!(StepMRangeLen(1, 1, 10), UInt32(2))) == StepMRangeLen(2, 1, 10)
@@ -119,4 +98,20 @@
         @test @inferred(is_static(Any[])) == false
         @test @inferred(is_static(UnitSRange(1, 10))) == true
     end
+
+    #= TODO as_[mutable/immutable/static]
+    as_mutable(x::OneToMRange) = x
+    as_mutable(x::Union{OneTo,OneToSRange}) = OneToMRange(last(x))
+    as_mutable(x::UnitMRange) = x
+    as_mutable(x::Union{UnitRange,UnitSRange}) = UnitMRange(first(x), last(x))
+    as_mutable(x::StepMRange) = x
+    as_mutable(x::Union{StepRange,StepSRange}) = StepMRange(first(x), step(x), last(x))
+    as_mutable(x::LinMRange) = x
+    as_mutable(x::Union{LinRange,LinSRange}) = LinMRange(first(x), last(x), length(x))
+    as_mutable(x::StepMRangeLen) = x
+    as_mutable(x::Union{StepRangeLen,StepSRangeLen}) = S
+    as_mutable(r)
+    as_immutable(r)
+    as_static(r)
+    =#
 end

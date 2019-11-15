@@ -1,4 +1,3 @@
-
 @testset "Uniqueness" begin
     for (v,u) in ((1:10, AllUnique),
                   (collect(1:10), UnkownUnique),
@@ -17,4 +16,10 @@
         @test all_unique(v, AllUnique) == true
         @test all_unique(v, NotUnique) == false
     end
+
+    struct Tmp end
+    StaticRanges.Uniqueness(::Type{T}) where {T<:Tmp} = NotUnique
+
+    @test_throws ErrorException all_unique(1:10, NotUnique)
+    @test_throws ErrorException all_unique(Tmp(), AllUnique)
 end

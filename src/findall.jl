@@ -25,7 +25,6 @@ function find_all(f::Fix2{<:Union{typeof(>),typeof(>=)}}, r, ::ReverseOrdering)
 end
 find_all(f::Fix2{<:Union{typeof(>),typeof(>=)}}, r, ::UnorderedOrdering) = Int[]
 
-
 find_all(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, r, ::UnorderedOrdering) = Int[]
 function find_all(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, r, ro::Ordering)
     isempty(r) && Int[]
