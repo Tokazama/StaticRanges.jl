@@ -75,7 +75,7 @@ function set_length!(r::StepMRangeLen, len::Int)
     setfield!(r, :len, len)
     return r
 end
-set_length!(x::OneToMRange, len) = set_last!(x, len)
+set_length!(x::OneToMRange{T}, len::T) where {T} = set_last!(x, len)
 set_length!(x::UnitMRange{T}, len) where {T} = set_last!(x, T(first(x)+len-1))
 function set_length!(r::StepMRange{T}, len) where {T}
     setfield!(r, :stop, convert(T, first(r) + step(r) * (len - 1)))

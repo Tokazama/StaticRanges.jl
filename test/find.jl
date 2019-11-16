@@ -20,11 +20,11 @@ end
 
 @testset "find" begin
     for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
-                    (UnitMRange(2, 6), UnitSRange(2, 6), UnitRange(2, 6)),
-                    (StepMRange(1, 2, 11), StepSRange(1, 2, 11), StepRange(1, 2, 11)),
-                    (StepMRange(11, -2, 1), StepSRange(11, -2, 1), StepRange(11, -2, 1)),
-                    (LinMRange(1, 10, 5), LinSRange(1, 10, 5), LinRange(1, 10, 5)),
-                    (StepMRangeLen(1, 3, 5), StepSRangeLen(1, 3, 5), StepRangeLen(1, 3, 5))
+                    #(UnitMRange(2, 6), UnitSRange(2, 6), UnitRange(2, 6)),
+                    #(StepMRange(1, 2, 11), StepSRange(1, 2, 11), StepRange(1, 2, 11)),
+                    #(StepMRange(11, -2, 1), StepSRange(11, -2, 1), StepRange(11, -2, 1)),
+                    #(LinMRange(1, 10, 5), LinSRange(1, 10, 5), LinRange(1, 10, 5)),
+                    #(StepMRangeLen(1, 3, 5), StepSRangeLen(1, 3, 5), StepRangeLen(1, 3, 5))
                    )
         @testset "Type: $(typeof(b))" begin
             for i in (m[1] - step(m), m[1], m[2], m[3], m[4], m[5], m[5] + step(m), m[5] + 2step(m))
@@ -96,6 +96,36 @@ end
                     @testset "filter" begin
                         @test filter(f(i), m) == filter(f(i), b)
                         @test filter(f(i), s) == filter(f(i), b)
+                    end
+                end
+            end
+        end
+    end
+
+    for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
+                    (UnitMRange(2, 6), UnitSRange(2, 6), UnitRange(2, 6)),
+                    (StepMRange(1, 2, 11), StepSRange(1, 2, 11), StepRange(1, 2, 11)),
+                    (StepMRange(11, -2, 1), StepSRange(11, -2, 1), StepRange(11, -2, 1)),
+                    (LinMRange(1, 10, 5), LinSRange(1, 10, 5), LinRange(1, 10, 5)),
+                    (StepMRangeLen(1, 3, 5), StepSRangeLen(1, 3, 5), StepRangeLen(1, 3, 5))
+                   )
+        for fxn in (find_all, filter)
+            @testset "$fxn(f, $(typeof(b).name))" begin
+                for i1 in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
+                    for i2 in (m[2], m[3], m[5], m[5] + step(m))
+                        for f1 in (<(i1), >(i1), <=(i1), >=(i1), ==(i1))
+                            for f2 in (<(i2), >(i2), <=(i2), >=(i2), ==(i2))
+                                for (f,anon) in ((f1 & f2, i -> f1(i) & f2(i)),
+                                                 (f2 & f1, i -> f2(i) & f1(i)),
+                                                 (f1 | f2, i -> f1(i) | f2(i)),
+                                                 (f2 | f1, i -> f2(i) | f1(i)))
+                                    @testset "$f" begin
+                                        @test find_all(f, m) == findall(anon, b)
+                                        @test find_all(f, s) == findall(anon, b)
+                                    end
+                                end
+                            end
+                        end
                     end
                 end
             end

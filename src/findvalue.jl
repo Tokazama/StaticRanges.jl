@@ -28,8 +28,3 @@ Base.findlast(f::Function, x::UnionRange) = find_last(f, x)
 Base.findfirst(f::Function, r::UnionRange) = find_first(f, r)
 
 Base.count(f::Function, r::UnionRange) = length(findall(f, r))
-
-function Base.filter(f::Function, r::UnionRange)
-    isempty(r) && return Int[]
-    return @inbounds(r[findall(f, r)])
-end

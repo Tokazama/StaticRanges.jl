@@ -9,7 +9,7 @@ using Base: @propagate_inbounds
 
 using Base.Broadcast: DefaultArrayStyle
 
-using StaticArrays, ArrayInterface
+using Statistics, StaticArrays, ArrayInterface
 using ArrayInterface: can_setindex
 using StaticArrays: Dynamic
 
@@ -57,8 +57,15 @@ export
     Discrete,
     # reexports
     Size,
-    Length
+    Length,
+    similar_type,
+    # AbstractIndices
+    AbstractIndex,
+    Index,
+    IndicesArray,
+    is_index
 
+include("utils.jl")
 include("uniqueness.jl")
 include("continuity.jl")
 include("order.jl")
@@ -73,6 +80,9 @@ include("abstractsteprange.jl")
 include("abstractlinrange.jl")
 include("abstractsteprangelen.jl")
 include("mutability.jl")
+
+include("filter.jl")
+
 include("first.jl")
 include("last.jl")
 include("step.jl")
@@ -85,7 +95,6 @@ include("broadcast.jl")
 include("operators.jl")
 include("getindex.jl")
 include("findvalue.jl")
-include("index.jl")
 include("show.jl")
 
 end
