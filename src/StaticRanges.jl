@@ -9,7 +9,7 @@ using Base: @propagate_inbounds
 
 using Base.Broadcast: DefaultArrayStyle
 
-using Statistics, StaticArrays, ArrayInterface
+using StaticArrays, ArrayInterface
 using ArrayInterface: can_setindex
 using StaticArrays: Dynamic
 
