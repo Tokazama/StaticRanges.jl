@@ -27,4 +27,5 @@ Base.findlast(f::Function, x::UnionRange) = find_last(f, x)
 
 Base.findfirst(f::Function, r::UnionRange) = find_first(f, r)
 
-Base.count(f::Function, r::UnionRange) = length(findall(f, r))
+# TODO this could easily be optimized more
+@propagate_inbounds Base.count(f::Function, r::UnionRange) = length(find_all(f, r))

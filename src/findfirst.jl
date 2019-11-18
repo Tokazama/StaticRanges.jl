@@ -1,4 +1,19 @@
-find_first(f, x) = find_first(f, x, order(x))
+"""
+    find_first()
+
+# Examples
+
+```jldoctest
+
+r = 10:-1:1
+
+find_first(<(5), r)
+
+
+
+```
+"""
+@propagate_inbounds find_first(f, x) = find_first(f, x, order(x))
 
 # ==, isequal
 function find_first(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, r, ::Ordering)
@@ -14,71 +29,72 @@ function find_first(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, r, ::Ordering)
 end
 
 # <, isless
-find_first(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r, ::ForwardOrdering) = first(r) < f.x ? firstindex(r) : nothing
+function find_first(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r, ::ForwardOrdering)
+    @boundscheck if first(r) < f.x
+        return firstindex(r)
+    end
+    return nothing
+end
 find_first(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r, ::UnorderedOrdering) = nothing
 function find_first(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r, ::ReverseOrdering)
     idx = unsafe_findvalue(f.x, r)
-    if firstindex(r) > idx
+    @boundscheck if firstindex(r) > idx
         return 1
-    elseif lastindex(r) < idx
-        return nothing
-    elseif f(@inbounds(r[idx]))
-        return idx
-    elseif idx != lastindex(r)
-        return idx + 1
-    else
+    end
+    @boundscheck if lastindex(r) < idx
         return nothing
     end
+    return f(@inbounds(r[idx])) ? idx : ((idx != lastindex(r)) ? idx + 1 : nothing)
 end
 
 # <=
-find_first(f::Fix2{typeof(<=)}, r, ::ForwardOrdering) = first(r) <= f.x ? firstindex(r) : nothing
+function find_first(f::Fix2{typeof(<=)}, r, ::ForwardOrdering)
+    @boundscheck if first(r) <= f.x
+        return firstindex(r)
+    end
+    return nothing
+end
 find_first(f::Fix2{typeof(<=)}, r, ::UnorderedOrdering) = nothing
 function find_first(f::Fix2{typeof(<=)}, r, ::ReverseOrdering)
     idx = unsafe_findvalue(f.x, r)
-    if lastindex(r) < idx
+    @boundscheck if lastindex(r) < idx
         return nothing
-    elseif firstindex(r) >= idx
-        return 1
-    elseif (@inbounds(f(r[idx])))
-        return idx
-    else 
-        return idx - 1
     end
+    @boundscheck if firstindex(r) >= idx
+        return 1
+    end
+    return @inbounds(f(r[idx])) ? idx : return idx - 1
 end
 
 # >
 function find_first(f::Fix2{typeof(>)}, r, ::ForwardOrdering)
     idx = unsafe_findvalue(f.x, r)
-    if last(r) < f.x
+    @boundscheck if lastindex(r) < idx
         return nothing
-    elseif first(r) > f.x
-        return 1
-    else
-        if f(@inbounds(r[idx]))
-            return idx
-        elseif idx != lastindex(r)
-            return idx + 1
-        else
-            return nothing
-        end
     end
+    @boundscheck if firstindex(r) > idx
+        return 1
+    end
+    return f(@inbounds(r[idx])) ? idx : (idx != lastindex(r) ? idx + 1 : nothing)
 end
-find_first(f::Fix2{typeof(>)}, r, ::ReverseOrdering) = first(r) > f.x ? firstindex(r) : nothing
+function find_first(f::Fix2{typeof(>)}, r, ::ReverseOrdering)
+    @boundscheck if first(r) > f.x
+        return firstindex(r)
+    end
+    return nothing
+end
 find_first(f::Fix2{typeof(>)}, r, ::UnorderedOrdering) = nothing
 
 # >=
 function find_first(f::Fix2{typeof(>=)}, r, ::ForwardOrdering)
     idx = unsafe_findvalue(f.x, r)
-    if last(r) < f.x
+    @boundscheck if lastindex(r) < idx
         return nothing
-    elseif first(r) > f.x
-        return firstindex(r)
-    elseif f(@inbounds(r[idx]))
-        return idx
-    else
-        return idx + 1
     end
+    @boundscheck if firstindex(r) > idx
+        return 1
+    end
+    return f(@inbounds(r[idx])) ? idx : idx + 1
 end
 find_first(f::Fix2{typeof(>=)}, r, ::ReverseOrdering) = first(r) >= f.x ? firstindex(r) : nothing
 find_first(f::Fix2{typeof(>=)}, r, ::UnorderedOrdering) = nothing
