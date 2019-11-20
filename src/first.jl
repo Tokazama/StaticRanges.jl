@@ -1,12 +1,14 @@
 
-###
 ### first(x)
-###
 Base.first(::OneToRange{T}) where {T} = one(T)
 
 Base.first(::UnitSRange{T,F,L}) where {T,F,L} = F
 
 Base.first(r::UnitMRange) = getfield(r, :start)
+
+Base.first(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = F
+
+Base.first(r::StepMRange) = getfield(r, :start)
 
 Base.first(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = B
 

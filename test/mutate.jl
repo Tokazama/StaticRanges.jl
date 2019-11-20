@@ -1,5 +1,4 @@
 @testset "Mutable interface" begin
-
     @testset "can_set_first" begin
         @test @inferred(can_set_first(LinRange)) == false
         @test @inferred(can_set_first(LinMRange)) == true
@@ -97,31 +96,5 @@
     @testset "is_static" begin
         @test @inferred(is_static(Any[])) == false
         @test @inferred(is_static(UnitSRange(1, 10))) == true
-    end
-
-    # as_[mutable/immutable/static]
-    for (i,m,s) in ((OneTo(4), OneToMRange(4), OneToSRange(4)),
-                    (UnitRange(1, 3), UnitMRange(1, 3), UnitSRange(1, 3)),
-                    (StepRange(1, 1, 4), StepMRange(1, 1, 4), StepSRange(1, 1, 4)),
-                    (StepRangeLen(1, 1, 4), StepMRangeLen(1, 1, 4), StepSRangeLen(1, 1, 4)),
-                    (LinRange(1, 4, 4), LinMRange(1, 4, 4), LinSRange(1, 4, 4)),
-                   )
-        @testset "as_mutable($(typeof(i).name))" begin
-            @test ismutable(as_mutable(i)) == true
-            @test ismutable(as_mutable(m)) == true
-            @test ismutable(as_mutable(s)) == true
-        end
-
-        @testset "as_immutable($(typeof(i).name))" begin
-            @test isimmutable(as_immutable(i)) == true
-            @test isimmutable(as_immutable(m)) == true
-            @test isimmutable(as_immutable(s)) == true
-        end
-
-        @testset "as_static($(typeof(i).name))" begin
-            @test is_static(as_static(i)) == true
-            @test is_static(as_static(m)) == true
-            @test is_static(as_static(s)) == true
-        end
     end
 end

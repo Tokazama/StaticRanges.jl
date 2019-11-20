@@ -37,17 +37,9 @@ function Base.getproperty(r::StepSRange, s::Symbol)
     end
 end
 
-Base.first(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = F
-
-Base.last(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = L
-
-Base.length(r::StepSRange) = StaticArrays.get(Length(r))
-
-
 function (::Type{<:StepSRange{T1,T2} where T1})(r::AbstractRange) where {T2}
     return StepSRange{eltype(r),T2}(r)
 end
-
 
 """
     StepMRange
@@ -69,14 +61,6 @@ end
 
 function (::Type{StepMRange{T1,T2} where T1})(r::AbstractRange) where {T2}
     return StepMRange{eltype(r),T2}(r)
-end
-
-Base.first(r::StepMRange) = getfield(r, :start)
-
-Base.last(r::StepMRange) = getfield(r, :stop)
-
-function Base.length(r::StepMRange{T}) where {T}
-    return start_step_stop_to_length(T, first(r), step(r), last(r))
 end
 
 function Base.setproperty!(r::StepMRange, s::Symbol, val)

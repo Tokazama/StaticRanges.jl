@@ -6,8 +6,10 @@ function unsafe_findvalue(val, r::Union{StaticUnitRange,UnitRange})
 end
 
 function unsafe_findvalue(val, r::Union{AbstractStepRangeLen,StepRangeLen})
-    return round(Integer, ((val - r.ref) / step_hp(r)) + r.offset)
+    _unsafe_findvalue(((val - r.ref) / step_hp(r)) + r.offset)
 end
+_unsafe_findvalue(idx) = round(Integer, idx)
+_unsafe_findvalue(idx::TwicePrecision{T}) where {T} = round(Integer, T(idx))
 
 unsafe_findvalue(val, r::AbstractRange) = round(Integer, (val - r.start) / r.step) + 1
 

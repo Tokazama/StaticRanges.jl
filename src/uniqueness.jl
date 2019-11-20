@@ -44,4 +44,3 @@ function _catch_all_unique(x::T, ::typeof(error)) where {T}
            determined at compile time. Consider not specifying  `u` in
            `all_unique`.")
 end
-

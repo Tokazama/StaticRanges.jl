@@ -217,7 +217,7 @@ max_of_group_min(x, xo, y, yo) = max(ordmin(x, xo), ordmin(y, yo))
 Returns `true` if `x` is before `y` in `collection`.
 """
 function is_before(x, y, collection)
-    findfirst(isequal(x), collection) < findfirst(isequal(y), collection)
+    find_first(isequal(x), collection) < find_first(isequal(y), collection)
 end
 
 """
@@ -236,7 +236,7 @@ is_before(x, xo, y, yo) = ordmax(x, xo) < ordmin(y, yo)
 Returns `true` if `x` is after `y` in `collection`.
 """
 function is_after(x, y, collection)
-    findfirst(isequal(x), collection) > findfirst(isequal(y), collection)
+    find_first(isequal(x), collection) > find_first(isequal(y), collection)
 end
 
 """

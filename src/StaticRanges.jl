@@ -2,7 +2,7 @@ module StaticRanges
 
 import Base: OneTo, TwicePrecision, el_same, unsafe_getindex, nbitslen, rat,
              IEEEFloat, floatrange, sumpair, add12, twiceprecision, step_hp,
-             truncbits, Fix1, Fix2, tail, front
+             truncbits, Fix1, Fix2, tail, front, to_index
 
 using Base.Order
 using Base: @propagate_inbounds
@@ -26,8 +26,8 @@ export
     OneToMRange,
     # methods
     as_static,
-    as_mutable,
-    as_immutable,
+    as_dynamic,
+    as_fixed,
     mrange,
     srange,
     set_first!,
@@ -43,6 +43,8 @@ export
     cmpmin,
     # Traits
     is_static,
+    is_dynamic,
+    is_fixed,
     is_within,
     is_before,
     is_after,
@@ -51,27 +53,21 @@ export
     is_ordered,
     is_contiguous,
     order,
-    # Continuity traits
     Continuity,
     Continuous,
     Discrete,
     # reexports
-    Size,
-    Length,
     similar_type,
-    # AbstractIndices
-    AbstractIndex,
-    Index,
-    IndicesArray,
-    is_index
+    pop,
+    popfirst
 
 include("utils.jl")
-include("uniqueness.jl")
 include("continuity.jl")
 include("order.jl")
 include("findall.jl")
 include("findlast.jl")
 include("findfirst.jl")
+include("nextval.jl")
 
 include("twiceprecision.jl")
 include("onetorange.jl")
@@ -79,7 +75,9 @@ include("staticunitrange.jl")
 include("abstractsteprange.jl")
 include("abstractlinrange.jl")
 include("abstractsteprangelen.jl")
-include("mutability.jl")
+include("staticness.jl")
+
+include("checkindex.jl")
 
 include("filter.jl")
 
@@ -87,7 +85,7 @@ include("first.jl")
 include("last.jl")
 include("step.jl")
 include("length.jl")
-include("traits.jl")
+include("size.jl")
 include("promotion.jl")
 include("range.jl")
 include("intersect.jl")
@@ -95,6 +93,8 @@ include("broadcast.jl")
 include("operators.jl")
 include("getindex.jl")
 include("findvalue.jl")
+include("pop.jl")
+include("push.jl")
 include("show.jl")
 
 end

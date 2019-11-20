@@ -6,6 +6,10 @@ Base.last(::UnitSRange{T,F,L}) where {T,F,L} = L
 
 Base.last(r::UnitMRange) = getfield(r, :stop)
 
+Base.last(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = L
+
+Base.last(r::StepMRange) = getfield(r, :stop)
+
 Base.last(r::AbstractStepRangeLen) = unsafe_getindex(r, length(r))
 
 Base.last(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = E

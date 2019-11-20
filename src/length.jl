@@ -1,7 +1,7 @@
 
-Base.length(r::OneToRange) = _unsafe_length(r)
+Base.length(r::OneToMRange) = Int(last(r) - zero(last(r)))
 
-_unsafe_length(r::OneToRange) = Int(last(r) - zero(last(r)))
+Base.length(r::OneToSRange{T,L}) where {T,L} = Int(L - zero(T))
 
 Base.length(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = L
 
@@ -12,6 +12,12 @@ Base.length(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = L
 lendiv(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = D
 
 Base.length(r::LinMRange) = getfield(r, :len)
+
+Base.length(r::StepSRange) = StaticArrays.get(Length(r))
+
+function Base.length(r::StepMRange{T}) where {T}
+    return start_step_stop_to_length(T, first(r), step(r), last(r))
+end
 
 lendiv(r::LinMRange) = getfield(r, :lendiv)
 
@@ -56,7 +62,7 @@ can_set_length(::Type{T}) where {T<:OneToMRange} = true
 
 Change the length of `x` while maintaining it's first and last positions.
 """
-set_length!(x::AbstractRange, val) = set_length!(x, Int(val))
+set_length!(r::Union{AbstractRange}, val) = set_length!(r, Int(val))
 function set_length!(r::LinMRange, len::Int)
     len >= 0 || throw(ArgumentError("set_length!($r, $len): negative length"))
     if len == 1

@@ -18,14 +18,7 @@ StaticArrays.Size(::Type{OneToSRange{T,L}}) where {T<:Union{Int,Int64},L} = Size
 
 StaticArrays.Size(::Type{OneToSRange{T,L}}) where {T,L} = Size{(Integer(L - zero(T)),)}()
 
-StaticArrays.Size(::Type{T}) where {T<:MRange} = Size{(Dynamic(),)}()
-
+StaticArrays.Size(::Type{T}) where {T<:MRange} = Size{(Dynamic,)}()
 
 # TODO would be better to have this implemented in StaticArrays
 _Size(::Type{T}) where {T<:Tuple} = Size{StaticArrays.get.(Tuple(Length.(T.parameters)))}()
-
-Base.checkindex(::Type{Bool}, r::SRange, i) = _checkindex(Length(r), i)
-_checkindex(::Length{L}, i::Integer) where {L} = (i < 1 || i > L) ? false : true
-function _checkindex(::Length{L}, i::AbstractVector{<:Integer}) where {L}
-    return minimum(i) < 1 || maximum(i) > L ? false : true
-end

@@ -2,22 +2,21 @@ using Test, StaticRanges, Dates
 using StaticRanges: can_set_first, can_set_last, can_set_step, has_step, can_set_length,
     stephi, steplo, refhi, reflo, eqmax, eqmin, ltmax, ltmin, gtmax, gtmin, group_max,
     group_min, min_of_group_max, max_of_group_min, ordmin, ordmax, next_type, prev_type,
-    Unordered, set_ref!, set_offset!, set_lendiv!
+    Unordered, set_ref!, set_offset!, set_lendiv!, Size, Length
 
 # Uniqueness methods
-using StaticRanges: all_unique, Uniqueness, AllUnique, NotUnique, UnkownUnique
-
 using StaticRanges: ArrayInterface.ismutable
 
 using Base: OneTo, step_hp
 using Base.Order
 
+#include("uniqueness_tests.jl")
 include("continuity_tests.jl")
-include("uniqueness_tests.jl")
 include("order_tests.jl")
 include("unitrange_tests.jl")
 include("twiceprecision.jl")
 include("mutate.jl")
+include("staticness_tests.jl")
 include("find.jl")
 include("range_interface.jl")
 include("promotion.jl")
@@ -669,7 +668,22 @@ for frange in (mrange, srange)
     end
 end
 
-
+#=  TODO mod with ranges
+@testset "mod with ranges" begin
+    for n in -10:10
+        @test mod(n, 0:4) == mod(n, 5)
+        @test mod(n, 1:5) == mod1(n, 5)
+        @test mod(n, 2:6) == 2 + mod(n-2, 5)
+        @test mod(n, Base.OneTo(5)) == mod1(n, 5)
+    end
+    @test mod(Int32(3), 1:5) == 3
+    @test mod(big(typemax(Int))+99, 0:4) == mod(big(typemax(Int))+99, 5)
+    @test_throws MethodError mod(3.141, 1:5)
+    @test_throws MethodError mod(3, UnitRange(1.0,5.0))
+    @test_throws MethodError mod(3, 1:2:7)
+    @test_throws DivideError mod(3, 1:0)
+end
+=#
 
 
 @testset "AbstractStepRangeLen" begin

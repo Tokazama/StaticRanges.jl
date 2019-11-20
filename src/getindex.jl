@@ -5,9 +5,7 @@ function Base.getindex(r::Union{AbstractStepRangeLen,AbstractLinRange}, i::Integ
 end
 
 
-###
 ### AbstractStepRangeLen
-###
 function _getindex_hiprec(r::AbstractStepRangeLen, i::Integer)  # without rounding by T
     u = i - _offset(r)
     return _ref(r) + u * step(r)

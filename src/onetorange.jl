@@ -17,13 +17,13 @@ Base.issubset(r::OneTo, s::OneToRange) = last(r) <= last(s)
 function Base.getindex(v::OneToRange{T}, i::Integer) where T
     Base.@_inline_meta
     @boundscheck ((i > 0) & (i <= last(v))) || throw(BoundsError(v, i))
-    return convert(T, i)
+    return T(i)
 end
 
-function Base.getindex(r::OneToRange, s::Union{OneToRange,OneTo}) where T
+function Base.getindex(r::OneToRange{T}, s::Union{OneToRange,OneTo}) where T
     Base.@_inline_meta
     @boundscheck checkbounds(r, s)
-    return typeof(r)(T(last(s)))
+    return similar_type(r)(T(last(s)))
 end
 
 Base.mod(i::Integer, r::OneToRange) = Base.mod1(i, last(r))

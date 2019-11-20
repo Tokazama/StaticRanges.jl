@@ -1,9 +1,3 @@
-values_type(::T) where {T} = values_type(T)
-values_type(::Type{T}) where {T} = T
-
-keys_type(::T) where {T<:AbstractVector} = LinearIndices{1,Tuple{Base.OneTo{Int64}}}
-keys_type(x::T) where {T} = typeof(keys(x))
-
 ## TODO these should go in base if possible
 struct BitAnd{F1<:Function,F2<:Function} <: Function
     f1::F1

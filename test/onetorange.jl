@@ -8,6 +8,9 @@ for (frange, oneto) in ((mrange, OneToMRange),(srange ,OneToSRange))
         let r = oneto(3)
             @test !isempty(r)
             @test last(r) == r.stop
+            @test getindex(r, oneto(2)) == oneto(2)
+
+            @test getindex(r, oneto(2)) == oneto(2)
             @test_throws ErrorException r.notfield
             @test length(r) == 3
             @test size(r) == (3,)
