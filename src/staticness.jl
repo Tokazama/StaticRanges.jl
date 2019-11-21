@@ -14,7 +14,7 @@ is_static(::Type{T}) where {T<:SRange} = true
 
 "is_fixed(x) - Returns `true` if the size of `x` is fixed."
 is_fixed(::T) where {T} = is_fixed(T)
-is_fixed(::Type{T}) where {T} = isimmutable(T) & !is_static(T) ? true : false
+is_fixed(::Type{T}) where {T} = !T.mutable & !is_static(T) ? true : false
 
 # TODO: this should be in ArrayInterface
 ArrayInterface.can_setindex(::Type{X}) where {X<:AbstractRange} = false

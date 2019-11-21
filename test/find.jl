@@ -155,5 +155,10 @@ for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
             @test filter(!=(i), m) == filter(!=(i), b)
             @test filter(!=(i), s) == filter(!=(i), b)
         end
+
+        @testset "find_all(!=($i), $b)" begin
+            @test findall(!=(i), m) == findall(!=(i), b)
+            @test findall(!=(i), s) == findall(!=(i), b)
+        end
     end
 end

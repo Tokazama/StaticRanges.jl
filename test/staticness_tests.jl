@@ -7,15 +7,15 @@
                     (LinRange(1, 4, 4), LinMRange(1, 4, 4), LinSRange(1, 4, 4)),
                    )
         @testset "as_dynamic($(typeof(i).name))" begin
-            @test ismutable(as_dynamic(i)) == true
-            @test ismutable(as_dynamic(m)) == true
-            @test ismutable(as_dynamic(s)) == true
+            @test is_dynamic(as_dynamic(i)) == true
+            @test is_dynamic(as_dynamic(m)) == true
+            @test is_dynamic(as_dynamic(s)) == true
         end
 
         @testset "as_fixed($(typeof(i).name))" begin
-            @test isimmutable(as_fixed(i)) == true
-            @test isimmutable(as_fixed(m)) == true
-            @test isimmutable(as_fixed(s)) == true
+            @test is_fixed(as_fixed(i)) == true
+            @test is_fixed(as_fixed(m)) == true
+            @test is_fixed(as_fixed(s)) == true
         end
 
         @testset "as_static($(typeof(i).name))" begin

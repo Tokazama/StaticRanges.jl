@@ -59,4 +59,16 @@ function _merge_bit_find(inds1::AbstractRange{T}, inds2::AbstractRange{T}) where
     end
 end
 
-@propagate_inbounds find_all(f::Fix2{typeof(!=)}, r, ro) = find_all(<(f.x) | >(f.x), r, ro)
+@propagate_inbounds function find_all(f::Fix2{typeof(!=)}, r, ro::ForwardOrdering)
+    return find_all(<(f.x) | >(f.x), r, ro)
+end
+@propagate_inbounds function find_all(f::Fix2{typeof(!=)}, r, ro::ReverseOrdering)
+    return find_all(>(f.x) | <(f.x), r, ro)
+end
+
+find_all(f::Fix2{typeof(!=)}, r::AbstractRange, ::UnorderedOrdering) = _empty_ur(keytype(r))
+function find_all(f::Fix2{typeof(!=)}, r::AbstractVector, ::UnorderedOrdering)
+    return findall(f, r)
+end
+
+
