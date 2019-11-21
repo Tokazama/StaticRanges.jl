@@ -38,11 +38,17 @@ function _fltr_or(r, ro, inds1, inds2)
     end
 end
 
-@propagate_inbounds function Base.filter(f::Fix2{typeof(!=)}, r::UnionRange)
-    return _fltr_not(r, find_all(<(f.x), x), find_all(>(f.x), x))
+@propagate_inbounds Base.filter(f::Fix2{typeof(!=)}, r::UnionRange) = _fltr_not(f, r, order(r))
+
+@propagate_inbounds function _fltr_not(f, r, ro::ForwardOrdering)
+    return __fltr_not(r, find_all(<(f.x), r, ro), find_all(>(f.x), r, ro))
 end
 
-function _fltr_not(r, inds1, inds2)
+@propagate_inbounds function _fltr_not(f, r, ro::ReverseOrdering)
+    return __fltr_not(r, find_all(>(f.x), r, ro), find_all(<(f.x), r, ro))
+end
+
+function __fltr_not(r, inds1, inds2)
     if isempty(inds1)
         return isempty(inds2) ? empty(r) : @inbounds(r[inds2])
     else

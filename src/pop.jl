@@ -10,8 +10,8 @@ StaticArrays.pop(r::Union{OneTo,OneToRange}) = similar_type(r)(last(r) - one(elt
 
 # FIXME this should be defined somewhere
 function StaticArrays.popfirst(v::AbstractVector)
-    isempty(r) && error("array must be non-empty")
-    return length(r) == 1 ? empty!(r) : @inbounds(v[2:end])
+    isempty(v) && error("array must be non-empty")
+    return length(v) == 1 ? empty!(v) : @inbounds(v[2:end])
 end
 
 ###

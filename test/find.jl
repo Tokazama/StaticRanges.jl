@@ -142,4 +142,18 @@ end
     end
 end
 
-#1.0:2.25:7.75 == [1.0, 3.25, 5.5, 7.75]
+
+for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
+                (UnitMRange(2, 6), UnitSRange(2, 6), UnitRange(2, 6)),
+                (StepMRange(1, 2, 11), StepSRange(1, 2, 11), StepRange(1, 2, 11)),
+                (StepMRange(11, -2, 1), StepSRange(11, -2, 1), StepRange(11, -2, 1)),
+                (LinMRange(1, 10, 5), LinSRange(1, 10, 5), LinRange(1, 10, 5)),
+                (StepMRangeLen(1, 3, 5), StepSRangeLen(1, 3, 5), StepRangeLen(1, 3, 5))
+               )
+    for i in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
+        @testset "filter(!=($i), $b)" begin
+            @test filter(!=(i), m) == filter(!=(i), b)
+            @test filter(!=(i), s) == filter(!=(i), b)
+        end
+    end
+end
