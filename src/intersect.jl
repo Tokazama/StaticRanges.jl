@@ -1,6 +1,4 @@
-###
 ### intersect
-###
 for R in (:StepMRange,:LinMRange,:StepMRangeLen)
     @eval begin
         Base.intersect(r::$(R){T}, i::T) where {T} = intersect(i, r)

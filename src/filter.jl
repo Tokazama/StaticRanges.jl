@@ -1,3 +1,5 @@
+# FIXME specify Bit operator filters here to <,<=,>=,>,==,isequal,isless
+# Currently will return incorrect order or repeated results otherwise
 @propagate_inbounds function Base.filter(f::Function, r::UnionRange)
     return isempty(r) ? empty(r) : @inbounds(r[find_all(f, r)])
 end
@@ -26,13 +28,12 @@ function _fltr_or(r, ro, inds1, inds2)
             return @inbounds(r[inds1])
         else
             if is_after(inds1, inds2)
-                return vcat(@inbounds(inds2), @inbounds(inds1))
+                return vcat(@inbounds(r[inds2]), @inbounds(r[inds1]))
             elseif is_before(inds1, inds2)
                 return vcat(@inbounds(r[inds1]), @inbounds(r[inds2]))
             else
-                return @inbounds(r[_group_min(inds1, Forward, inds2, Forward):_group_max(inds1, Forward, inds2, Forward)])
+                return @inbounds(r[_weave_sort(inds1, Forward, inds2, Forward)])
             end
-
         end
     end
 end

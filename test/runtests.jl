@@ -10,7 +10,7 @@ using StaticRanges: ArrayInterface.ismutable
 using Base: OneTo, step_hp
 using Base.Order
 
-#include("uniqueness_tests.jl")
+include("pop_tests.jl")
 include("continuity_tests.jl")
 include("order_tests.jl")
 include("unitrange_tests.jl")

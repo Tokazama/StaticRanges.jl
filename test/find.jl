@@ -79,6 +79,15 @@ end
                                     @test filter(f(i2), m) == filter(f(i2), b)
                                     @test filter(f(i2), s) == filter(f(i2), b)
                                 end
+
+                                for f2 in (<, >, <=, >=, ==)
+                                    for bitop in (&, |)
+                                        @testset "filter($f($i1) $bitop $f2($i2), $b)" begin
+                                            @test filter(bitop(f(i1),  f2(i2)), m) == filter(x -> bitop(f(i1)(x), f2(i2)(x)), b)
+                                            @test filter(bitop(f(i2),  f2(i1)), m) == filter(x -> bitop(f(i2)(x), f2(i1)(x)), b)
+                                        end
+                                    end
+                                end
                             end
                             for f2 in (<, >, <=, >=, ==)
                                 for bitop in (&, |)
@@ -94,6 +103,7 @@ end
             end
         end
     end
+
 
     @testset "Find with empty range" begin
         for i in (0, 1)
@@ -131,3 +141,5 @@ end
         end
     end
 end
+
+#1.0:2.25:7.75 == [1.0, 3.25, 5.5, 7.75]
