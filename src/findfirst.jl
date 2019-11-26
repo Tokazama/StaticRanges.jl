@@ -1,3 +1,4 @@
+
 """
     find_first(predicate::Function, A)
 
@@ -38,117 +39,131 @@ find_first
 unsafe_findfirst(val, r::AbstractRange, ::ForwardOrdering) = unsafe_findvalue(val, r)
 unsafe_findfirst(val, r::AbstractRange, ::ReverseOrdering) = unsafe_findvalue(val, r)
 
-unsafe_findfirst(f, a::AbstractArray, ::ReverseOrdering) = searchsortedfirst(f.x, a, Reverse)
-unsafe_findfirst(f, a::AbstractArray, ::ForwardOrdering) = searchsortedfirst(f.x, a, Forward)
-function findfirst(f, a::AbstractArray, ro::Ordering)
+unsafe_findfirst(val, a::LinearIndices, ::ReverseOrdering) = unsafe_findfirst(val, axes(a, 1), Reverse)
+unsafe_findfirst(val, a::LinearIndices, ::ForwardOrdering) = unsafe_findfirst(val, axes(a, 1), Forward)
+
+# FIXME: this needs an explicit method and not just a fallback
+unsafe_findfirst(val, a::AbstractArray, ::ReverseOrdering) = findfirst(==(val), a)
+unsafe_findfirst(val, a::AbstractArray, ::ForwardOrdering) = findfirst(==(val), a)
+
+
+@propagate_inbounds find_first(f, x) = find_first(f, x, order(x))
+
+find_first(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, a, o) = _find_first_eq(f.x, a, o)
+find_first(f::Fix2{<:Union{typeof(<),typeof(isless)}}, a, o) = _find_first_lt(f.x, a, o)
+find_first(f::Fix2{typeof(<=)}, a, o) = _find_first_lteq(f.x, a, o)
+find_first(f::Fix2{typeof(>)}, a, o) = _find_first_gt(f.x, a, o)
+find_first(f::Fix2{typeof(>=)}, a, o) = _find_first_gteq(f.x, a, o)
+find_first(f, a, o) = _find_first(f, a, o)  # fall back
+
+function _find_first(f, a, o)
     for (i, a_i) in pairs(a)
         f(a_i) && return i
     end
     return nothing
 end
 
-@propagate_inbounds find_first(f, x) = find_first(f, x, order(x))
 
 # ==, isequal
-function find_first(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, r, ro::Ordering)
+function _find_first_eq(x, r, ro::Ordering)
     if isempty(r)
         return nothing
     else
-        idx = unsafe_findfirst(f.x, r, ro)
-        @boundscheck if (firstindex(r) > idx || idx > lastindex(r)) || @inbounds(!f(r[idx]))
+        idx = unsafe_findfirst(x, r, ro)
+        @boundscheck if (firstindex(r) > idx || idx > lastindex(r)) || @inbounds(r[idx]) != x
             return nothing
         end
         return idx
     end
 end
+function _find_first_eq(x, r, ::UnorderedOrdering)
+    return r isa AbstractRange ? nothing : unsafe_findfirst(x, r, ro)
+end
+
 
 # <, isless
-function find_first(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r, ::ForwardOrdering)
-    @boundscheck if first(r) < f.x
+function _find_first_lt(x, r, ::ForwardOrdering)
+    @boundscheck if first(r) < x
         return firstindex(r)
     end
     return nothing
 end
-function find_first(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r, ro::ReverseOrdering)
-    idx = unsafe_findfirst(f.x, r, ro)
+function _find_first_lt(x, r, ro::ReverseOrdering)
+    idx = unsafe_findfirst(x, r, ro)
     @boundscheck if firstindex(r) > idx
         return 1
     end
     @boundscheck if lastindex(r) < idx
         return nothing
     end
-    return f(@inbounds(r[idx])) ? idx : ((idx != lastindex(r)) ? idx + 1 : nothing)
+    return @inbounds(r[idx]) < x ? idx : ((idx != lastindex(r)) ? idx + 1 : nothing)
 end
-find_first(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r::AbstractRange, ::UnorderedOrdering) = nothing
-function find_first(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r::AbstractArray, ro::UnorderedOrdering)
-    return unsafe_findfirst(f, r, ro)
+function _find_first_lt(x, r, ::UnorderedOrdering)
+    return r isa AbstractRange ? nothing : unsafe_findfirst(x, r, ro)
 end
 
 # <=
-function find_first(f::Fix2{typeof(<=)}, r, ::ForwardOrdering)
-    @boundscheck if first(r) <= f.x
+function _find_first_lteq(x, r, ::ForwardOrdering)
+    @boundscheck if first(r) <= x
         return firstindex(r)
     end
     return nothing
 end
-function find_first(f::Fix2{typeof(<=)}, r, ro::ReverseOrdering)
-    idx = unsafe_findfirst(f.x, r, ro)
+function _find_first_lteq(x, r, ro::ReverseOrdering)
+    idx = unsafe_findfirst(x, r, ro)
     @boundscheck if lastindex(r) < idx
         return nothing
     end
     @boundscheck if firstindex(r) >= idx
         return 1
     end
-    return @inbounds(f(r[idx])) ? idx : return idx - 1
+    return @inbounds(r[idx]) <= x ? idx : return idx - 1
 end
-find_first(f::Fix2{typeof(<=)}, r::AbstractRange, ::UnorderedOrdering) = nothing
-
-function find_first(f::Fix2{typeof(<=)}, r::AbstractArray, ro::UnorderedOrdering)
-    return unsafe_findfirst(f, r, ro)
+function _find_first_lteq(x, r, ::UnorderedOrdering)
+    return r isa AbstractRange ? nothing : unsafe_findfirst(x, r, ro)
 end
 
 
 # >
-function find_first(f::Fix2{typeof(>)}, r, ro::ForwardOrdering)
-    idx = unsafe_findfirst(f.x, r, ro)
+function _find_first_gt(x, r, ro::ForwardOrdering)
+    idx = unsafe_findfirst(x, r, ro)
     @boundscheck if lastindex(r) < idx
         return nothing
     end
     @boundscheck if firstindex(r) > idx
         return 1
     end
-    return f(@inbounds(r[idx])) ? idx : (idx != lastindex(r) ? idx + 1 : nothing)
+    return @inbounds(r[idx]) > x ? idx : (idx != lastindex(r) ? idx + 1 : nothing)
 end
-function find_first(f::Fix2{typeof(>)}, r, ::ReverseOrdering)
-    @boundscheck if first(r) > f.x
+function _find_first_gt(x, r, ::ReverseOrdering)
+    @boundscheck if first(r) > x
         return firstindex(r)
     end
     return nothing
 end
-find_first(f::Fix2{typeof(>)}, r::AbstractRange, ::UnorderedOrdering) = nothing
-function find_first(f::Fix2{typeof(>)}, r::AbstractArray, ro::UnorderedOrdering)
-    return unsafe_findfirst(f, r, ro)
+function _find_first_gt(x, r, ::UnorderedOrdering)
+    return r isa AbstractRange ? nothing : unsafe_findfirst(x, r, ro)
 end
 
 # >=
-function find_first(f::Fix2{typeof(>=)}, r, ro::ForwardOrdering)
-    idx = unsafe_findfirst(f.x, r, ro)
+function _find_first_gteq(x, r, ro::ForwardOrdering)
+    idx = unsafe_findfirst(x, r, ro)
     @boundscheck if lastindex(r) < idx
         return nothing
     end
     @boundscheck if firstindex(r) > idx
         return 1
     end
-    return f(@inbounds(r[idx])) ? idx : idx + 1
+    return @inbounds(r[idx]) >= x ? idx : idx + 1
 end
-function find_first(f::Fix2{typeof(>=)}, r, ::ReverseOrdering)
-    @boundscheck if first(r) >= f.x
+function _find_first_gteq(x, r, ::ReverseOrdering)
+    @boundscheck if first(r) >= x
         return firstindex(r)
     end
     return nothing
 end
-find_first(f::Fix2{typeof(>=)}, r::AbstractRange, ::UnorderedOrdering) = nothing
-function find_first(f::Fix2{typeof(>=)}, r::AbstractArray, ro::UnorderedOrdering)
-    return unsafe_findfirst(f, r, ro)
+
+function _find_first_gteq(x, r, ::UnorderedOrdering)
+    return r isa AbstractRange ? nothing : unsafe_findfirst(x, r, ro)
 end
 

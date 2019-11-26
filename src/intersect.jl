@@ -213,7 +213,7 @@ function _findin(x::StepSRange, xo, y::StepSRange, yo)
     end
 end
 
-function _findin(x::StepRange, xo, y::StepRange, yo)
+function _findin(x::AbstractRange, xo, y::AbstractRange, yo)
     fi = _find_first_in(x, xo, y, yo)
     li = _find_last_in(x, xo, y, yo)
     sxy = _find_step_in(step(x), xo, step(y), yo)
