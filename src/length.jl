@@ -43,6 +43,18 @@ function start_step_stop_to_length(::Type{T}, start, step, stop) where {T<:Union
     end
 end
 
+# some special cases to favor default Int type
+smallint = (Int === Int64 ? Union{Int8,UInt8,Int16,UInt16,Int32,UInt32} : Union{Int8,UInt8,Int16,UInt16})
+
+function Base.length(r::AbstractStepRange{T}) where {T<:smallint}
+    if isempty(r)
+        return Int(0)
+    else
+        return div(Int(last(r))+Int(step(r)) - Int(first(r)), Int(step(r)))
+    end
+end
+Base.length(r::OneToRange{<:smallint}) = Int(r.stop)
+
 """
     can_set_length(x) -> Bool
 

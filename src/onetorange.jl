@@ -14,18 +14,6 @@ Base.issubset(r::OneToRange, s::OneTo) = last(r) <= last(s)
 Base.issubset(r::OneToRange, s::OneToRange) = last(r) <= last(s)
 Base.issubset(r::OneTo, s::OneToRange) = last(r) <= last(s)
 
-function Base.getindex(v::OneToRange{T}, i::Integer) where T
-    Base.@_inline_meta
-    @boundscheck ((i > 0) & (i <= last(v))) || throw(BoundsError(v, i))
-    return T(i)
-end
-
-function Base.getindex(r::OneToRange{T}, s::Union{OneToRange,OneTo}) where T
-    Base.@_inline_meta
-    @boundscheck checkbounds(r, s)
-    return similar_type(r)(T(last(s)))
-end
-
 Base.mod(i::Integer, r::OneToRange) = Base.mod1(i, last(r))
 
 """
@@ -35,6 +23,7 @@ A static range that parallels `OneTo` in behavior.
 """
 struct OneToSRange{T<:Integer,E} <: OneToRange{T}
     OneToSRange{T}(stop::T) where {T} = new{T,max(zero(T), stop)}()
+    OneToSRange{T}(stop::Number) where {T} = new{T,max(zero(T),T(stop))}()
 end
 
 function OneToSRange{T}(r::AbstractRange) where {T<:Integer}
@@ -45,8 +34,8 @@ end
 OneToSRange{T,<:Any}(r::OneToSRange{T}) where {T<:Integer} = r
 OneToSRange{T}(r::OneToRange) where {T<:Integer} = OneToSRange{T}(last(r))
 OneToSRange(stop::T) where {T<:Integer} = OneToSRange{T}(stop)
-OneToSRange{T}(stop) where {T} = OneToSRange{T}(T(stop))
 OneToSRange(r::AbstractRange{T}) where {T<:Integer} = OneToSRange{T}(r)
+(::Type{<:OneToSRange{T,<:Any}})(r::AbstractRange) where {T<:Integer} = OneToSRange{T}(r)
 
 function Base.getproperty(r::OneToSRange, s::Symbol)
     if s === :stop

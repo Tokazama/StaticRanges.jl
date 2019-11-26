@@ -101,7 +101,7 @@ function Base.getindex(r::LinSRange, s::Union{OneToSRange{T},UnitSRange{T},StepS
     @boundscheck checkbounds(r, s)
     vfirst = unsafe_getindex(r, first(s))
     vlast  = unsafe_getindex(r, last(s))
-    return LinMRange(vfirst, vlast, length(s))
+    return LinSRange(vfirst, vlast, length(s))
 end
 
 ###
@@ -113,12 +113,43 @@ function Base.getindex(v::StaticUnitRange{T}, i::Integer) where T
     Base.@_inline_meta
     val = convert(T, first(v) + (i - 1))
     @boundscheck _in_unit_range(v, val, i) || throw(BoundsError(v, i))
-    val
+    return val
 end
 
 function Base.getindex(v::StaticUnitRange{T}, i::Integer) where {T<:Base.OverflowSafe}
     Base.@_inline_meta
     val = v.start + (i - 1)
     @boundscheck _in_unit_range(v, val, i) || throw(BoundsError(v, i))
-    val % T
+    return val % T
 end
+
+function Base.getindex(r::UnitSRange, s::AbstractUnitRange{<:Integer})
+    Base.@_inline_meta
+    @boundscheck checkbounds(r, s)
+    f = first(r)
+    st = oftype(f, f + first(s)-1)
+    return UnitSRange(st, st + oftype(f, (length(s) - 1)))
+end
+
+function Base.getindex(r::UnitMRange, s::AbstractUnitRange{<:Integer})
+    Base.@_inline_meta
+    @boundscheck checkbounds(r, s)
+    f = first(r)
+    st = oftype(f, f + first(s)-1)
+    return UnitMRange(st, st + oftype(f, (length(s) - 1)))
+end
+
+### OneToRange
+function Base.getindex(v::OneToRange{T}, i::Integer) where T
+    Base.@_inline_meta
+    @boundscheck ((i > 0) & (i <= last(v))) || throw(BoundsError(v, i))
+    return T(i)
+end
+
+function Base.getindex(r::OneToRange{T}, s::Union{OneToRange,OneTo}) where T
+    Base.@_inline_meta
+    @boundscheck checkbounds(r, s)
+    return similar_type(r)(T(last(s)))
+end
+
+

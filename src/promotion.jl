@@ -228,3 +228,6 @@ Base.promote_rule(::Type{LinMRange{T1}}, ::Type{OneToMRange{T2}}) where {T1,T2} 
 
 Base.promote_rule(::Type{<:OneToSRange{T1}}, ::Type{<:LinSRange{T2}}) where {T1,T2} = promote_rule(LinSRange{T1},LinSRange{T2})
 Base.promote_rule(::Type{<:LinSRange{T1}}, ::Type{<:OneToSRange{T2}}) where {T1,T2} = promote_rule(LinSRange{T1},LinSRange{T2})
+
+# TODO: needs to be in base
+Base.promote_rule(a::Type{<:OneTo}, b::Type{<:UnitRange}) = UnitRange{promote_type(eltype(a), eltype(b))}

@@ -5,7 +5,7 @@ import Base: OneTo, TwicePrecision, el_same, unsafe_getindex, nbitslen, rat,
              truncbits, Fix1, Fix2, tail, front, to_index
 
 using Base.Order
-using Base: @propagate_inbounds
+using Base: @propagate_inbounds, @pure
 
 using Base.Broadcast: DefaultArrayStyle
 
@@ -61,7 +61,7 @@ export
     pop,
     popfirst
 
-include("utils.jl")
+include("chainedfix.jl")
 include("continuity.jl")
 include("order.jl")
 include("findall.jl")
