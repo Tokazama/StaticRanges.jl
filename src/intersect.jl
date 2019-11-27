@@ -96,7 +96,7 @@ function _find_first_in(x, xo::O, y, yo::O) where {O<:Ordering}
         out = find_first(==(x_i), y, yo)
         isnothing(out) || return out
     end
-    return nothing
+    return 1
 end
 
 function _find_first_in(x, xo::Ordering, y, yo::Ordering)
@@ -104,7 +104,7 @@ function _find_first_in(x, xo::Ordering, y, yo::Ordering)
         out = find_last(==(x_i), y, yo)
         isnothing(out) || return out
     end
-    return nothing
+    return 1
 end
 
 function _find_last_in(x, xo::O, y, yo::O) where {O<:Ordering}
@@ -112,7 +112,7 @@ function _find_last_in(x, xo::O, y, yo::O) where {O<:Ordering}
         out = find_first(==(x_i), y, yo)
         isnothing(out) || return out
     end
-    return nothing
+    return 0
 end
 
 function _find_last_in(x, xo::Ordering, y, yo::Ordering)
@@ -120,50 +120,20 @@ function _find_last_in(x, xo::Ordering, y, yo::Ordering)
         out = find_last(==(x_i), y, yo)
         isnothing(out) || return out
     end
-    return nothing
-end
-
-# finds the step of indices in y given x 
-_find_step_in(sx::T, xo::O, sy::T, yo::O) where {T<:Integer,O<:Ordering} = sx * gcd(sx, sy)
-_find_step_in(sx::T, xo::Ordering, sy::T, yo::Ordering) where {T<:Integer} = -sx * gcd(sx, sy)
-
-function _find_step_in(sx::T, xo, sy::T, yo) where {T<:AbstractFloat}
-    return _find_step_in(rationalize(sx), rationalize(sy))
-end
-
-function _find_step_in(sx::T, xo::Ordering, sy::T, yo::Ordering) where {T<:Rational}
-    if denominator(sx) != denominator(sy)
-        return _find_step_in(denominator(sy) * sx, xo, denominator(sx) * sy, yo)
-    else
-        return -Rational(numerator(sx) * gcd(numerator(sx), numerator(sy)), denominator(sx))
-    end
-end
-
-function _find_step_in(sx::T, xo::O, sy::T, yo::O) where {T<:Rational,O<:Ordering}
-    if denominator(sx) != denominator(sy)
-        return _find_step_in(denominator(sy) * sx, xo, denominator(sx) * sy, yo)
-    else
-        return Rational(numerator(sx) * gcd(numerator(sx), numerator(sy)), denominator(sx))
-    end
+    return 0
 end
 
 ###
 ### findin
 ###
-function _findin(x, xo, y, yo)
+function _findin(x::AbstractUnitRange, xo, y::AbstractUnitRange, yo)
     xnew, ynew = promote(x, y)
     return _findin(xnew, xo, ynew, yo)
 end
 
-function _findin(x::OneToMRange, xo, y::OneToMRange, yo)
-    return OneToMRange(_find_last_in(x, xo, y, yo))
-end
-function _findin(x::OneTo, xo, y::OneTo, yo)
-    return OneTo(_find_last_in(x, xo, y, yo))
-end
-function _findin(x::OneToSRange, xo, y::OneToSRange, yo)
-    return OneToSRange(_find_last_in(x, xo, y, yo))
-end
+_findin(x::OneToMRange, xo, y::OneToMRange, yo) = OneToMRange(_find_last_in(x, xo, y, yo))
+_findin(x::OneTo,       xo, y::OneTo,       yo) = OneTo(_find_last_in(x, xo, y, yo))
+_findin(x::OneToSRange, xo, y::OneToSRange, yo) = OneToSRange(_find_last_in(x, xo, y, yo))
 
 function _findin(x::UnitRange{<:Integer}, xo, y::UnitRange{<:Integer}, yo)
     return UnitRange(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
@@ -176,52 +146,52 @@ function _findin(x::UnitSRange{<:Integer}, xo, y::UnitSRange{<:Integer}, yo)
 end
 
 function _findin(x::UnitRange, xo, y::UnitRange, yo)
-    iszero(rem(first(x) - first(y), 1)) || return similar_type(x)(fi, li)
-    return UnitRange(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
+    if iszero(rem(first(x) - first(y), 1))
+        return similar_type(x)(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
+    else
+        return empty(x)
+    end
 end
+
 function _findin(x::UnitMRange, xo, y::UnitMRange, yo)
-    iszero(rem(first(x) - first(y), 1)) || return similar_type(x)(fi, li)
-    return UnitMRange(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
+    if iszero(rem(first(x) - first(y), 1))
+        return similar_type(x)(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
+    else
+        return empty(x)
+    end
 end
+
 function _findin(x::UnitSRange, xo, y::UnitSRange, yo)
-    iszero(rem(first(x) - first(y), 1)) || return similar_type(x)(fi, li)
-    return UnitSRange(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
-end
-
-function _findin(x::StepMRange, xo, y::StepMRange, yo)
-    fi = _find_first_in(x, xo, y, yo)
-    li = _find_last_in(x, xo, y, yo)
-    sxy = _find_step_in(step(x), xo, step(y), yo)
-    if !iszero(rem(ordmin(x, xo) - ordmin(y, yo), div(sxy, step(x))))
-        # Unaligned, no overlap possible.
-        return mrange(fi, step=sxy, length=0)
+    if iszero(rem(first(x) - first(y), 1))
+        return similar_type(x)(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
     else
-        return mrange(fi, step=sxy, stop=li)
+        return empty(x)
     end
 end
 
-function _findin(x::StepSRange, xo, y::StepSRange, yo)
-    fi = _find_first_in(x, xo, y, yo)
-    li = _find_last_in(x, xo, y, yo)
-    sxy = _find_step_in(step(x), xo, step(y), yo)
+_to_step(x, ::O, ::O) where {O<:Ordering} = x
+_to_step(x, ::Ordering, ::Ordering) = -x
 
-    if !iszero(rem(ordmin(x, xo) - ordmin(y, yo), div(sxy, step(x))))
-        # Unaligned, no overlap possible.
-        return srange(fi, step=sxy, length=0)
-    else
-        return srange(fi, step=sxy, stop=li)
-    end
-end
-
+# TODO Does it matter what paramters are in the return empty range
 function _findin(x::AbstractRange, xo, y::AbstractRange, yo)
-    fi = _find_first_in(x, xo, y, yo)
-    li = _find_last_in(x, xo, y, yo)
-    sxy = _find_step_in(step(x), xo, step(y), yo)
-    if !iszero(rem(ordmin(x, xo) - ordmin(y, yo), div(sxy, step(x))))
-        # Unaligned, no overlap possible.
-        return range(fi, step=sxy, length=0)
+    sx = step(x)
+    sy = step(y)
+    sxy = div(sx, sy)
+    if iszero(sxy)
+        sxy = div(sy, sx)
+        if !iszero(rem(ordmin(x, xo) - ordmin(y, yo), div(sxy, sx)))
+            return 1:1:0
+        else
+            fi = _find_first_in(x, xo, y, yo)
+            li = _find_last_in(x, xo, y, yo)
+            return similar_range(x, y)(fi, step=_to_step(1, xo, yo), stop=li)
+        end
+    elseif !iszero(rem(ordmin(x, xo) - ordmin(y, yo), div(sxy, sx)))
+        return 1:1:0
     else
-        return range(fi, step=sxy, stop=li)
+        fi = _find_first_in(x, xo, y, yo)
+        li = _find_last_in(x, xo, y, yo)
+        return similar_range(x, y)(fi, step=_to_step(Int(sxy), xo, yo), stop=li)
     end
 end
 
