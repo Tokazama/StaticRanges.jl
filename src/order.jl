@@ -57,6 +57,10 @@ forward, reverse, etc).
 is_ordered(::Type{T}) where {T} = false
 is_ordered(::Type{T}) where {T<:AbstractRange} = true
 is_ordered(x::X) where {X} = is_ordered(X) ? true : is_forward(x) || is_reverse(x)
+is_ordered(::ForwardOrdering) = true
+is_ordered(::ReverseOrdering) = true
+is_ordered(::UnorderedOrdering) = false
+
 
 """
     ordmax(x) = ordmax(x, order(x))

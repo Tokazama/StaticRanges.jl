@@ -237,3 +237,8 @@ Base.promote_rule(::Type{<:LinSRange{T1}}, ::Type{<:OneToSRange{T2}}) where {T1,
 # TODO: needs to be in base
 Base.promote_rule(a::Type{<:OneTo}, b::Type{<:UnitRange}) = UnitRange{promote_type(eltype(a), eltype(b))}
 Base.promote_rule(a::Type{<:UnitRange}, b::Type{<:OneTo}) = UnitRange{promote_type(eltype(a), eltype(b))}
+
+# fixes ambiguity
+function Base.promote_rule(a::Type{StepRangeLen{T,R,S}}, ::Type{OR}) where {T,R,S,OR<:OneToMRange}
+    return StepMRangeLen{promote_type(T, eltype(OR)),promote_type(R, eltype(OR)),promote_type(S, eltype(OR))}
+end

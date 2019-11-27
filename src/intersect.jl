@@ -131,6 +131,10 @@ function _findin(x::AbstractUnitRange, xo, y::AbstractUnitRange, yo)
     return _findin(xnew, xo, ynew, yo)
 end
 
+function _findin(x::AbstractArray, xo, y::AbstractArray, yo)
+    return is_ordered(xo) && is_ordered(yo) ? Base._sortedfindin(y, x) : Base._findin(y, x)
+end
+
 _findin(x::OneToMRange, xo, y::OneToMRange, yo) = OneToMRange(_find_last_in(x, xo, y, yo))
 _findin(x::OneTo,       xo, y::OneTo,       yo) = OneTo(_find_last_in(x, xo, y, yo))
 _findin(x::OneToSRange, xo, y::OneToSRange, yo) = OneToSRange(_find_last_in(x, xo, y, yo))
