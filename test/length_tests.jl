@@ -35,7 +35,19 @@
         @test @inferred(set_length!(StepMRangeLen(1, 1, 10), 11)) == StepMRangeLen(1, 1, 11)
         @test @inferred(set_length!(StepMRangeLen(1, 1, 10), UInt32(11))) == StepMRangeLen(1, 1, 11)
         @test @inferred(set_length!(StepMRange(1, 1, 10), UInt32(11))) == StepMRange(1, 1, 11)
+        @test @inferred(set_length!(UnitMRange(2, 10), 10)) == UnitMRange(2, 11)
         @test @inferred(set_length!(OneToMRange(10), UInt32(11))) == OneToMRange(11)
+    end
+
+    @testset "set_length" begin
+        @test @inferred(set_length(LinMRange(1, 10, 5), 10)) == LinMRange(1, 10, 10)
+        @test @inferred(set_length(LinMRange(1, 10, 5), UInt32(10))) == LinMRange(1, 10, 10)
+        @test @inferred(set_length(LinMRange(1,1,0), 1)) == LinMRange(1,1,1)
+        @test @inferred(set_length(StepMRangeLen(1, 1, 10), 11)) == StepMRangeLen(1, 1, 11)
+        @test @inferred(set_length(StepMRangeLen(1, 1, 10), UInt32(11))) == StepMRangeLen(1, 1, 11)
+        @test @inferred(set_length(StepMRange(1, 1, 10), UInt32(11))) == StepMRange(1, 1, 11)
+        @test @inferred(set_length(UnitMRange(2, 10), 10)) == UnitMRange(2, 11)
+        @test @inferred(set_length(OneToMRange(10), UInt32(11))) == OneToMRange(11)
     end
 
     @testset "set_lediv!" begin
