@@ -62,6 +62,29 @@ function set_first!(r::StepMRangeLen{T,R,S}, val) where {T,R,S}
 end
 
 """
+    set_first(x, val)
+
+Returns similar type as `x` with first value set to `val`.
+"""
+set_first(x::AbstractVector{T}, val) where {T} = set_first(x, convert(T, val))
+function set_first(x::AbstractVector{T}, val::T) where {T}
+    if isempty(x)
+        return pushfirst(x, val)
+    elseif length(x) == 1
+        return similar_type(x)([val])
+    else
+        return pushfirst(@inbounds(x[2:end]), val)
+    end
+end
+set_first(r::LinRangeUnion{T}, val::T) where {T} = similar_type(r)(val, last(r), r.len)
+set_first(r::StepRangeUnion{T}, val::T) where {T} = similar_type(r)(val, step(r), last(r))
+set_first(r::UnitRangeUnion{T}, val::T) where {T} = similar_type(r)(val, last(r))
+function set_first(r::StepRangeLenUnion{T}, val::T) where {T}
+    return similar_type(r)(val, step(r), r.len, r.offset)
+end
+
+
+"""
     set_ref!(x, val)
 Set the reference field of an instance of `StepMRangeLen`.
 """

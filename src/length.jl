@@ -72,9 +72,9 @@ can_set_length(::Type{T}) where {T<:OneToMRange} = true
 """
     set_length!(x, len)
 
-Change the length of `x` while maintaining it's first and last positions.
+Returns a similar type as `x` with a length equal to `len`.
 """
-set_length!(r::Union{AbstractRange}, val) = set_length!(r, Int(val))
+set_length!(r::AbstractRange, val) = set_length!(r, Int(val))
 function set_length!(r::LinMRange, len::Int)
     len >= 0 || throw(ArgumentError("set_length!($r, $len): negative length"))
     if len == 1
@@ -98,6 +98,20 @@ set_length!(x::UnitMRange{T}, len) where {T} = set_last!(x, T(first(x)+len-1))
 function set_length!(r::StepMRange{T}, len) where {T}
     setfield!(r, :stop, convert(T, first(r) + step(r) * (len - 1)))
     return r
+end
+
+"""
+    set_length(x, len)
+
+Change the length of `x` while maintaining it's first and last positions.
+"""
+set_length(r::AbstractRange, val) = set_length(r, Int(val))
+set_length(r::LinRangeUnion, len::Int) = similar_type(r)(first(r), last(r), len)
+set_length(r::StepRangeLenUnion, len::Int) = similar_type(r)(r.ref, r.step, len, r.offset)
+set_length(r::OneToUnion{T}, len::T) where {T} = similar_type(r)(len)
+set_length(r::UnitRangeUnion{T}, len) where {T} = set_last(r, T(first(r) + len - 1))
+function set_length(r::StepRangeUnion{T}, len) where {T}
+    return set_last(r, convert(T, first(r) + step(r) * (len - 1)))
 end
 
 """

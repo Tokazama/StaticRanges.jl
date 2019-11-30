@@ -31,9 +31,13 @@ export
     mrange,
     srange,
     set_first!,
+    set_first,
     set_step!,
+    set_step,
     set_last!,
+    set_last,
     set_length!,
+    set_length,
     find_first,
     find_last,
     find_all,
@@ -75,6 +79,19 @@ include("staticunitrange.jl")
 include("abstractsteprange.jl")
 include("abstractlinrange.jl")
 include("abstractsteprangelen.jl")
+
+const LinRangeUnion{T} = Union{LinRange{T},AbstractLinRange{T}}
+const StepRangeLenUnion{T,R,S} = Union{StepRangeLen{T,R,S},AbstractStepRangeLen{T,R,S}}
+const StepRangeUnion{T,S} = Union{StepRange{T,S},AbstractStepRange{T,S}}
+const UnitRangeUnion{T} = Union{UnitRange{T},StaticUnitRange{T}}
+const OneToUnion{T} = Union{OneTo{T},OneToRange{T}}
+
+const SRange{T} = Union{OneToSRange{T},UnitSRange{T},StepSRange{T},LinSRange{T},StepSRangeLen{T}}
+const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},StepMRangeLen{T}}
+const UnionRange{T} = Union{SRange{T},MRange{T}}
+const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRangeLen{T}}
+
+
 include("staticness.jl")
 
 include("checkindex.jl")

@@ -1,8 +1,3 @@
-const SRange{T} = Union{OneToSRange{T},UnitSRange{T},StepSRange{T},LinSRange{T},StepSRangeLen{T}}
-const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},StepMRangeLen{T}}
-const UnionRange{T} = Union{SRange{T},MRange{T}}
-const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRangeLen{T}}
-
 "is_dynamic(x) - Returns true if the size of `x` is dynamic/can change."
 is_dynamic(::T) where {T} = is_dynamic(T)
 is_dynamic(::Type{T}) where {T} = is_fixed(T) | is_static(T) ? false : true

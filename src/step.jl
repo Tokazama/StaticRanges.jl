@@ -62,3 +62,18 @@ function set_step!(r::StepMRangeLen{T,R,S}, st::S) where {T,R,S}
     setfield!(r, :step, st)
     return r
 end
+
+"""
+    set_step(x, st)
+
+Sets the `step` of `x` to `val`.
+"""
+function set_step(r::AbstractRange, st)
+    if is_static(r)
+        return srange(first(r), step=st, last(r))
+    elseif is_fixed(r)
+        return range(first(r), step=st, last(r))
+    else
+        return mrange(first(r), step=st, last(r))
+    end
+end

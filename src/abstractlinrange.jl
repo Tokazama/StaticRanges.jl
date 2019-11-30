@@ -25,9 +25,7 @@ struct LinSRange{T,B,E,L,D} <: AbstractLinRange{T}
     end
 end
 
-function LinSRange(start, stop, len::Integer)
-    return LinSRange{typeof((stop-start)/len)}(start, stop, len)
-end
+LinSRange(start, stop, len::Integer) = LinSRange{typeof((stop-start)/len)}(start, stop, len)
 
 function Base.getproperty(r::LinSRange, s::Symbol)
     if s === :start
@@ -67,9 +65,7 @@ mutable struct LinMRange{T} <: AbstractLinRange{T}
     end
 end
 
-function LinMRange(start, stop, len::Integer)
-    return LinMRange{typeof((stop-start)/len)}(start, stop, len)
-end
+LinMRange(start, stop, len::Integer) = LinMRange{typeof((stop-start)/len)}(start, stop, len)
 
 LinMRange{T}(r::AbstractRange) where {T}= LinMRange{T}(first(r), last(r), length(r))
 

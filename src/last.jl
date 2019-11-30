@@ -59,3 +59,25 @@ function set_last!(r::StepMRangeLen{T}, val::T) where {T}
     return r
 end
 
+"""
+    set_last(x, val)
+
+Returns a similar type as `x` with its last value equal to `val`.
+"""
+set_last(x::AbstractVector{T}, val) where {T} = set_last(x, convert(T, val))
+function set_last(x::AbstractVector{T}, val::T) where {T}
+    if isempty(x)
+        return push(x, val)
+    elseif length(x) == 1
+        return similar_type(x)([val])
+    else
+        return push(@inbounds(x[1:end-1]), val)
+    end
+end
+set_last(r::LinRangeUnion{T}, val::T) where {T} = similar_type(r)(first(r), val, r.len)
+set_last(r::StepRangeUnion{T}, val::T) where {T} = similar_type(r)(first(r), step(r), val)
+set_last(r::UnitRangeUnion{T}, val::T) where {T} = similar_type(r)(first(r), val)
+set_last(r::OneToUnion{T}, val::T) where {T} = similar_type(r)(val)
+function set_last(r::StepRangeLenUnion{T}, val::T) where {T}
+    return similar_type(r)(r.ref, r.step, unsafe_findvalue(val, r), r.offset)
+end

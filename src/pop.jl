@@ -28,8 +28,10 @@ function Base.pop!(r::LinMRange)
     if length(r) == 1
         empty!(r)
     else
-        setfield!(r, :stop, @inbounds(r[lastindex(r) - 1]))
-        setfield!(r, :len, length(r) - 1)
+        len = length(r) - 1
+        setfield!(r, :stop, unsafe_getindex(r, len))
+        setfield!(r, :len, len)
+        setfield!(r, :lendiv, max(len - 1, 1))
     end
     return l
 end
@@ -48,16 +50,17 @@ function Base.pop!(r::Union{UnitMRange{T},OneToMRange{T}}) where {T}
     return l
 end
 
-###
+### popfirst!
 
 function Base.popfirst!(r::StepMRangeLen)
     isempty(r) && error("array must be non-empty")
     f = first(r)
     if length(r) == 1
-        return empty!(r)
+        empty!(r)
+    else
+        setfield!(r, :ref, @inbounds(r[2]))
+        setfield!(r, :len, length(r) - 1)
     end
-    setfield!(r, :ref, @inbounds(r[2]))
-    setfield!(r, :len, length(r) - 1)
     return f
 end
 
@@ -65,19 +68,19 @@ function Base.popfirst!(r::LinMRange)
     isempty(r) && error("array must be non-empty")
     f = first(r)
     if length(r) == 1
-        return empty!(r)
+        empty!(r)
+    else
+        len = length(r) - 1
+        setfield!(r, :start, @inbounds(r[2]))
+        setfield!(r, :len, len)
+        setfield!(r, :lendiv, max(len - 1, 1))
     end
-    setfield!(r, :start, @inbounds(r[2]))
-    setfield!(r, :len, length(r) - 1)
     return f
 end
 
 function Base.popfirst!(r::Union{StepMRange,UnitMRange})
     isempty(r) && error("array must be non-empty")
     f = first(r)
-    if length(r) == 1
-        return empty!(r)
-    end
-    setfield!(r, :start, @inbounds(r[2]))
+    length(r) == 1 ? empty!(r) : setfield!(r, :start, @inbounds(r[2]))
     return f
 end
