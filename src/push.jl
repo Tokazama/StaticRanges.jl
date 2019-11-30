@@ -1,15 +1,24 @@
-"""
-    push_key!(a::AbstractIndex{K}, k::K)
-"""
-function push_key!(a, k)
-    is_dynamic(a) || error("$(typeof(a)) is not dynamic. Cannot change keys.")
-    _push_key!(key_continuity(a), a, k)
-    set_last!(values(a), last(a) + one(eltype(a)))
-    return a
+StaticArrays.push(v::AbstractVector{T}, item) where {T} = pushfirst(v, convert(T, item))
+
+function StaticArrays.push(v::AbstractVector{T}, item::T)  where {T}
+    len = 
+    out = similar(v, set_length(axes(v, 1), length(v) + 1))
+    for i in eachindex(v)
+        out[i] = v[i]
+    end
+    out[end] = item
+    return out
 end
 
-_push_key!(::DiscreteTrait, ks, k) = push!(ks, k)
-function _push_key!(::ContinuousTrait, a, k)
-    nextval(a, last(a)) == k
-    set_length!(keys(a), length(a) + 1)
+StaticArrays.pushfirst(v::AbstractVector{T}, item) where {T} = pushfirst(v, convert(T, item))
+
+function StaticArrays.pushfirst(v::AbstractVector{T}, item::T)  where {T}
+    len = length(v) + 1
+    out = similar(v, set_length(axes(v, 1), len))
+    out[1] = item
+    for i in 2:len
+        out[i] = v[i-1]
+    end
+    return out
 end
+

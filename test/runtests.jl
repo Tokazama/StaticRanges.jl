@@ -17,6 +17,13 @@ include("unitrange_tests.jl")
 include("twiceprecision.jl")
 include("promotion_tests.jl")
 include("mutate.jl")
+
+include("first_tests.jl")
+include("step_tests.jl")
+include("last_tests.jl")
+include("size_tests.jl")
+include("length_tests.jl")
+
 include("staticness_tests.jl")
 include("find.jl")
 include("range_interface.jl")
@@ -30,10 +37,6 @@ include("reverse.jl")
 include("steprangelen_test.jl")
 
 include("linrange_test.jl")
-include("size_tests.jl")
-include("step_tests.jl")
-include("length_tests.jl")
-
 for frange in (mrange, srange)
     @testset "$frange" begin
         @test_throws ArgumentError frange(1)
