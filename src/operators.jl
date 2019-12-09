@@ -192,28 +192,21 @@ end
 =#
 
 Base.empty!(r::LinMRange{T}) where {T} = (setfield!(r, :len, 0); r)
-
 Base.empty!(r::StepMRangeLen{T}) where {T} = (setfield!(r, :len, 0); r)
-
 function Base.empty!(r::StepMRange{T}) where {T}
     setfield!(r, :stop, first(r) - step(r))
     return r
 end
-
 Base.empty!(r::UnitMRange{T}) where {T} = (setfield!(r, :stop, first(r) - one(T)); r)
-
 Base.empty!(r::OneToMRange{T}) where {T} = (setfield!(r, :start, zero(T)); r)
 
-Base.empty(r::AbstractLinRange{T}) where {T} = similar_type(r)(first(r), last(r), 0)
-
-function Base.empty(r::AbstractStepRangeLen{T}) where {T}
-    return similar_type(r)(r.ref, r.step, 0, r.offset)
-end
-
-function Base.empty(r::AbstractStepRange{T}) where {T}
-    return similar_type(r)(r.start, r.step, r.start - step(r))
-end
-
-Base.empty(r::StaticUnitRange{T}) where {T} = similar_type(r)(first(r), first(r) - one(T))
-
-Base.empty(r::OneToRange{T}) where {T} = similar_type(r)(zero(T))
+Base.empty(r::LinSRange) = LinSRange(first(r), last(r), 0)
+Base.empty(r::LinMRange) = LinMRange(first(r), last(r), 0)
+Base.empty(r::StepSRangeLen) = StepSRangeLen(r.ref, r.step, 0, r.offset)
+Base.empty(r::StepMRangeLen) = StepMRangeLen(r.ref, r.step, 0, r.offset)
+Base.empty(r::StepSRange)  = StepSRange(r.start, r.step, r.start - step(r))
+Base.empty(r::StepMRange)  = StepMRange(r.start, r.step, r.start - step(r))
+Base.empty(r::UnitSRange{T}) where {T} = UnitSRange(first(r), first(r) - one(T))
+Base.empty(r::UnitMRange{T}) where {T} = UnitMRange(first(r), first(r) - one(T))
+Base.empty(r::OneToSRange{T}) where {T} = OneToSRange(zero(T))
+Base.empty(r::OneToMRange{T}) where {T} = OneToMRange(zero(T))

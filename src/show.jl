@@ -12,7 +12,10 @@ function Base.show(io::IO, r::StepSRange)
     print(io, "StepSRange(", first(r), ":", step(r), ":", last(r), ")")
 end
 
-function Base.show(io::IO, r::StaticUnitRange)
-    print(io, typeof(r).name, "(", repr(first(r)), ':', repr(last(r)), ")")
+function Base.show(io::IO, r::UnitSRange)
+    print(io, "UnitSRange(", repr(first(r)), ':', repr(last(r)), ")")
 end
 
+function Base.show(io::IO, r::UnitMRange)
+    print(io, "UnitMRange(", repr(first(r)), ':', repr(last(r)), ")")
+end

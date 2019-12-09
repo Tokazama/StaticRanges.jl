@@ -49,7 +49,7 @@ as_fixed(x::OneTo) = x
 as_fixed(x::OneToRange) = OneTo(last(x))
 
 as_fixed(x::UnitRange) = x
-as_fixed(x::StaticUnitRange) = UnitRange(first(x), last(x))
+as_fixed(x::AbstractUnitRange) = UnitRange(first(x), last(x))
 
 as_fixed(x::StepRange) = x
 as_fixed(x::AbstractStepRange) = StepRange(first(x), step(x), last(x))

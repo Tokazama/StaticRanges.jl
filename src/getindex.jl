@@ -105,18 +105,20 @@ function Base.getindex(r::LinSRange, s::Union{OneToSRange{T},UnitSRange{T},StepS
 end
 
 ###
-### StaticUnitRange
+### UnitRange
 ###
-_in_unit_range(v::StaticUnitRange, val, i::Integer) = i > 0 && val <= last(v) && val >= first(v)
+function _in_unit_range(v::Union{UnitMRange,UnitSRange}, val, i::Integer)
+    return i > 0 && val <= last(v) && val >= first(v)
+end
 
-function Base.getindex(v::StaticUnitRange{T}, i::Integer) where T
+function Base.getindex(v::Union{UnitMRange{T},UnitSRange{T}}, i::Integer) where T
     Base.@_inline_meta
     val = convert(T, first(v) + (i - 1))
     @boundscheck _in_unit_range(v, val, i) || throw(BoundsError(v, i))
     return val
 end
 
-function Base.getindex(v::StaticUnitRange{T}, i::Integer) where {T<:Base.OverflowSafe}
+function Base.getindex(v::Union{UnitMRange{T},UnitSRange{T}}, i::Integer) where {T<:Base.OverflowSafe}
     Base.@_inline_meta
     val = v.start + (i - 1)
     @boundscheck _in_unit_range(v, val, i) || throw(BoundsError(v, i))

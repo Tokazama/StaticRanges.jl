@@ -83,7 +83,7 @@ include("abstractsteprangelen.jl")
 const LinRangeUnion{T} = Union{LinRange{T},AbstractLinRange{T}}
 const StepRangeLenUnion{T,R,S} = Union{StepRangeLen{T,R,S},AbstractStepRangeLen{T,R,S}}
 const StepRangeUnion{T,S} = Union{StepRange{T,S},AbstractStepRange{T,S}}
-const UnitRangeUnion{T} = Union{UnitRange{T},StaticUnitRange{T}}
+const UnitRangeUnion{T} = Union{UnitRange{T},UnitSRange{T},UnitMRange{T}}
 const OneToUnion{T} = Union{OneTo{T},OneToRange{T}}
 
 const SRange{T} = Union{OneToSRange{T},UnitSRange{T},StepSRange{T},LinSRange{T},StepSRangeLen{T}}
@@ -93,11 +93,8 @@ const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRang
 
 
 include("staticness.jl")
-
 include("checkindex.jl")
-
 include("filter.jl")
-
 include("first.jl")
 include("last.jl")
 include("step.jl")
@@ -107,6 +104,7 @@ include("promotion.jl")
 include("range.jl")
 include("merge_sort.jl")
 include("intersect.jl")
+include("findin.jl")
 include("broadcast.jl")
 include("operators.jl")
 include("getindex.jl")
