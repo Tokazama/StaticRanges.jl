@@ -75,7 +75,7 @@ include("nextval.jl")
 
 include("twiceprecision.jl")
 include("onetorange.jl")
-include("staticunitrange.jl")
+include("unitrange.jl")
 include("abstractsteprange.jl")
 include("abstractlinrange.jl")
 include("abstractsteprangelen.jl")

@@ -31,7 +31,7 @@
                 @test @inferred(length(r)) == 10
             end
 
-            if r isa StaticRanges.StaticUnitRange
+            if r isa UnitSRange || r isa UnitMRange
                 io = IOBuffer()
                 show(io, r)
                 str = String(take!(io))
