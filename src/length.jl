@@ -19,6 +19,14 @@ function Base.length(r::StepMRange{T}) where {T}
     return start_step_stop_to_length(T, first(r), step(r), last(r))
 end
 
+function Base.length(r::Union{UnitSRange{T},UnitMRange{T}})  where {T<:Union{UInt,UInt64,UInt128},F,L}
+    return last(r) < first(r) ? 0 : Int(Base.Checked.checked_add(last(r) - first(r), one(T)))
+end
+
+function Base.length(r::Union{UnitSRange{T},UnitMRange{T}}) where {T<:Union{Int,Int64,Int128},F,L}
+    return Int(Base.Checked.checked_add(Base.Checked.checked_sub(last(r), first(r)), one(T)))
+end
+
 lendiv(r::LinMRange) = getfield(r, :lendiv)
 
 function start_step_stop_to_length(::Type{T}, start, step, stop) where {T}
