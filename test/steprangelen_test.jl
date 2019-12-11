@@ -29,5 +29,6 @@
             end
         end
     end
+    @test +(StepMRangeLen(1, 2, 10, 1), StepMRangeLen(1, 2, 10, 2)) == +(StepRangeLen(1, 2, 10, 1), StepRangeLen(1, 2, 10, 2))
 end
 

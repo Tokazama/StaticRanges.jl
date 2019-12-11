@@ -16,7 +16,7 @@ end
 
 StaticArrays.Size(::Type{OneToSRange{T,L}}) where {T<:Union{Int,Int64},L} = Size{(T(L),)}()
 
-StaticArrays.Size(::Type{OneToSRange{T,L}}) where {T,L} = Size{(Integer(L - zero(T)),)}()
+StaticArrays.Size(::Type{OneToSRange{T,L}}) where {T,L} = Size{(Int(L - zero(T)),)}()
 
 # TODO would be better to have this implemented in StaticArrays
 _Size(::Type{T}) where {T<:Tuple} = Size{StaticArrays.get.(Tuple(Length.(T.parameters)))}()

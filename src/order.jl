@@ -10,6 +10,21 @@ const UnkownOrder = UnkownOrdering()
     is_forward(x) -> Bool
 
 Returns `true` if `x` is sorted forward.
+
+## Examples
+```jldoctest
+julia> fr = 1:2:10
+1:2:9
+
+julia> rr = 10:-2:1
+10:-2:2
+
+julia> is_forward(fr)
+true
+
+julia> is_forward(rr)
+false
+```
 """
 is_forward(x) = issorted(x)
 is_forward(::ForwardOrdering) = true
@@ -21,6 +36,21 @@ is_forward(x::AbstractRange) = step(x) > 0
     is_reverse(x) -> Bool
 
 Returns `true` if `x` is sorted in reverse.
+
+## Examples
+```jldoctest
+julia> fr = 1:2:10
+1:2:9
+
+julia> rr = 10:-2:1
+10:-2:2
+
+julia> is_reverse(fr)
+false
+
+julia> is_reverse(rr)
+true
+```
 """
 is_reverse(x) = issorted(x, order=Reverse)
 is_reverse(::ReverseOrdering) = true
@@ -230,6 +260,21 @@ end
 
 Returns `true` if all elements in `x` are before all elements in `y`. Functionally
 equivalent to `all(x .< y)`.
+
+## Examples
+```jldoctest
+julia> r1 = 1:5
+1:5
+
+julia> r2 = 6:10
+6:10
+
+julia> is_before(r2, r1)
+false
+
+julia> is_before(r1, r2)
+true
+```
 """
 is_before(x, y) = is_before(x, order(x), y, order(y))
 is_before(x, xo, y, yo) = ordmax(x, xo) < ordmin(y, yo)
@@ -249,6 +294,21 @@ end
 
 Returns `true` if all elements in `x` are after all elements in `y`. Functionally
 equivalent to `all(x .> y)`.
+
+## Examples
+```jldoctest
+julia> r1 = 1:5
+1:5
+
+julia> r2 = 6:10
+6:10
+
+julia> is_after(r2, r1)
+true
+
+julia> is_after(r1, r2)
+false
+```
 """
 is_after(x, y) = is_after(x, order(x), y, order(y))
 is_after(x, xo, y, yo) = ordmin(x, xo) > ordmax(y, yo)

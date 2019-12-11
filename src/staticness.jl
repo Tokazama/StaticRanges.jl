@@ -1,13 +1,87 @@
-"is_dynamic(x) - Returns true if the size of `x` is dynamic/can change."
+"""
+    is_dynamic(x) -> Bool
+
+Returns true if the size of `x` is dynamic/can change.
+
+## Examples
+```jldoctest
+julia> usr = UnitSRange(1, 10)
+UnitSRange(1:10)
+
+julia> smr = StepMRange(1, 2, 20)
+StepMRange(1:2:19)
+
+julia> sfr = StepRange(1, 2, 20)
+1:2:19
+
+julia> is_dynamic(usr)
+false
+
+julia> is_dynamic(ufr)
+false
+
+julia> is_dynamic(umr)
+true
+"""
 is_dynamic(::T) where {T} = is_dynamic(T)
 is_dynamic(::Type{T}) where {T} = is_fixed(T) | is_static(T) ? false : true
 
-"is_static(x) - Returns `true` if `x` is static."
+"""
+    is_static(x) -> Bool
+
+Returns `true` if `x` is static.
+
+## Examples
+```jldoctest
+julia> usr = UnitSRange(1, 10)
+UnitSRange(1:10)
+
+julia> smr = StepMRange(1, 2, 20)
+StepMRange(1:2:19)
+
+julia> sfr = StepRange(1, 2, 20)
+1:2:19
+
+julia> is_static(usr)
+true
+
+julia> is_static(ufr)
+false
+
+julia> is_static(umr)
+false
+```
+"""
 is_static(::T) where {T} = is_static(T)
 is_static(::Type{T}) where {T} = false
 is_static(::Type{T}) where {T<:SRange} = true
 
-"is_fixed(x) - Returns `true` if the size of `x` is fixed."
+"""
+    is_fixed(x) -> Bool
+
+Returns `true` if the size of `x` is fixed.
+
+## Examples
+```jldoctest
+julia> usr = UnitSRange(1, 10)
+UnitSRange(1:10)
+
+julia> smr = StepMRange(1, 2, 20)
+StepMRange(1:2:19)
+
+julia> sfr = StepRange(1, 2, 20)
+1:2:19
+
+julia> is_fixed(usr)
+false
+
+julia> is_fixed(ufr)
+true
+
+julia> is_fixed(umr)
+false
+```
+"""
 is_fixed(::T) where {T} = is_fixed(T)
 is_fixed(::Type{T}) where {T} = !T.mutable & !is_static(T) ? true : false
 
@@ -23,6 +97,24 @@ ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = true
 
 If `x` is mutable then returns `x`, otherwise returns a comparable but mutable
 type to `x`.
+
+## Examples
+```jldoctest
+julia> as_dynamic(OneTo(10))
+OneToMRange(10)
+
+julia> as_dynamic(UnitRange(1, 10))
+UnitMRange(1:10)
+
+julia> as_dynamic(StepRange(1, 2, 20))
+StepMRange(1:2:19)
+
+julia> as_dynamic(range(1.0, step=2.0, stop=20.0))
+StepMRangeLen(1.0:2.0:19.0)
+
+julia> as_dynamic(LinRange(1, 20, 10))
+LinMRange(1.0, stop=20.0, length=10)
+```
 """
 as_dynamic(x::OneToMRange) = x
 as_dynamic(x::Union{OneTo,OneToSRange}) = OneToMRange(last(x))
@@ -44,6 +136,25 @@ as_dynamic(x::Union{StepRangeLen,StepSRangeLen}) = StepMRangeLen(first(x), step(
 
 If `x` is immutable then returns `x`, otherwise returns a comparable but fixed size
 type to `x`.
+
+## Examples
+```jldoctest
+julia> as_fixed(OneToMRange(10))
+Base.OneTo(10)
+
+julia> as_fixed(UnitMRange(1, 10))
+1:10
+
+julia> as_fixed(StepMRange(1, 2, 20))
+1:2:19
+
+julia> as_fixed(mrange(1.0, step=2.0, stop=20.0))
+1.0:2.0:19.0
+
+julia> as_fixed(LinMRange(1, 20, 10))
+10-element LinRange{Float64}:
+ 1.0,3.11111,5.22222,7.33333,9.44444,11.5556,13.6667,15.7778,17.8889,20.0
+```
 """
 as_fixed(x::OneTo) = x
 as_fixed(x::OneToRange) = OneTo(last(x))
@@ -65,6 +176,24 @@ as_fixed(x::AbstractStepRangeLen) = StepRangeLen(first(x), step(x), length(x), x
 
 If `x` is static then returns `x`, otherwise returns a comparable but static size
 type to `x`.
+
+## Examples
+```jldoctest
+julia> as_static(OneTo(10))
+OneToSRange(10)
+
+julia> as_static(UnitRange(1, 10))
+UnitSRange(1:10)
+
+julia> as_static(StepRange(1, 2, 20))
+StepSRange(1:2:19)
+
+julia> as_static(range(1.0, step=2.0, stop=20.0))
+StepSRangeLen(1.0:2.0:19.0)
+
+julia> as_static(LinRange(1, 20, 10))
+LinSRange(1.0, stop=20.0, length=10)
+```
 """
 as_static(x::OneToSRange) = x
 as_static(x::Union{OneTo,OneToMRange}) = OneToSRange(last(x))

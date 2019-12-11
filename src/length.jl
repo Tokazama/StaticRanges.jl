@@ -1,7 +1,7 @@
 
-Base.length(r::OneToMRange) = Int(last(r) - zero(last(r)))
+Base.length(r::OneToMRange) = Int(last(r))
 
-Base.length(r::OneToSRange{T,L}) where {T,L} = Int(L - zero(T))
+Base.length(r::OneToSRange{T,L}) where {T,L} = Int(L)
 
 Base.length(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = L
 
@@ -19,11 +19,19 @@ function Base.length(r::StepMRange{T}) where {T}
     return start_step_stop_to_length(T, first(r), step(r), last(r))
 end
 
-function Base.length(r::Union{UnitSRange{T},UnitMRange{T}})  where {T<:Union{UInt,UInt64,UInt128},F,L}
+function Base.length(r::UnitMRange{T})  where {T<:Union{UInt,UInt64,UInt128}}
     return last(r) < first(r) ? 0 : Int(Base.Checked.checked_add(last(r) - first(r), one(T)))
 end
 
-function Base.length(r::Union{UnitSRange{T},UnitMRange{T}}) where {T<:Union{Int,Int64,Int128},F,L}
+function Base.length(r::UnitSRange{T,F,L})  where {T<:Union{UInt,UInt64,UInt128},F,L}
+    return L < F ? 0 : Int(Base.Checked.checked_add(L - F, one(T)))
+end
+
+function Base.length(r::UnitSRange{T,F,L}) where {T<:Union{Int,Int64,Int128},F,L}
+    return Int(Base.Checked.checked_add(Base.Checked.checked_sub(L, F), one(T)))
+end
+
+function Base.length(r::UnitMRange{T}) where {T<:Union{Int,Int64,Int128}}
     return Int(Base.Checked.checked_add(Base.Checked.checked_sub(last(r), first(r)), one(T)))
 end
 
