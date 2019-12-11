@@ -4,6 +4,8 @@
                       (OneToSRange(UInt(10)), OneTo(UInt(10))),
                       (UnitMRange(1, 10), UnitRange(1, 10)),
                       (UnitSRange(1.,10.), UnitRange(1.0, 10.0)),
+                      (UnitMRange(UInt(1), UInt(10)), UnitRange(UInt(1), UInt(10))),
+                      (UnitSRange(UInt(1), UInt(10)), UnitRange(UInt(1), UInt(10))),
                       (StepMRange(1, 2, 10), StepRange(1, 2, 10)),
                       (StepSRange(UInt32(1), UInt32(2), UInt32(10)), StepRange(UInt32(1), UInt32(2), UInt32(10))),
                       (mrange(1.0, step=2.0, stop=10.0), 1.0:2.0:10.0),

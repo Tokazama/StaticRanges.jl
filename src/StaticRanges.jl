@@ -25,6 +25,8 @@ export
     OneToSRange,
     OneToMRange,
     # methods
+    and,
+    or,
     as_static,
     as_dynamic,
     as_fixed,
