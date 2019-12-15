@@ -38,6 +38,18 @@ can_set_last(::Type{T}) where {T<:OneToMRange} = true
     set_last!(x, val)
 
 Set the last element of `x` to `val`.
+
+## Examples
+```julia
+julia> mr = UnitMRange(1, 10)
+UnitMRange(1:10)
+
+julia> set_last!(r, 5)
+UnitMRange(1:5)
+
+julia> last(mr)
+5
+```
 """
 function set_last!(x::AbstractVector{T}, val::T) where {T}
     can_set_last(x) || throw(MethodError(set_last!, (x, val)))
@@ -67,6 +79,15 @@ end
     set_last(x, val)
 
 Returns a similar type as `x` with its last value equal to `val`.
+
+## Examplse
+```jldoctest
+julia> r = 1:10
+1:10
+
+julia> set_last(r, 5)
+1:5
+```
 """
 set_last(x::AbstractVector{T}, val) where {T} = set_last(x, convert(T, val))
 function set_last(x::AbstractVector{T}, val::T) where {T}

@@ -48,6 +48,18 @@ can_set_first(::Type{T}) where {T<:UnitMRange} = true
     set_first!(x, val)
 
 Set the first element of `x` to `val`.
+
+## Examples
+```jldoctest
+julia> mr = UnitMRange(1, 10)
+UnitMRange(1:10)
+
+julia> set_first!(mr, 2)
+UnitMRange(2:20)
+
+julia> first(mr)
+2
+```
 """
 function set_first!(x::AbstractVector{T}, val::T) where {T}
     can_set_first(x) || throw(MethodError(set_first!, (x, val)))
@@ -70,6 +82,15 @@ end
     set_first(x, val)
 
 Returns similar type as `x` with first value set to `val`.
+
+## Examples
+```julia
+julia> r = 1:10
+1:10
+
+julia> set_first(r, 2)
+2:10
+```
 """
 set_first(x::AbstractVector{T}, val) where {T} = set_first(x, convert(T, val))
 function set_first(x::AbstractVector{T}, val::T) where {T}

@@ -47,6 +47,18 @@ can_set_step(::Type{T}) where {T<:StepMRangeLen} = true
     set_step!(x, st)
 
 Sets the `step` of `x` to `val`.
+
+## Examples
+```jldoctest
+julia> mr = StepMRange(1, 1, 10)
+1:1:10
+
+julia> set_step!(mr, 2)
+StepMRange(1:2:9)
+
+julia> step(mr)
+2
+```
 """
 set_step!(x::UnitMRange, st) = error("Step size of UnitMRange type can only be 1.")
 set_step!(x::OneToMRange, st) = error("Step size of OneToMRange type can only be 1.")
@@ -67,6 +79,15 @@ end
     set_step(x, st)
 
 Sets the `step` of `x` to `val`.
+
+## Examples
+```jldoctest
+julia> r = 1:1:10
+1:1:10
+
+julia> set_step(r, 2)
+1:2:9
+```
 """
 function set_step(r::AbstractRange, st)
     if is_static(r)

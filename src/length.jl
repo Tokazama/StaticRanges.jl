@@ -96,6 +96,18 @@ can_set_length(::Type{T}) where {T<:OneToMRange} = true
     set_length!(x, len)
 
 Returns a similar type as `x` with a length equal to `len`.
+
+## Examples
+```jldoctest
+julia> mr = UnitMRange(1, 10)
+UnitMRange(1:10)
+
+julia> set_length!(mr, 20)
+UnitMRange(1:20)
+
+julia> length(mr)
+20
+```
 """
 set_length!(r::AbstractRange, val) = set_length!(r, Int(val))
 function set_length!(r::LinMRange, len::Int)
@@ -127,6 +139,15 @@ end
     set_length(x, len)
 
 Change the length of `x` while maintaining it's first and last positions.
+
+## Examples
+```jldoctest
+julia> r = 1:10
+1:10
+
+julia> set_length(r, 20)
+1:20
+```
 """
 set_length(r::AbstractRange, val) = set_length(r, Int(val))
 set_length(r::LinRangeUnion, len::Int) = similar_type(r)(first(r), last(r), len)

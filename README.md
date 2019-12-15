@@ -16,8 +16,8 @@ It's objectives are:
 
 Most subtypes of `AbstractRange` present in `Base` have counterparts implemented here.
 ```julia
-using StaticRanges
-using Base: OneTo
+julia> using StaticRanges
+julia> using Base: OneTo
 
 julia> mot = OneToMRange(10)
 OneToMRange(10)
@@ -222,6 +222,57 @@ julia> @btime find_all(<(5), $fr)
 1:2
 ```
 
+```julia
+julia> r = 1:10
+1:10
+
+julia> mr = UnitMRange(1, 10)
+UnitMRange(1:10)
+
+julia> findall(or(<(4), >(12)), mr)
+7-element Array{Int64,1}:
+  1
+  2
+  3
+  7
+  8
+  9
+ 10
+
+julia> find_all(or(<(4), >(6)), r)
+7-element GapRange{Int64,UnitRange{Int64},UnitRange{Int64}}:
+  1
+  2
+  3
+  7
+  8
+  9
+ 10
+
+julia> @btime filter(or(<(4), >(6)), $r)
+  124.496 ns (3 allocations: 320 bytes)
+7-element Array{Int64,1}:
+  1
+  2
+  3
+  7
+  8
+  9
+ 10
+
+julia> @btime filter(or(<(4), >(6)), $mr)
+  72.911 ns (3 allocations: 208 bytes)
+7-element Array{Int64,1}:
+  1
+  2
+  3
+  7
+  8
+  9
+ 10
+
+```
+
 ## Experimental Syntax
 
 Currently there's some experimental syntax that can be used to chain together
@@ -282,12 +333,78 @@ julia> find_all(>(4) & <(8), fr)
 ```
 ## Mutation
 
-These are implemented but need examples
-* `set_length`
-* `set_step`
-* `set_first`
-* `set_last`
-* `set_length!`
-* `set_step!`
-* `set_first!`
-* `set_last!`
+### set_length
+
+```julia
+julia> r = 1:10
+1:10
+
+julia> set_length(r, 20)
+1:20
+
+julia> mr = UnitMRange(1, 10)
+UnitMRange(1:10)
+
+julia> set_length!(mr, 20)
+UnitMRange(1:20)
+
+julia> length(mr)
+20
+```
+
+### set_first
+
+```julia
+julia> r = 1:10
+1:10
+
+julia> set_first(r, 2)
+2:10
+
+julia> mr = UnitMRange(1, 10)
+UnitMRange(1:10)
+
+julia> set_first!(mr, 2)
+UnitMRange(2:20)
+
+julia> first(mr)
+2
+```
+
+### set_last
+
+```julia
+julia> r = 1:10
+1:10
+
+julia> set_last(r, 5)
+1:5
+
+julia> mr = UnitMRange(1, 10)
+UnitMRange(1:10)
+
+julia> set_last!(r, 5)
+UnitMRange(1:5)
+
+julia> last(mr)
+5
+```
+
+### set_step
+
+```julia
+julia> r = 1:1:10
+1:1:10
+
+julia> set_step(r, 2)
+1:2:10
+
+julia> mr = StepMRange(1, 1, 10)
+1:1:10
+
+julia> set_step!(mr, 2)
+StepMRange(1:2:9)
+
+julia> step(mr)
+2
+```
