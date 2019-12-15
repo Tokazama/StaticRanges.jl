@@ -28,4 +28,5 @@
         end
     end
 
+    @test last(GapRange(2:5, 7:10)) == 10
 end

@@ -24,6 +24,7 @@ export
     UnitMRange,
     OneToSRange,
     OneToMRange,
+    GapRange,
     # methods
     and,
     or,
@@ -66,6 +67,8 @@ export
     similar_type,
     pop,
     popfirst
+
+    include("gaprange.jl")
 
 include("chainedfix.jl")
 include("continuity.jl")

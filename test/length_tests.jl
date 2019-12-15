@@ -17,6 +17,8 @@
                 @test @inferred(stephi(r)) == stephi(b)
                 @test @inferred(steplo(r)) == steplo(b)
             end
+
+            @test length(GapRange(1:5, 6:10)) == 10
         end
     end
 

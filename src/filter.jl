@@ -38,7 +38,9 @@ function _fltr_or(r, ro, inds1, inds2)
     end
 end
 
-@propagate_inbounds Base.filter(f::Fix2{typeof(!=)}, r::UnionRange) = _fltr_not(f, r, order(r))
+@propagate_inbounds function Base.filter(f::Fix2{typeof(!=)}, r::UnionRange)
+    return _fltr_not(f, r, order(r))
+end
 
 @propagate_inbounds function _fltr_not(f, r, ro::ForwardOrdering)
     return __fltr_not(r, find_all(<(f.x), r, ro), find_all(>(f.x), r, ro))

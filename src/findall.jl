@@ -62,7 +62,22 @@ function _bit_or(r, ro, inds1, inds2)
     end
 end
 
-# we assume that neither of these are empty at this point
+# TODO: this should be implemented once GapRange is more stable
+function _merge_bit_find(inds1::AbstractRange{T}, inds2::AbstractRange{T}) where {T}
+    if is_after(inds1, inds2)
+        return GapRange{T,typeof(inds2),typeof(inds1)}(inds2, inds1)
+    elseif is_before(inds1, inds2)
+        return GapRange{T,typeof(inds1),typeof(inds2)}(inds1, inds2)
+    else
+        # TODO this makes this type unstable, should it return a GapRange
+        return UnitRange(
+            _group_min(inds1, Forward, inds2, Forward),
+            _group_max(inds1, Forward, inds2, Forward)
+           )
+    end
+end
+
+#= we assume that neither of these are empty at this point
 function _merge_bit_find(inds1::AbstractRange{T}, inds2::AbstractRange{T}) where {T}
     if is_after(inds1, inds2)
         return vcat(inds2, inds1)
@@ -72,6 +87,7 @@ function _merge_bit_find(inds1::AbstractRange{T}, inds2::AbstractRange{T}) where
         return _group_min(inds1, Forward, inds2, Forward):_group_max(inds1, Forward, inds2, Forward)
     end
 end
+=#
 
 @propagate_inbounds function find_all(f::Fix2{typeof(!=)}, r, ro::ForwardOrdering)
     return find_all(<(f.x) | >(f.x), r, ro)
@@ -84,5 +100,3 @@ find_all(f::Fix2{typeof(!=)}, r::AbstractRange, ::UnorderedOrdering) = _empty_ur
 function find_all(f::Fix2{typeof(!=)}, r::AbstractVector, ::UnorderedOrdering)
     return findall(f, r)
 end
-
-

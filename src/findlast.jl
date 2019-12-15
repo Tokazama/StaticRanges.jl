@@ -13,7 +13,7 @@ function unsafe_findlast(f, a::AbstractArray, ro::Ordering)
 end
 
 # ==, isequal
-function find_last(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, r, ro::Ordering)
+function find_last(f::F2Eq, r, ro::Ordering)
     if isempty(r)
         return nothing
     else
@@ -25,7 +25,7 @@ function find_last(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, r, ro::Ordering
     end
 end
 # <, isless
-function find_last(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r, ro::ForwardOrdering)
+function find_last(f::F2IsLess, r, ro::ForwardOrdering)
     idx = unsafe_findlast(f, r, ro)
     @boundscheck if lastindex(r) < idx
         return lastindex(r)
@@ -35,16 +35,14 @@ function find_last(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r, ro::ForwardOrd
     end
     return f(@inbounds(r[idx])) ? idx : (idx != firstindex(r) ? idx - 1 : nothing)
 end
-function find_last(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r, ::ReverseOrdering)
+function find_last(f::F2IsLess, r, ::ReverseOrdering)
     @boundscheck if last(r) < f.x
         return lastindex(r)
     end
     return nothing
 end
-find_last(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r::AbstractRange, ::UnorderedOrdering) = nothing
-function find_last(f::Fix2{<:Union{typeof(<),typeof(isless)}}, r::AbstractArray, ro::UnorderedOrdering)
-    return unsafe_findlast(f, r, ro)
-end
+find_last(f::F2IsLess, r::AbstractRange, ::UnorderedOrdering) = nothing
+find_last(f::F2IsLess, r::AbstractArray, ro::UnorderedOrdering) = unsafe_findlast(f, r, ro)
 
 
 # <=

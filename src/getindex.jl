@@ -155,3 +155,21 @@ function Base.getindex(r::OneToRange{T}, s::Union{OneToRange,OneTo}) where T
 end
 
 
+# GapRange
+unsafe_index_first(gr::GapRange, i::Integer) = @inbounds(getindex(first_range(gr), i))
+function unsafe_index_last(gr::GapRange, i::Integer)
+    return @inbounds(getindex(last_range(gr), i - first_length(gr)))
+end
+
+function Base.getindex(gr::GapRange, i::Integer)
+    @boundscheck checkbounds(gr, i)
+    return i <= first_length(gr) ? unsafe_index_first(gr, i) : unsafe_index_last(gr, i)
+end
+
+@propagate_inbounds function  Base.getindex(x::AbstractArray, gr::GapRange)
+    @boundscheck checkbounds(x, gr)
+    return vcat(
+        @inbounds(getindex(x, first_range(gr))),
+        @inbounds(getindex(x, last_range(gr)))
+    )
+end

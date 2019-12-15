@@ -26,4 +26,5 @@
             @test set_first(r1, v) == r2
         end
     end
+    @test first(GapRange(2:5, 7:10)) == 2
 end

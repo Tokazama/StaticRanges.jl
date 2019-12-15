@@ -1,3 +1,7 @@
+
+
+Base.size(gr::GapRange) = (length(gr),)
+
 StaticArrays.Size(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = Size{(L,)}()
 
 StaticArrays.Size(::Type{StepSRangeLen{T,Tr,Ts,R,S,L,F}}) where {T,Tr,Ts,R,S,L,F} = Size{(L,)}()

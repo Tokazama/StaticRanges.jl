@@ -26,6 +26,11 @@ reflo(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr<:TwicePrecision,Ts,R,S,L,F} 
 reflo(r::StepMRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.lo
 reflo(r::StepRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.lo
 
+first_range(gr::GapRange) = getfield(gr, :first_range)
+
+Base.first(gr::GapRange) = first(first_range(gr))
+
+
 """
     can_set_first(x) -> Bool
 
@@ -97,7 +102,9 @@ set_ref!(r::StepMRangeLen{T,R,S}, val) where {T,R,S} = set_ref!(r, convert(R, va
 Set the offset field of an instance of `StepMRangeLen`.
 """
 function set_offset!(r::StepMRangeLen, val::Int)
-    1 <= val <= max(1,r.len) || throw(ArgumentError("StepMRangeLen: offset must be in [1,$len], got $offset"))
+    if 1 > val > max(1, r.len)
+        throw(ArgumentError("StepMRangeLen: offset must be in [1,$(r.len)], got $(r.offset)"))
+    end
     setfield!(r, :offset, val)
     return r
 end

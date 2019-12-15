@@ -4,9 +4,9 @@ struct ChainedFix{L,F1,F2} <: Function
     f2::F2
 end
 
-#ChainedFix(link, f1, f2) = ChainedFix{typeof(link),typeof(f1),typeof(f2)}(link, f1, f2)
-
-(cf::ChainedFix{L,F1,F2})(x) where {L,F1<:Function,F2<:Function} = cf.link(cf.f1(x), cf.f2(x))
+function (cf::ChainedFix{L,F1,F2})(x) where {L,F1<:Function,F2<:Function}
+    return cf.link(cf.f1(x), cf.f2(x))
+end
 (cf::ChainedFix{L,F1,F2})(x) where {L,F1<:Function,F2} = cf.link(cf.f1(x), cf.f2)
 (cf::ChainedFix{L,F1,F2})(x) where {L,F1,F2<:Function} = cf.link(cf.f1, cf.f2(x))
 
@@ -46,6 +46,7 @@ Base.:|(x::Function, y) = ChainedFix(|, x, y)
 Base.:|(x, y::Function) = ChainedFix(|, x, y)
 Base.:|(x::Function, y::Function) = ChainedFix(|, x, y)
 
-F2Lt{T} = Fix2{<:Union{typeof(<),typeof(<=)},T}
-F2Gt{T} = Fix2{<:Union{typeof(>),typeof(>=)},T}
-F2Eq{T} = Fix2{<:Union{typeof(isequal),typeof(==)},T}
+const F2Lt{T} = Fix2{<:Union{typeof(<),typeof(<=)},T}
+const F2Gt{T} = Fix2{<:Union{typeof(>),typeof(>=)},T}
+const F2Eq{T} = Fix2{<:Union{typeof(isequal),typeof(==)},T}
+const F2IsLess{T} = Fix2{<:Union{typeof(isless),typeof(<)},T}

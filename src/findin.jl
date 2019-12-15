@@ -55,7 +55,7 @@ end
 
 function _findin(x::UnitRange, xo, y::UnitRange, yo)
     if iszero(rem(first(x) - first(y), 1))
-        return similar_type(x)(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
+        return UnitRange(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
     else
         return empty(x)
     end
@@ -63,7 +63,7 @@ end
 
 function _findin(x::UnitMRange, xo, y::UnitMRange, yo)
     if iszero(rem(first(x) - first(y), 1))
-        return similar_type(x)(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
+        return UnitMRange(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
     else
         return empty(x)
     end
@@ -71,7 +71,7 @@ end
 
 function _findin(x::UnitSRange, xo, y::UnitSRange, yo)
     if iszero(rem(first(x) - first(y), 1))
-        return similar_type(x)(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
+        return UnitSRange(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
     else
         return empty(x)
     end
