@@ -31,6 +31,7 @@ is_forward(::ForwardOrdering) = true
 is_forward(::Ordering) = false
 is_forward(::AbstractUnitRange) = true
 is_forward(x::AbstractRange) = step(x) > 0
+is_forward(x::GapRange) = is_forward(first_range(x))
 
 """
     is_reverse(x) -> Bool
@@ -57,6 +58,7 @@ is_reverse(::ReverseOrdering) = true
 is_reverse(::Ordering) = false
 is_reverse(::AbstractUnitRange) = false
 is_reverse(x::AbstractRange) = step(x) < 0
+is_reverse(x::GapRange) = is_reverse(first_range(x))
 
 """
     order(x) -> Ordering

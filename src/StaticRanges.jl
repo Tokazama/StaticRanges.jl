@@ -68,8 +68,7 @@ export
     pop,
     popfirst
 
-    include("gaprange.jl")
-
+include("gaprange.jl")
 include("chainedfix.jl")
 include("continuity.jl")
 include("order.jl")

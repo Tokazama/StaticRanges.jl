@@ -16,8 +16,6 @@ Base.last(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = E
 
 Base.last(r::LinMRange) = getfield(r, :stop)
 
-last_range(gr::GapRange) = getfield(gr, :last_range)
-
 Base.last(gr::GapRange) = last(last_range(gr))
 
 """

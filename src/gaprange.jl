@@ -2,7 +2,8 @@
 """
     GapRange{T,F,L}
 
-Represents a range that is broken up by gaps making it noncontinuous.
+Represents a range that is broken up by gaps making it noncontinuous. This allows
+more compact storage of numbers where the majority are known to be continuous.
 
 ## Examples
 ```jldoctest
@@ -31,14 +32,49 @@ julia> find_all(or(<(4), >(6)), r)
 
 ```
 """
-struct GapRange{T,F<:AbstractVector{T},L<:AbstractVector{T}} <: AbstractVector{T}
+struct GapRange{T,F,L} <: AbstractVector{T}
     first_range::F
     last_range::L
+    function GapRange{T,F,L}(fr::F, lr::L) where {T,F,L}
+        if fr isa T
+            return _unsafe_gaprange(fr:fr, lr)
+        elseif lr isa T
+            return _unsafe_gaprange(fr, lr:lr)
+        else
+            check_gaprange_keytype(fr, lr)
+            check_gaprange_type(fr, lr)
+            return new{T,F,L}(fr, lr)
+        end
+    end
 end
 
-const GapRangeOrRange{T} = Union{GapRange{T},AbstractRange{T}}
 
-function GapRange(f::GapRangeOrRange{T}, l::GapRangeOrRange{T}) where {T}
+# compile time checks for GapRange parameters
+function check_gaprange_type(fr, lr) where {T}
+    if !isa(fr, AbstractRange) & !isa(fr, GapRange)
+        error("All segments of a GapRange must be another GapRange or AbstractRange,
+              got $(typeof(fr)) for the first segment.")
+    end
+    if !isa(lr, AbstractRange) & !isa(lr, GapRange)
+        error("All segments of a GapRange must be another GapRange or AbstractRange,
+              got $(typeof(fr)) for the last segment.")
+    end
+    return nothing
+end
+function check_gaprange_keytype(fr, lr)
+    if keytype(fr) != keytype(lr)
+        error("The first segment and last segment of a GapRange must have the same keytypes,
+              got $(keytype(fr)) and $(keytype(lr)).")
+    end
+    return nothing
+end
+
+# bypasses order checking
+function _unsafe_gaprange(f, l)
+    return GapRange{eltype(f),typeof(f),typeof(l)}(f, l)
+end
+
+function GapRange(f::AbstractVector{T}, l::AbstractVector{T}) where {T}
     if is_forward(f)
         if is_forward(f)
             if is_before(f, l)
@@ -65,6 +101,28 @@ function GapRange(f::GapRangeOrRange{T}, l::GapRangeOrRange{T}) where {T}
         end
     end
 end
+
+"""
+    first_range(gr::GapRange)
+
+Returns the first segment of a `GapRange`
+"""
+first_range(gr::GapRange) = getfield(gr, :first_range)
+
+"""
+    last_range(gr::GapRange)
+
+Returns the last segment of a `GapRange`.
+"""
+last_range(gr::GapRange) = getfield(gr, :last_range)
+
+Base.firstindex(gr::GapRange) = firstindex(first_range(gr))
+
+first_lastindex(gr) = lastindex(first_range(gr))
+
+Base.lastindex(gr::GapRange) = length(gr)
+
+last_firstindex(gr::GapRange) = lastindex(first_range(gr)) + 1
 
 Base.iterate(gr::GapRange) = first(gr), 1
 
