@@ -10,4 +10,6 @@
              )
         @test Size(typeof(S)) === Size{(3,)}()
     end
+    @test size(GapRange(1:3, 7:10)) == (7,)
+    @test size(GapRange(1:5, 6:10)) == (10,)
 end

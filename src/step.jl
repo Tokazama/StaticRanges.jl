@@ -98,3 +98,7 @@ function set_step(r::AbstractRange, st)
         return mrange(first(r), step=st, last(r))
     end
 end
+
+set_step(r::StepRangeLen, st) = StepRangeLen(r.ref, st, r.len, r.offset)
+set_step(r::StepMRangeLen, st) = StepMRangeLen(r.ref, st, r.len, r.offset)
+set_step(r::StepSRangeLen, st) = StepSRangeLen(r.ref, st, r.len, r.offset)

@@ -128,5 +128,10 @@
                 end
             end
         end
+        # small ints
+        @test length(StepMRange(UInt16(1), UInt16(1), UInt16(10))) == 10
+        @test length(StepMRange(UInt16(1), UInt16(1), UInt16(0))) == 0
+        @test length(OneToMRange{Int16}(10)) == 10
+
     end
 end

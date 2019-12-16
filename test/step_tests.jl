@@ -18,13 +18,12 @@
         for (r1,b,v,r2) in ((UnitMRange(1,3), false, nothing, nothing),
                             (StepMRange(1,1,4), true, 2, StepMRange(1,2,4)),
                             (StepMRange(1,1,4), true, UInt32(2), StepMRange(1,2,4)),
-                            (StepMRangeLen(1,1,4), true, 2, StepMRangeLen(1,2,4)),
-                           )
-
+                            (StepMRangeLen(1,1,4), true, 2, StepMRangeLen(1,2,4)))
             @testset "set_step!-$(r1)" begin
                 x = @inferred(can_set_step(r1))
                 @test x == b
                 if x
+                    @test @inferred(set_step(r1, v)) == r2
                     @test @inferred(set_step!(r1, v)) == r2
                 end
             end
