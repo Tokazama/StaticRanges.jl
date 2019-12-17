@@ -333,6 +333,12 @@ julia> find_all(>(4) & <(8), fr)
 ```
 ## Mutation
 
+There are options for in place mutations and corresponding non mutationg
+operations. These allow safe mutation of ranges by avoiding states that are
+typically prohibited at time of construction. For example, `OneToMRange` cannot
+have a negative value for it's `stop` field. These methods are also called
+whenever `setproperty!` is used.
+
 ### set_length
 
 ```julia
@@ -369,6 +375,12 @@ UnitMRange(2:20)
 
 julia> first(mr)
 2
+
+julia> mr.start = 3
+3
+
+julia> mr
+UnitMRange(3:10)
 ```
 
 ### set_last
@@ -380,14 +392,20 @@ julia> r = 1:10
 julia> set_last(r, 5)
 1:5
 
-julia> mr = UnitMRange(1, 10)
-UnitMRange(1:10)
+julia> mr = OneToMRange(10)
+OneToMRange(10)
 
-julia> set_last!(r, 5)
-UnitMRange(1:5)
+julia> set_last!(mr, 5)
+UnitMRange(5)
 
 julia> last(mr)
 5
+
+julia> mr.stop = -1
+-1
+
+julia> mr
+OneToMRange(0)
 ```
 
 ### set_step

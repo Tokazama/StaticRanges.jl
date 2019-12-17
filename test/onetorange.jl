@@ -41,6 +41,7 @@ for (frange, oneto) in ((mrange, OneToMRange),(srange ,OneToSRange))
             str = String(take!(io))
             @test str == "$(oneto)(3)"
             @test in(1, r) == true
+
         end
 
         @test oneto{Int}(oneto(10)) == oneto(10)
@@ -65,4 +66,8 @@ for (frange, oneto) in ((mrange, OneToMRange),(srange ,OneToSRange))
         @test oneto{Int16}(3.0) == oneto{Int16}(3)
         @test_throws InexactError(:Int16, Int16, 3.2) oneto{Int16}(3.2)
     end
+
+    r = OneToMRange(10)
+    r.stop = -3
+    @test last(r) == 0
 end

@@ -95,7 +95,6 @@ const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},
 const UnionRange{T} = Union{SRange{T},MRange{T}}
 const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRangeLen{T}}
 
-
 include("staticness.jl")
 include("checkindex.jl")
 include("filter.jl")

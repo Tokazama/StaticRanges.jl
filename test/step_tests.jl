@@ -29,6 +29,11 @@
             end
         end
     end
+
+    @test set_step(StepSRangeLen(1,1,4), 2) == StepSRangeLen(1,2,4)
+    @test set_step(StepRangeLen(1,1,4), 2) == StepRangeLen(1,2,4)
+
+
     for (r,b) in ((OneToMRange(10), OneTo(10)),
                   (OneToSRange(UInt(10)), OneTo(UInt(10))),
                   (UnitMRange(1, 10), UnitRange(1, 10)),

@@ -69,3 +69,12 @@ OneToMRange(r::AbstractRange{T}) where {T<:Integer} = OneToMRange{T}(r)
 
 Base.AbstractUnitRange{T}(r::OneToSRange) where {T} = OneToSRange{T}(r)
 Base.AbstractUnitRange{T}(r::OneToMRange) where {T} = OneToMRange{T}(r)
+
+function Base.setproperty!(r::OneToMRange, s::Symbol, val)
+    if s === :stop
+        return set_last!(r, val)
+    else
+        error("type $(typeof(r)) has no property $s")
+    end
+end
+
