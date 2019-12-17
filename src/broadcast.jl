@@ -3,7 +3,6 @@ Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractStepRange) = r
 Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractStepRangeLen) = r
 Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractLinRange) = r
 
-
 Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRange) = srange(-first(r), step=-step(r), length=length(r))
 Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepMRange) = mrange(-first(r), step=-step(r), length=length(r))
 Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRangeLen) = StepSRangeLen(-r.ref, -r.step, length(r), r.offset)

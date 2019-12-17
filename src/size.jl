@@ -1,5 +1,3 @@
-
-
 Base.size(gr::GapRange) = (length(gr),)
 
 StaticArrays.Size(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = Size{(L,)}()
