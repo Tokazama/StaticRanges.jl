@@ -1,4 +1,3 @@
-
 """
     merge_sort(x, y)
 
@@ -42,8 +41,4 @@ function _weave_sort(x::AbstractRange, xo, y::AbstractRange, yo)
     end
     return _group_min(x, xo, y, yo):min(sx, sy):_group_max(x, xo, y, yo)
 end
-#Base.Broadcast.Broadcasted{IndicesArrayStyle{Base.Broadcast.Style{Tuple}},
-#                           Nothing,
-#                           typeof(+),
-#                           Tuple{IndicesArray{Float64,1,Array{Float64,1},Tuple{Index{Int64,OneTo{Int64},Index{Int64,OneToMRange{Int64},OneToMRange{Int64}}}}},
-#                                 IndicesArray{Float64,1,Array{Float64,1},Tuple{Index{Int64,OneTo{Int64},Index{Int64,OneToMRange{Int64},OneToMRange{Int64}}}}}}} = <suppressed 195 bytes of output>
+

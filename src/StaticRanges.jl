@@ -115,5 +115,6 @@ include("findvalue.jl")
 include("pop.jl")
 include("push.jl")
 include("show.jl")
+include("vcat.jl")
 
 end
