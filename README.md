@@ -9,7 +9,7 @@
 StaticRanges was originally inspired by [StaticArrays](https://github.com/JuliaArrays/StaticArrays.jl).
 It's objectives are:
 
-1. Easy/intuitive composition of mutable and static ranges: The utility of static and mutable ranges is not fully realized in this package (although there are performance gains offered by using statically defined ranges). This objective is more fully realized in the [AbstractIndices](https://github.com/Tokazama/AbstractIndices.jl) package.
+1. Easy/intuitive composition of mutable and static ranges.
 2. Optimized methods involving ranges: "find" methods are currently the focus and optimizations currently exist for `findall`, `findfirst`, `findlast`, `filter`, and `count` using the `<`, `<=`, `>`, `>=`, `==`, and `!=` operators.
 
 ## New Types
