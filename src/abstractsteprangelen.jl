@@ -88,9 +88,6 @@ function StepMRangeLen{T,R1,S1}(ref::R2, step::S2, len::Integer, offset::Integer
     return StepMRangeLen{T,R1,S1}(R1(ref), S1(step), len, offset)
 end
 
-_offset(r::StepMRangeLen) = getfield(r, :offset)
-_ref(r::StepMRangeLen) = getfield(r, :ref)
-
 function Base.setproperty!(r::StepMRangeLen, s::Symbol, val)
     if s === :ref
         return set_ref!(r, val)
@@ -116,18 +113,18 @@ for (F,f) in ((:M,:m), (:S,:s))
         $(SR){T,R,S}(r::$(SR){T,R,S}) where {T,R,S} = r
         function $(SR){T,R,S}(r::$(SR)) where {T,R,S}
             return $(SR){T,R,S}(
-                convert(R, _ref(r)),
+                convert(R, r.ref),
                 convert(S, step(r)),
                 length(r),
-                _offset(r)
+                r.offset
                )
         end
         function $(SR){T}(r::Union{StepRangeLen,AbstractStepRangeLen}) where {T}
             return $(SR)(
-                convert(T, _ref(r)),
+                convert(T, r.ref),
                 convert(T, step(r)),
                 length(r),
-                _offset(r)
+                r.offset
                )
         end
 
@@ -168,7 +165,7 @@ for (F,f) in ((:M,:m), (:S,:s))
         end
 
         function $(CSRL)(::Type{<:$(SR){T,R,S}}, r::$(SR){<:Integer}) where {T,R,S}
-            return $(SR){T,R,S}(R(_ref(r)), S(step(r)), length(r), _offset(r))
+            return $(SR){T,R,S}(R(r.ref), S(step(r)), length(r), r.offset)
         end
 
         function $(CSRL)(::Type{<:$(SR){T,R,S}}, r::AbstractRange{<:Integer}) where {T,R,S}
@@ -196,7 +193,7 @@ for (F,f) in ((:M,:m), (:S,:s))
         end
 
         function $(_CSRL)(::Type{<:$(SR){T,R,S}}, r::$(SR){U}) where {T,R,S,U}
-            return $(SR){T,R,S}(R(_ref(r)), S(step(r)), length(r), _offset(r))
+            return $(SR){T,R,S}(R(r.ref), S(step(r)), length(r), r.offset)
         end
         function $(_CSRL)(::Type{<:$(SR){T,R,S}}, r::AbstractRange{U}) where {T,R,S,U}
             return $(SR){T,R,S}(R(first(r)), S(step(r)), length(r))

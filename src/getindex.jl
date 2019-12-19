@@ -6,15 +6,15 @@ end
 
 ### AbstractStepRangeLen
 function _getindex_hiprec(r::AbstractStepRangeLen, i::Integer)  # without rounding by T
-    u = i - _offset(r)
-    return _ref(r) + u * step(r)
+    u = i - r.offset
+    return r.ref + u * step(r)
 end
 
 function _getindex_hiprec(
     r::AbstractStepRangeLen{<:Any,<:TwicePrecision,<:TwicePrecision},
     i::Integer
    )
-    u = i - _offset(r)
+    u = i - r.offset
     shift_hi, shift_lo = u * gethi(step_hp(r)), u * getlo(step_hp(r))
     x_hi, x_lo = add12(refhi(r), shift_hi)
     x_hi, x_lo = add12(x_hi, x_lo + (shift_lo + reflo(r)))
@@ -28,7 +28,7 @@ for RT in (:StepMRangeLen,:StepSRangeLen)
             s::OrdinalRange{<:Integer}
            ) where {T}
             @boundscheck checkbounds(r, s)
-            soffset = 1 + round(Int, (_offset(r) - first(s))/step(s))
+            soffset = 1 + round(Int, (r.offset - first(s))/step(s))
             soffset = clamp(soffset, 1, length(s))
             ioffset = first(s) + (soffset-1)*step(s)
             if step(s) == 1 || length(s) < 2
@@ -36,10 +36,10 @@ for RT in (:StepMRangeLen,:StepSRangeLen)
             else
                 newstep = Base.twiceprecision(step_hp(r)*step(s), Base.nbitslen(T, length(s), soffset))
             end
-            if ioffset == _offset(r)
-                return similar_type(r)(_ref(r), newstep, length(s), max(1,soffset))
+            if ioffset == r.offset
+                return similar_type(r)(r.ref, newstep, length(s), max(1,soffset))
             else
-                return similar_type(r)(_ref(r) + (ioffset-_offset(r))*step_hp(r), newstep, length(s), max(1,soffset))
+                return similar_type(r)(r.ref + (ioffset-r.offset)*step_hp(r), newstep, length(s), max(1,soffset))
             end
         end
     end
@@ -55,7 +55,7 @@ function Base.unsafe_getindex(
    ) where {T}
     # Very similar to _getindex_hiprec, but optimized to avoid a 2nd call to add12
     Base.@_inline_meta
-    u = i - _offset(r)
+    u = i - r.offset
     shift_hi, shift_lo = u * stephi(r), u * steplo(r)
     x_hi, x_lo = add12(refhi(r), shift_hi)
     return T(x_hi + (x_lo + (shift_lo + reflo(r))))
@@ -67,17 +67,17 @@ function Base.unsafe_getindex(
    ) where {T}
     # Very similar to _getindex_hiprec, but optimized to avoid a 2nd call to add12
     Base.@_inline_meta
-    u = i - _offset(r)
+    u = i - r.offset
     shift_hi, shift_lo = u * stephi(r), u * steplo(r)
     x_hi, x_lo = add12(refhi(r), shift_hi)
     return T(x_hi + (x_lo + (shift_lo + reflo(r))))
 end
 
 function Base.unsafe_getindex(r::StepSRangeLen{T,R,S}, i::Integer) where {T,R,S}
-    return T(_ref(r) + (i - _offset(r)) * step_hp(r))
+    return T(r.ref + (i - r.offset) * step_hp(r))
 end
 function Base.unsafe_getindex(r::StepMRangeLen{T,R,S}, i::Integer) where {T,R,S}
-    return T(_ref(r) + (i - _offset(r)) * step_hp(r))
+    return T(r.ref + (i - r.offset) * step_hp(r))
 end
 
 ###

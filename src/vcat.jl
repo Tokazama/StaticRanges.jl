@@ -72,17 +72,17 @@ vcat_sort(x) = _vcat_sort_one(order(x), x)
 _vcat_sort_one(::UnorderedOrdering, x) = sort(x)
 _vcat_sort_one(::Ordering, x) = x
 
-vcat_sort(x, y) = _vcat_sort(order(x), order(y), x, y)
-function _vcat_sort(xo, yo, x, y)
-    if isbefore(xo, yo, x, y)
-        return _vcatbefore(xo, yo, x, y)
-    elseif isafter(xo, yo, x, y)
-        return _vcatafter(xo, yo, x, y)
+vcat_sort(x, y) = _vcat_sort(x, order(x), y, order(y))
+function _vcat_sort(x, xo, y, yo)
+    if isbefore(x, xo, y, yo)
+        return _vcatbefore(x, xo, y, yo)
+    elseif isafter(x, xo, y, yo)
+        return _vcatafter(x, xo, y, yo)
     else
         return __vcat_sort(
-            max_of_groupmin(xo, yo, x, y),
-            min_of_groupmax(xo, yo, x, y),
-            xo, yo, x, y)
+            max_of_groupmin(x, xo, y, yo),
+            min_of_groupmax(x, xo, y, yo),
+            x, xo, y, yo)
     end
 end
 
@@ -96,16 +96,16 @@ end
 
 function _vcatbefore(xo, yo, x, y)
     if isforward(xo)
-        return SortedVector(isforward(yo) ? vcat(x, y) : vcat(x, reverse(y)), xo, IsOrdered)
+        return isforward(yo) ? vcat(x, y) : vcat(x, reverse(y))
     else
-        return SortedVector(isforward(yo) ? vcat(reverse(y), x) : vcat(y, x), xo, IsOrdered)
+        return isforward(yo) ? vcat(reverse(y), x) : vcat(y, x)
     end
 end
 
 function _vcatafter(xo, yo, x, y)
     if isforward(xo)
-        return SortedVector(isforward(yo) ? vcat(y, x) : vcat(reverse(y), x), xo, IsOrdered)
+        return isforward(yo) ? vcat(y, x) : vcat(reverse(y), x)
     else
-        return SortedVector(isforward(yo) ? vcat(x, reverse(y)) : vcat(x, y), xo, IsOrdered)
+        return isforward(yo) ? vcat(x, reverse(y)) : vcat(x, y)
     end
 end

@@ -6,8 +6,8 @@ function Base.reverse(r::AbstractStepRangeLen)
     # If `r` is empty, `length(r) - r.offset + 1 will be nonpositive hence
     # invalid. As `reverse(r)` is also empty, any offset would work so we keep
     # `r.offset`
-    offset = isempty(r) ? _offset(r) : length(r) - _offset(r) + 1
-    return similar_type(r)(_ref(r), -step_hp(r), length(r), offset)
+    offset = isempty(r) ? r.offset : length(r) - r.offset + 1
+    return similar_type(r)(r.ref, -step_hp(r), length(r), offset)
 end
 
 function Base.reverse!(r::StepMRange)
@@ -23,7 +23,7 @@ function Base.reverse!(r::StepMRangeLen)
     # If `r` is empty, `length(r) - r.offset + 1 will be nonpositive hence
     # invalid. As `reverse(r)` is also empty, any offset would work so we keep
     # `r.offset`
-    setfield!(r, :offset, isempty(r) ? _offset(r) : length(r) - _offset(r) + 1)
+    setfield!(r, :offset, isempty(r) ? r.offset : length(r) - r.offset + 1)
     setfield!(r, :step, -step_hp(r))
     return r
 end
@@ -98,7 +98,7 @@ function Base.:(+)(r1::StepSRangeLen{T,TwicePrecision{T}}, r2::StepSRangeLen{T,T
         throw(DimensionMismatch("argument dimensions must match")))
     if _offset(r1) == _offset(r2)
         imid = _offset(r1)
-        ref = _ref(r1) + _ref(r2)
+        ref = r1.ref + r2.ref
     else
         imid = round(Int, (_offset(r1)+_offset(r2))/2)
         ref1mid = _getindex_hiprec(r1, imid)
@@ -138,7 +138,7 @@ Base.:(-)(r1::AbstractRange, r2::Union{AbstractStepRangeLen,AbstractLinRange}) =
 Base.:(-)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::Union{AbstractStepRangeLen,AbstractLinRange}) = -(promote(r1, r2)...)
 
 function Base.:(-)(r::AbstractStepRangeLen)
-    return similar_type(r)(-_ref(r), -step(r), length(r), _offset(r))
+    return similar_type(r)(-r.ref, -step(r), length(r), r.offset)
 end
 Base.:(-)(r1::StepMRangeLen{T,R,S}, r2::StepMRangeLen{T,R,S}) where {T,R,S} = +(r1, -r2)
 Base.:(-)(r1::StepSRangeLen{T,R,S}, r2::StepSRangeLen{T,R,S}) where {T,R,S} = +(r1, -r2)
@@ -149,20 +149,20 @@ Base.:(-)(r1::StepSRangeLen{T,R,S}, r2::StepSRangeLen{T,R,S}) where {T,R,S} = +(
 ###
 Base.:(*)(r::AbstractStepRangeLen{T,TwicePrecision{T}}, x::Real) where {T<:Real} = x*r
 function Base.:(*)(x::Real, r::StepMRangeLen{T,TwicePrecision{T}}) where {T<:Real}
-    return StepMRangeLen(x * _ref(r), Base.twiceprecision(x * step(r), nbitslen(r)), length(r), _offset(r))
+    return StepMRangeLen(x * r.ref, Base.twiceprecision(x * step(r), nbitslen(r)), length(r), r.offset)
 end
 function Base.:(*)(x::Real, r::StepSRangeLen{T,TwicePrecision{T}}) where {T<:Real}
-    return StepSRangeLen(x * _ref(r), Base.twiceprecision(x * step(r), nbitslen(r)), length(r), _offset(r))
+    return StepSRangeLen(x * r.ref, Base.twiceprecision(x * step(r), nbitslen(r)), length(r), r.offset)
 end
 
 ###
 ### /(r1, r2)
 ###
 function Base.:(/)(r::StepMRangeLen{T,TwicePrecision{T}}, x::Real) where {T<:Real}
-    return StepMRangeLen(_ref(r)/x, Base.twiceprecision(step(r)/x, Base.nbitslen(r)), length(r), _offset(r))
+    return StepMRangeLen(r.ref/x, Base.twiceprecision(step(r)/x, Base.nbitslen(r)), length(r), r.offset)
 end
 function Base.:(/)(r::StepSRangeLen{T,TwicePrecision{T}}, x::Real) where {T<:Real}
-    return StepSRangeLen(_ref(r)/x, Base.twiceprecision(step(r)/x, Base.nbitslen(r)), length(r), _offset(r))
+    return StepSRangeLen(r.ref/x, Base.twiceprecision(step(r)/x, Base.nbitslen(r)), length(r), r.offset)
 end
 
 for (frange,R) in ((mrange, :StepMRange), (srange, :StepSRange))
