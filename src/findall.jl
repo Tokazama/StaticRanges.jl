@@ -13,7 +13,7 @@ end
     return _find_all(keytype(r), find_first(f, r, ro), lastindex(r))
 end
 find_all(f::F2Lt, r::AbstractRange, ::UnorderedOrdering) = _empty_ur(keytype(r))
-find_all(f::F2Lt, r::AbstractArray, ::UnorderedOrdering) = _fallback_find_all(f, a)
+find_all(f::F2Lt, a::AbstractArray, ::UnorderedOrdering) = _fallback_find_all(f, a)
 
 # >, >=
 @propagate_inbounds function find_all(f::F2Gt, r, ro::ForwardOrdering)
@@ -23,7 +23,7 @@ end
     return _find_all(keytype(r), firstindex(r), find_last(f, r, ro))
 end
 find_all(f::F2Gt, r::AbstractRange, ::UnorderedOrdering) = _empty_ur(keytype(r))
-find_all(f::F2Gt, r::AbstractArray, ::UnorderedOrdering) = _fallback_find_all(f, a)
+find_all(f::F2Gt, a::AbstractArray, ::UnorderedOrdering) = _fallback_find_all(f, a)
 
 # find_all(==(x), r)
 find_all(f::F2Eq, r::AbstractRange, ::UnorderedOrdering) = _empty_ur(keytype(r))

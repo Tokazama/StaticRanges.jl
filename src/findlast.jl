@@ -3,8 +3,8 @@
 unsafe_findlast(f, r::AbstractRange, ::ForwardOrdering) = unsafe_findvalue(f.x, r)
 unsafe_findlast(f, r::AbstractRange, ::ReverseOrdering) = unsafe_findvalue(f.x, r)
 
-unsafe_findlast(f, a::AbstractArray, ::ReverseOrdering) = searchsortedlast(f.x, a, Reverse)
-unsafe_findlast(f, a::AbstractArray, ::ForwardOrdering) = searchsortedlast(f.x, a, Forward)
+unsafe_findlast(f, a::AbstractArray, ::ReverseOrdering) = searchsortedlast(a, f.x, Reverse)
+unsafe_findlast(f, a::AbstractArray, ::ForwardOrdering) = searchsortedlast(a, f.x, Forward)
 function unsafe_findlast(f, a::AbstractArray, ro::Ordering)
     for (i, a_i) in Iterators.reverse(pairs(a))
         f(a_i) && return i

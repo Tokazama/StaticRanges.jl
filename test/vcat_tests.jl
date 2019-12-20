@@ -14,7 +14,7 @@
                                  ([1, 2, 3, 4], [2, 3, 4, 5], [1, 2, 2, 3, 3, 4, 4, 5], "Intermixed"))
 
             @testset "$cmp" begin
-                @test @inferred(SortedArrays._vcat_sort(Forward, Forward, x, y)) == ret
+                @test @inferred(vcat_sort(x, y)) == ret
             end
         end
     end
@@ -32,7 +32,7 @@
                                  ([3, 6, 7], [5, 4, 3], [3, 3, 4, 5, 6, 7], "== >"),
                                  ([3, 6, 7], [7, 5, 3], [3, 3, 5, 6, 7, 7], "== =="))
             @testset "$cmp" begin
-                @test @inferred(SortedArrays._vcat_sort(Forward, Reverse, x, y)) == ret
+                @test @inferred(StaticRanges._vcat_sort(Forward, Reverse, x, y)) == ret
             end
         end
     end
@@ -50,7 +50,7 @@
                                  ([7, 6, 3], [3, 4, 5], [7, 6, 5, 4, 3, 3], "== >"),
                                  ([7, 6, 3], [3, 5, 7], [7, 7, 6, 5, 3, 3], "== =="))
             @testset "$cmp" begin
-                @test @inferred(SortedArrays._vcat_sort(Reverse, Forward, x, y)) == ret
+                @test @inferred(StaticRanges._vcat_sort(Reverse, Forward, x, y)) == ret
             end
         end
     end
@@ -68,7 +68,7 @@
                                  ([7, 6, 3], [5, 4, 3], [7, 6, 5, 4, 3, 3], "== >"),
                                  ([7, 6, 3], [7, 5, 3], [7, 7, 6, 5, 3, 3], "== =="))
             @testset "$cmp" begin
-                @test @inferred(SortedArrays._vcat_sort(Reverse, Reverse, x, y)) == ret
+                @test @inferred(StaticRanges._vcat_sort(Reverse, Reverse, x, y)) == ret
             end
         end
     end

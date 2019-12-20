@@ -123,10 +123,12 @@ function _find_first_lteq(x, r, ::UnorderedOrdering)
     return r isa AbstractRange ? nothing : unsafe_findfirst(x, r, ro)
 end
 
-
 # >
-function _find_first_gt(x, r, ro::ForwardOrdering)
-    idx = unsafe_findfirst(x, r, ro)
+@propagate_inbounds function _find_first_gt(x, r, ro::ForwardOrdering)
+    return __find_first_gt(x, r, unsafe_findfirst(x, r, ro))
+end
+__find_first_gt(x, r, ::Nothing) = nothing
+function __find_first_gt(x, r, idx)
     @boundscheck if lastindex(r) < idx
         return nothing
     end
@@ -146,8 +148,11 @@ function _find_first_gt(x, r, ::UnorderedOrdering)
 end
 
 # >=
-function _find_first_gteq(x, r, ro::ForwardOrdering)
-    idx = unsafe_findfirst(x, r, ro)
+@propagate_inbounds function _find_first_gteq(x, r, ro::ForwardOrdering)
+    return __find_first_gteq(x, r, unsafe_findfirst(x, r, ro))
+end
+__find_first_gteq(x, r, ::Nothing) = nothing
+function __find_first_gteq(x, r, idx)
     @boundscheck if lastindex(r) < idx
         return nothing
     end
