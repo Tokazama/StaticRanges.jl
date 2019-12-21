@@ -1,5 +1,5 @@
 
-maybe_flip(::O, ::O, x) where {O} = x
+maybe_flip(::O, ::O, x) where {O<:Ordering} = x
 maybe_flip(::Ordering, ::Ordering, x) = reverse(x)
 
 """
@@ -46,7 +46,7 @@ end
 
 Given two collections `x` and `y`, returns the first non-overlapping segment.
 """
-middle_segment(x, y) = middle_segment(x, order(x), x, order(y))
+middle_segment(x, y) = middle_segment(x, order(x), y, order(y))
 function middle_segment(x, xo, y, yo)
     return _middle_segment(
         max_of_group_min(x, xo, y, yo),
