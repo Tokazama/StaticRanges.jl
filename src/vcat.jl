@@ -18,7 +18,11 @@ end
 
 function _first_segment(cmin, cmax, x, xo, y, yo)
     xidx, yidx = _first_segment_index(cmin, cmax, x, xo, y, yo)
-    return vcat(@inbounds(x[xidx]), @inbounds(y[yidx]))
+    if xo isa ReverseOrdering
+        return sort(vcat(@inbounds(x[xidx]), @inbounds(y[yidx])), rev=true)
+    else
+        return sort(vcat(@inbounds(x[xidx]), @inbounds(y[yidx])), rev=false)
+    end
 end
 
 function _first_segment_index(cmin, cmax, x, xo::ForwardOrdering, y, yo)
@@ -26,7 +30,7 @@ function _first_segment_index(cmin, cmax, x, xo::ForwardOrdering, y, yo)
 end
 
 function _first_segment_index(cmin, cmax, x, xo::ReverseOrdering, y, yo)
-    return find_all(>(cmin), x, xo), maybe_flip(xo, yo, find_all(>(cmin), y, yo))
+    return find_all(>(cmax), x, xo), maybe_flip(xo, yo, find_all(>(cmax), y, yo))
 end
 
 function _first_segment_index(cmin, cmax, x, xo, y, yo)
@@ -57,12 +61,14 @@ end
 function _middle_segment(cmin, cmax, x, xo, y, yo)
     xidx = _middle_segment_index(cmin, cmax, x, xo)
     yidx = _middle_segment_index(cmin, cmax, y, yo)
-    return sort(vcat(@inbounds(x[xidx]), @inbounds(y[yidx])))
+    if xo isa ReverseOrdering
+        return sort(vcat(@inbounds(x[xidx]), @inbounds(y[yidx])), rev=true)
+    else
+        return sort(vcat(@inbounds(x[xidx]), @inbounds(y[yidx])), rev=false)
+    end
 end
 
-function _middle_segment_index(cmin, cmax, x, xo)
-    return find_all(and(>=(cmin), <=(cmax)), x, xo)
-end
+_middle_segment_index(cmin, cmax, x, xo) = find_all(and(>=(cmin), <=(cmax)), x, xo)
 
 """
     last_segment(x, y)
@@ -80,7 +86,11 @@ end
 
 function _last_segment(cmin, cmax, x, xo, y, yo)
     xidx, yidx = _last_segment_index(cmin, cmax, x, xo, y, yo)
-    return vcat(@inbounds(x[xidx]), @inbounds(y[yidx]))
+    if xo isa ReverseOrdering
+        return sort(vcat(@inbounds(x[xidx]), @inbounds(y[yidx])), rev=true)
+    else
+        return sort(vcat(@inbounds(x[xidx]), @inbounds(y[yidx])), rev=false)
+    end
 end
 
 function _last_segment_index(cmin, cmax, x, xo::ReverseOrdering, y, yo)

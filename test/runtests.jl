@@ -11,6 +11,7 @@ using Base: OneTo, step_hp
 using Base.Order
 
 include("gaprange_tests.jl")
+include("vcat_tests.jl")
 include("pop_tests.jl")
 include("continuity_tests.jl")
 include("order_tests.jl")

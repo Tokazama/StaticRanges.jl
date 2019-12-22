@@ -37,7 +37,6 @@
         end
     end
 
-    # TODO
     @testset "Reverse Forward" begin
         for (x, y, ret, cmp) in (([3, 2, 1], [4, 5, 6], [6, 5, 4, 3, 2, 1], "< < gap"),
                                  ([3, 2, 1], [2, 3, 4], [4, 3, 3, 2, 2, 1], "< <"),
@@ -51,7 +50,7 @@
                                  ([7, 6, 3], [3, 4, 5], [7, 6, 5, 4, 3, 3], "== >"),
                                  ([7, 6, 3], [3, 5, 7], [7, 7, 6, 5, 3, 3], "== =="))
             @testset "$cmp" begin
-                @test @inferred(vcat(x, y)) == ret
+                @test @inferred(vcat_sort(x, y)) == ret
             end
         end
     end
