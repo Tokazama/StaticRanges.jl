@@ -1,4 +1,3 @@
-
 maybe_flip(::O, ::O, x) where {O<:Ordering} = x
 maybe_flip(::Ordering, ::Ordering, x) = reverse(x)
 
@@ -113,9 +112,9 @@ _vcat_sort_one(::Ordering, x) = x
 vcat_sort(x::AbstractVector, y::AbstractVector) = _vcat_sort(x, order(x), y, order(y))
 function _vcat_sort(x, xo, y, yo)
     if is_before(x, xo, y, yo)
-        return _vcatbefore(x, xo, y, yo)
+        return _vcat_before(x, xo, y, yo)
     elseif is_after(x, xo, y, yo)
-        return _vcatafter(x, xo, y, yo)
+        return _vcat_after(x, xo, y, yo)
     else
         return __vcat_sort(
             max_of_group_min(x, xo, y, yo),
@@ -132,7 +131,7 @@ function __vcat_sort(cmin, cmax, x, xo, y, yo)
     )
 end
 
-function _vcatbefore(x, xo, y, yo)
+function _vcat_before(x, xo, y, yo)
     if is_forward(xo)
         return is_forward(yo) ? vcat(x, y) : vcat(x, reverse(y))
     else
@@ -140,7 +139,7 @@ function _vcatbefore(x, xo, y, yo)
     end
 end
 
-function _vcatafter(x, xo, y, yo)
+function _vcat_after(x, xo, y, yo)
     if is_forward(xo)
         return is_forward(yo) ? vcat(y, x) : vcat(reverse(y), x)
     else

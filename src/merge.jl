@@ -6,27 +6,14 @@ Merge's and sorts collections `x`, and `y`.
 merge_sort(x, y) = _merge_sort(x, order(x), y, order(y))
 
 function _merge_sort(x, xo, y, yo)
-    if isempt(x)
-        return _catch_sort(y, yo)
-    elseif isempty(y)
-        return _catch_sort(x, xo)
-    end
-
     if is_after(x, xo, y, yo)
-        return _stack_sort(y, yo, x, xo)
+        return _vcat_after(x, xo, y, yo)
     elseif is_before(x, xo, y, yo)
-        return _stack_sort(x, xo, y, yo)
+        return _vcat_before(x, xo, y, yo)
     else
         return _weave_sort(x, xo, y, yo)
     end
 end
-
-_catch_sort(x, ::ForwardOrdering) = x
-_catch_sort(x, ::ReverseOrdering) = x
-_catch_sort(x, ::UnorderedOrdering) = sort(x)
-
-_stack_sort(x, ::O, y, ::O) where {O} = vcat(x, y)
-_stack_sort(x, xo, y, yo) = vcat(x, sort(y, order=yo))
 
 function _weave_sort(x::AbstractUnitRange{<:Integer}, xo, y::AbstractUnitRange{<:Integer}, yo)
     return similar_type(x)(_group_min(x, xo, y, yo), _group_max(x, xo, y, yo))
@@ -41,4 +28,20 @@ function _weave_sort(x::AbstractRange, xo, y::AbstractRange, yo)
     end
     return _group_min(x, xo, y, yo):min(sx, sy):_group_max(x, xo, y, yo)
 end
+
+function _weave_sort(x, xo, y, yo)
+    return __weave_sort(
+        max_of_group_min(x, xo, y, yo),
+        min_of_group_max(x, xo, y, yo),
+        x, xo, y, yo)
+end
+
+function __weave_sort(cmin, cmax, x, xo, y, yo)
+    return vcat(
+        _first_segment(cmin, cmax, x, xo, y, yo),
+        unique(_middle_segment(cmin, cmax, x, xo, y, yo)),
+        _last_segment(cmin, cmax, x, xo, y, yo)
+    )
+end
+
 

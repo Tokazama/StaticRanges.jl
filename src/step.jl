@@ -23,6 +23,7 @@ steplo(r::StepRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.lo
 ### AbstractStepRange
 Base.step(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = S
 Base.step(r::StepMRange) = getfield(r, :step)
+Base.step(a::AbstractIndices) = step(values(a))
 
 """
     has_step(x) -> Bool

@@ -28,6 +28,7 @@ reflo(r::StepRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.lo
 
 Base.first(gr::GapRange) = first(first_range(gr))
 
+Base.first(a::AbstractIndices) = first(values(a))
 
 """
     can_set_first(x) -> Bool
@@ -41,6 +42,10 @@ can_set_first(::Type{T}) where {T<:StepMRangeLen} = true
 can_set_first(::Type{T}) where {T<:LinMRange} = true
 can_set_first(::Type{T}) where {T<:StepMRange} = true
 can_set_first(::Type{T}) where {T<:UnitMRange} = true
+function can_set_first(::Type{T}) where {T<:AbstractIndices}
+    return can_set_first(values_type(T)) & can_set_first(keys_type(T))
+end
+can_set_first(::Type{T}) where {T<:SimpleIndices} = can_set_first(keys_type(T))
 
 """
     set_first!(x, val)

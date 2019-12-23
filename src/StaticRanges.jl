@@ -14,44 +14,41 @@ using ArrayInterface: can_setindex
 using StaticArrays: Dynamic
 
 export
-    StepSRangeLen,
-    StepMRangeLen,
-    LinSRange,
-    LinMRange,
-    StepSRange,
-    StepMRange,
-    UnitSRange,
-    UnitMRange,
-    OneToSRange,
-    OneToMRange,
+    # Types
     GapRange,
+    Index,
+    Indices,
+    LinMRange,
+    LinSRange,
+    OneToMRange,
+    OneToSRange,
+    SimpleIndex,
+    SimpleIndices,
+    StepMRangeLen,
+    StepSRangeLen,
+    StepMRange,
+    StepSRange,
+    UnitMRange,
+    UnitSRange,
     # methods
     and,
     or,
     as_static,
     as_dynamic,
     as_fixed,
+    cmpmax,
+    cmpmin,
     mrange,
     srange,
-    set_first!,
-    set_first,
-    set_step!,
-    set_step,
-    set_last!,
-    set_last,
-    set_length!,
-    set_length,
-    vcat_sort,
     find_first,
     find_last,
     find_all,
     find_max,
     find_min,
     first_segment,
+    merge_sort,
     middle_segment,
     last_segment,
-    cmpmax,
-    cmpmin,
     # Traits
     is_static,
     is_dynamic,
@@ -63,6 +60,14 @@ export
     is_reverse,
     is_ordered,
     is_contiguous,
+    set_first!,
+    set_first,
+    set_step!,
+    set_step,
+    set_last!,
+    set_last,
+    set_length!,
+    set_length,
     order,
     Continuity,
     Continuous,
@@ -70,7 +75,9 @@ export
     # reexports
     similar_type,
     pop,
-    popfirst
+    popfirst,
+    vcat_sort
+
 
 include("gaprange.jl")
 include("chainedfix.jl")
@@ -87,6 +94,11 @@ include("unitrange.jl")
 include("abstractsteprange.jl")
 include("abstractlinrange.jl")
 include("abstractsteprangelen.jl")
+include("abstractindices.jl")
+
+include("uniqueness.jl")
+include("indices.jl")
+include("simpleindices.jl")
 
 const LinRangeUnion{T} = Union{LinRange{T},AbstractLinRange{T}}
 const StepRangeLenUnion{T,R,S} = Union{StepRangeLen{T,R,S},AbstractStepRangeLen{T,R,S}}
@@ -99,8 +111,12 @@ const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},
 const UnionRange{T} = Union{SRange{T},MRange{T}}
 const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRangeLen{T}}
 
+include("to_index.jl")
+include("to_indices.jl")
+include("names.jl")
 include("staticness.jl")
 include("checkindex.jl")
+include("reindex.jl")
 include("filter.jl")
 include("first.jl")
 include("last.jl")
@@ -109,7 +125,7 @@ include("length.jl")
 include("size.jl")
 include("promotion.jl")
 include("range.jl")
-include("merge_sort.jl")
+include("merge.jl")
 include("intersect.jl")
 include("findin.jl")
 include("broadcast.jl")

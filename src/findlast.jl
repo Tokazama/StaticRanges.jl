@@ -24,6 +24,7 @@ function find_last(f::F2Eq, r, ro::Ordering)
         return idx
     end
 end
+
 # <, isless
 function find_last(f::F2IsLess, r, ro::ForwardOrdering)
     idx = unsafe_findlast(f, r, ro)
@@ -43,7 +44,6 @@ function find_last(f::F2IsLess, r, ::ReverseOrdering)
 end
 find_last(f::F2IsLess, r::AbstractRange, ::UnorderedOrdering) = nothing
 find_last(f::F2IsLess, r::AbstractArray, ro::UnorderedOrdering) = unsafe_findlast(f, r, ro)
-
 
 # <=
 function find_last(f::Fix2{typeof(<=)}, r, ro::ForwardOrdering)
@@ -91,7 +91,6 @@ find_last(f::Fix2{typeof(>)}, r::AbstractRange, ::UnorderedOrdering) = nothing
 function find_last(f::Fix2{typeof(>)}, r::AbstractArray, ro::UnorderedOrdering)
     return unsafe_findlast(f, r, ro)
 end
-
 
 # >=
 function find_last(f::Fix2{typeof(>=)}, r, ::ForwardOrdering)

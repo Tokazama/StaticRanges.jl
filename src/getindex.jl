@@ -4,7 +4,9 @@ function Base.getindex(r::Union{AbstractStepRangeLen,AbstractLinRange}, i::Integ
     unsafe_getindex(r, i)
 end
 
+###
 ### AbstractStepRangeLen
+###
 function _getindex_hiprec(r::AbstractStepRangeLen, i::Integer)  # without rounding by T
     u = i - r.offset
     return r.ref + u * step(r)
@@ -140,7 +142,9 @@ function Base.getindex(r::UnitMRange, s::AbstractUnitRange{<:Integer})
     return UnitMRange(st, st + oftype(f, (length(s) - 1)))
 end
 
+###
 ### OneToRange
+###
 function Base.getindex(v::OneToRange{T}, i::Integer) where T
     Base.@_inline_meta
     @boundscheck ((i > 0) & (i <= last(v))) || throw(BoundsError(v, i))
@@ -205,3 +209,30 @@ function unsafe_spanning_getindex(gr, v)
            )
     end
 end
+
+###
+### AbstractIndices
+###
+# have to define several getindex methods to avoid ambiguities with other unit ranges
+@propagate_inbounds function Base.getindex(a::AbstractIndices, i::AbstractUnitRange{<:Integer})
+    return _getindex(a, to_index(a, i))
+end
+@propagate_inbounds function Base.getindex(a::AbstractIndices, i::Integer)
+    return _getindex(a, to_index(a, i))
+end
+@propagate_inbounds function Base.getindex(a::AbstractIndices, i)
+    return _getindex(a, to_index(a, i))
+end
+
+_getindex(idx::AbstractIndices, i::AbstractVector) = _maybe_index(idx, @inbounds(values(idx)[i]), i)
+_getindex(idx::AbstractIndices, i) = @inbounds(values(idx)[i])
+
+function _maybe_index(idx::Indices{name}, vs::AbstractUnitRange{<:Integer}, i) where {name}
+    return Indices{name}(@inbounds(keys(idx)[i]), vs, UnkownUnique, LengthChecked)
+end
+function _maybe_index(idx::SimpleIndices{name}, vs::AbstractUnitRange{<:Integer}, i) where {name}
+    return SimpleIndices{name}(vs)
+end
+# getindex of values promotes to a vector that can't be an index
+_maybe_index(idx::Indices{name}, vs::AbstractVector, i) where {name} = vs
+_maybe_index(idx::SimpleIndices{name}, vs::AbstractVector, i) where {name} = vs
