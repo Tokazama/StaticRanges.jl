@@ -36,12 +36,6 @@ function Base.reverse!(r::LinMRange)
     return r
 end
 
-function Base.iterate(r::Union{AbstractLinRange,AbstractStepRangeLen}, i::Int=1)
-    Base.@_inline_meta
-    length(r) < i && return nothing
-    unsafe_getindex(r, i), i + 1
-end
-
 Base.isempty(r::Union{AbstractLinRange,AbstractStepRangeLen}) = length(r) == 0
 
 ###

@@ -10,11 +10,6 @@ end
 
 StaticArrays.pop(r::Union{OneTo,OneToRange}) = similar_type(r)(last(r) - one(eltype(r)))
 
-function StaticArrays.pop(si::SimpleIndices)
-    can_set_last(a) || error("Cannot change size of index of type $(typeof(a)).")
-    return SimpleIndices{dimnames(si)}(pop(values(si)))
-end
-
 # FIXME this should be defined somewhere else
 function StaticArrays.popfirst(v::AbstractVector)
     isempty(v) && error("array must be non-empty")
@@ -56,14 +51,6 @@ function Base.pop!(r::Union{UnitMRange{T},OneToMRange{T}}) where {T}
     return l
 end
 
-function Base.pop!(a::AbstractIndices)
-    can_set_last(a) || error("Cannot change size of index of type $(typeof(a)).")
-    pop!(keys(a))
-    return pop!(values(a))
-end
-
-Base.pop!(si::SimpleIndices) = pop!(values(si))
-
 ### popfirst!
 
 function Base.popfirst!(r::StepMRangeLen)
@@ -98,17 +85,3 @@ function Base.popfirst!(r::Union{StepMRange,UnitMRange})
     length(r) == 1 ? empty!(r) : setfield!(r, :start, @inbounds(r[2]))
     return f
 end
-
-Base.popfirst!(si::SimpleIndices) = popfirst!(values(si))
-
-function Base.popfirst!(a::AbstractIndices)
-    can_set_first(a) || error("Cannot change size of index of type $(typeof(a)).")
-    popfirst!(keys(a))
-    return popfirst!(values(a))
-end
-
-function StaticArrays.popfirst(si::SimpleIndices)
-    can_set_first(a) || error("Cannot change size of index of type $(typeof(a)).")
-    return SimpleIndices{dimnames(si)}(popfirst(values(si)))
-end
-

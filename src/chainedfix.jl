@@ -21,7 +21,6 @@ and(x::Function, y) = ChainedFix(&, x, y)
 and(x, y::Function) = ChainedFix(&, x, y)
 and(x::Function, y::Function) = ChainedFix(&, x, y)
 
-
 """
     or(x, y)
 

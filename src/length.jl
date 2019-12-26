@@ -78,10 +78,6 @@ function Base.length(r::AbstractStepRange{T}) where {T<:smallint}
 end
 Base.length(r::OneToRange{<:smallint}) = Int(r.stop)
 
-Base.length(a::AbstractIndices) = length(values(a))
-
-can_set_length(::Type{T}) where {T<:SimpleIndices} = can_set_length(keys_type(T))
-
 """
     can_set_length(x) -> Bool
 
@@ -95,10 +91,6 @@ can_set_length(::Type{T}) where {T<:StepMRangeLen} = true
 can_set_length(::Type{T}) where {T<:StepMRange} = true
 can_set_length(::Type{T}) where {T<:UnitMRange} = true
 can_set_length(::Type{T}) where {T<:OneToMRange} = true
-function can_set_length(::Type{T}) where {T<:AbstractIndices}
-    return can_set_length(values_type(T)) & can_set_length(keys_type(T))
-end
-
 """
     set_length!(x, len)
 
@@ -141,11 +133,6 @@ function set_length!(r::StepMRange{T}, len) where {T}
     setfield!(r, :stop, convert(T, first(r) + step(r) * (len - 1)))
     return r
 end
-function set_length!(a::SimpleIndices, len::Int)
-    can_set_length(a) || error("Cannot use set_length! for instances of typeof $(typeof(x)).")
-    set_length!(keys(a), len)
-    return a
-end
 
 """
     set_length(x, len)
@@ -168,12 +155,6 @@ set_length(r::OneToUnion{T}, len::T) where {T} = similar_type(r)(len)
 set_length(r::UnitRangeUnion{T}, len) where {T} = set_last(r, T(first(r) + len - 1))
 function set_length(r::StepRangeUnion{T}, len) where {T}
     return set_last(r, convert(T, first(r) + step(r) * (len - 1)))
-end
-function set_length!(a::AbstractIndices, len::Int)
-    can_set_length(a) || error("Cannot use set_length! for instances of typeof $(typeof(x)).")
-    set_length!(keys(a), len)
-    set_length!(values(a), len)
-    return a
 end
 
 """

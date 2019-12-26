@@ -43,5 +43,3 @@ function __weave_sort(cmin, cmax, x, xo, y, yo)
         _last_segment(cmin, cmax, x, xo, y, yo)
     )
 end
-
-

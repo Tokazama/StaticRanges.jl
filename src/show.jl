@@ -33,20 +33,3 @@ function Base.show(io::IO, r::AbstractLinRange)
     show(io, length(r))
     print(io, ')')
 end
-
-function Base.show(io::IO, idx::Indices)
-    if isnothing(dimnames(idx))
-        print(io, "Indices($(keys(idx)) => $(values(idx)))")
-    else
-        print(io, "Indices{$(dimnames(idx))}($(keys(idx)) => $(values(idx)))")
-    end
-end
-
-function Base.show(io::IO, si::SimpleIndices)
-    if isnothing(dimnames(si))
-        print(io, "SimpleIndices($(keys(si)))")
-    else
-        print(io, "SimpleIndices{$(dimnames(si))}($(keys(si)))")
-    end
-end
-

@@ -16,14 +16,10 @@ using StaticArrays: Dynamic
 export
     # Types
     GapRange,
-    Index,
-    Indices,
     LinMRange,
     LinSRange,
     OneToMRange,
     OneToSRange,
-    SimpleIndex,
-    SimpleIndices,
     StepMRangeLen,
     StepSRangeLen,
     StepMRange,
@@ -46,8 +42,6 @@ export
     find_max,
     find_min,
     first_segment,
-    merge_sort,
-    middle_segment,
     last_segment,
     # Traits
     is_static,
@@ -60,6 +54,8 @@ export
     is_reverse,
     is_ordered,
     is_contiguous,
+    merge_sort,
+    middle_segment,
     set_first!,
     set_first,
     set_step!,
@@ -94,11 +90,7 @@ include("unitrange.jl")
 include("abstractsteprange.jl")
 include("abstractlinrange.jl")
 include("abstractsteprangelen.jl")
-include("abstractindices.jl")
-
 include("uniqueness.jl")
-include("indices.jl")
-include("simpleindices.jl")
 
 const LinRangeUnion{T} = Union{LinRange{T},AbstractLinRange{T}}
 const StepRangeLenUnion{T,R,S} = Union{StepRangeLen{T,R,S},AbstractStepRangeLen{T,R,S}}
@@ -111,12 +103,11 @@ const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},
 const UnionRange{T} = Union{SRange{T},MRange{T}}
 const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRangeLen{T}}
 
-include("to_index.jl")
-include("to_indices.jl")
-include("names.jl")
+ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = true
+
+include("iterate.jl")
 include("staticness.jl")
 include("checkindex.jl")
-include("reindex.jl")
 include("filter.jl")
 include("first.jl")
 include("last.jl")

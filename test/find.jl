@@ -90,7 +90,7 @@ end
                                 end
                             end
                             for f2 in (<, >, <=, >=, ==)
-                                for bitop in (&, |)
+                                for bitop in (and, or)
                                     @testset "find_all($f($i1) $bitop $f2($i2), $b)" begin
                                         @test find_all(bitop(f(i1),  f2(i2)), m) == find_all(x -> bitop(f(i1)(x), f2(i2)(x)), b)
                                         @test find_all(bitop(f(i2),  f2(i1)), m) == find_all(x -> bitop(f(i2)(x), f2(i1)(x)), b)

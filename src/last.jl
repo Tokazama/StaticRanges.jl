@@ -18,8 +18,6 @@ Base.last(r::LinMRange) = getfield(r, :stop)
 
 Base.last(gr::GapRange) = last(last_range(gr))
 
-Base.last(a::AbstractIndices) = last(values(a))
-
 """
     can_set_last(x) -> Bool
 
@@ -33,10 +31,6 @@ can_set_last(::Type{T}) where {T<:StepMRange} = true
 can_set_last(::Type{T}) where {T<:StepMRangeLen} = true
 can_set_last(::Type{T}) where {T<:UnitMRange} = true
 can_set_last(::Type{T}) where {T<:OneToMRange} = true
-function can_set_last(::Type{T}) where {T<:AbstractIndices}
-    return can_set_last(values_type(T)) & can_set_last(keys_type(T))
-end
-can_set_last(::Type{T}) where {T<:SimpleIndices} =  can_set_last(keys_type(T))
 
 """
     set_last!(x, val)

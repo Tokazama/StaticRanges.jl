@@ -25,10 +25,6 @@ true
 """
 is_dynamic(::T) where {T} = is_dynamic(T)
 is_dynamic(::Type{T}) where {T} = is_fixed(T) | is_static(T) ? false : true
-function is_dynamic(::Type{T}) where {T<:AbstractIndices}
-    return is_dynamic(values_type(T)) & is_dynamic(keys_type(T))
-end
-is_dynamic(::Type{T}) where {T<:SimpleIndices} = is_dynamic(keys_type(T))
 
 """
     is_static(x) -> Bool
@@ -59,11 +55,6 @@ false
 is_static(::T) where {T} = is_static(T)
 is_static(::Type{T}) where {T} = false
 is_static(::Type{T}) where {T<:SRange} = true
-function is_static(::Type{T}) where {T<:AbstractIndices}
-    return is_static(values_type(T)) & is_static(keys_type(T))
-end
-is_static(::Type{T}) where {T<:SimpleIndices} = is_static(keys_type(T))
-
 """
     is_fixed(x) -> Bool
 
@@ -92,17 +83,6 @@ false
 """
 is_fixed(::T) where {T} = is_fixed(T)
 is_fixed(::Type{T}) where {T} = !T.mutable & !is_static(T) ? true : false
-function is_fixed(::Type{T}) where {T<:AbstractIndices}
-    return is_fixed(values_type(T)) & is_fixed(keys_type(T))
-end
-is_fixed(::Type{T}) where {T<:SimpleIndices} = is_fixed(keys_type(T))
-
-# TODO: this should be in ArrayInterface
-ArrayInterface.can_setindex(::Type{X}) where {X<:AbstractRange} = false
-
-# TODO: this should be in ArrayInterface
-ArrayInterface.ismutable(::Type{X}) where {X<:AbstractRange} = false
-ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = true
 
 """
     as_dynamic(x)
