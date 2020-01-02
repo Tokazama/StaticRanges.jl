@@ -15,11 +15,14 @@ using StaticArrays: Dynamic
 
 export
     # Types
+    AbstractAxis,
+    Axis,
     GapRange,
     LinMRange,
     LinSRange,
     OneToMRange,
     OneToSRange,
+    SimpleAxis,
     StepMRangeLen,
     StepSRangeLen,
     StepMRange,
@@ -44,16 +47,16 @@ export
     first_segment,
     last_segment,
     # Traits
-    is_static,
+    is_after,
+    is_before,
+    is_contiguous,
     is_dynamic,
     is_fixed,
-    is_within,
-    is_before,
-    is_after,
     is_forward,
     is_reverse,
     is_ordered,
-    is_contiguous,
+    is_static,
+    is_within,
     merge_sort,
     middle_segment,
     set_first!,
@@ -74,10 +77,11 @@ export
     popfirst,
     vcat_sort
 
-
 include("gaprange.jl")
 include("chainedfix.jl")
 include("continuity.jl")
+include("uniqueness.jl")
+include("length_checks.jl")
 include("order.jl")
 include("findall.jl")
 include("findlast.jl")
@@ -90,7 +94,9 @@ include("unitrange.jl")
 include("abstractsteprange.jl")
 include("abstractlinrange.jl")
 include("abstractsteprangelen.jl")
-include("uniqueness.jl")
+include("abstractaxis.jl")
+include("axis.jl")
+include("simpleaxis.jl")
 
 const LinRangeUnion{T} = Union{LinRange{T},AbstractLinRange{T}}
 const StepRangeLenUnion{T,R,S} = Union{StepRangeLen{T,R,S},AbstractStepRangeLen{T,R,S}}
@@ -105,10 +111,14 @@ const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRang
 
 ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = true
 
+include("to_index.jl")
+include("names.jl")
+include("reindex.jl")
 include("iterate.jl")
 include("staticness.jl")
 include("checkindex.jl")
 include("filter.jl")
+include("resize.jl")
 include("first.jl")
 include("last.jl")
 include("step.jl")

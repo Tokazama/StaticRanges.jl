@@ -342,32 +342,3 @@ end
 function is_contiguous(x, ::ReverseOrdering, y, yo)
     return last(x) == ordmax(y, yo) || first(x) == ordmin(y, yo)
 end
-
-
-"""
-    next_type(x::T)
-
-Returns the immediately greater value of type `T`.
-"""
-function next_type(x::AbstractString)
-    isempty(x) && return ""
-    return x[1:prevind(x, lastindex(x))] * (last(x) + 1)
-end
-next_type(x::Symbol) = Symbol(next_type(string(x)))
-next_type(x::AbstractChar) = x + 1
-next_type(x::T) where {T<:AbstractFloat} = nextfloat(x)
-next_type(x::T) where {T} = x + one(T)
-
-"""
-    prev_type(x::T)
-
-Returns the immediately lesser value of type `T`.
-"""
-function prev_type(x::AbstractString)
-    isempty(x) && return ""
-    return x[1:prevind(x, lastindex(x))] * (last(x) - 1)
-end
-prev_type(x::Symbol) = Symbol(prev_type(string(x)))
-prev_type(x::AbstractChar) = x - 1
-prev_type(x::T) where {T<:AbstractFloat} = prevfloat(x)
-prev_type(x::T) where {T} = x - one(T)

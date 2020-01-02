@@ -209,3 +209,33 @@ function unsafe_spanning_getindex(gr, v)
            )
     end
 end
+
+###
+### AbstractAxis
+###
+# have to define several getindex methods to avoid ambiguities with other unit ranges
+@propagate_inbounds function Base.getindex(a::AbstractAxis, i::AbstractUnitRange{<:Integer})
+    return _getindex(a, to_index(a, i))
+end
+@propagate_inbounds function Base.getindex(a::AbstractAxis, i::Integer)
+    return _getindex(a, to_index(a, i))
+end
+@propagate_inbounds function Base.getindex(a::AbstractAxis, i)
+    return _getindex(a, to_index(a, i))
+end
+
+function _getindex(idx::AbstractAxis, i::AbstractVector)
+    return _maybe_index(idx, @inbounds(values(idx)[i]), i)
+end
+_getindex(idx::AbstractAxis, i) = @inbounds(values(idx)[i])
+
+function _maybe_index(idx::Axis{name}, vs::AbstractUnitRange{<:Integer}, i) where {name}
+    return Axis{name}(@inbounds(keys(idx)[i]), vs, UnkownUnique, LengthChecked)
+end
+function _maybe_index(idx::SimpleAxis{name}, vs::AbstractUnitRange{<:Integer}, i) where {name}
+    return SimpleAxis{name}(vs)
+end
+# getindex of values promotes to a vector that can't be an index
+_maybe_index(idx::Axis{name}, vs::AbstractVector, i) where {name} = vs
+_maybe_index(idx::SimpleAxis{name}, vs::AbstractVector, i) where {name} = vs
+

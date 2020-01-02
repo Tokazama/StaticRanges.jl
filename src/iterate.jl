@@ -11,6 +11,7 @@ end
 # check_iterate
 check_iterate(r::Union{LinRangeUnion,StepRangeLenUnion}, i) = length(r) >= i
 check_iterate(r::AbstractRange, i) = last(r) != i
+check_iterate(r::AbstractVector, i) = lastindex(r) != i
 # unsafe_iterate
 
 function unsafe_iterate(x::AbstractUnitRange{T}, state) where {T}
@@ -24,3 +25,16 @@ end
 function unsafe_iterate(r::Union{LinRangeUnion,StepRangeLenUnion}, i)
     return unsafe_getindex(r, i), i + 1
 end
+function unsafe_iterate(v::AbstractVector, i)
+    next = i + 1
+    return @inbounds(v[next]), next
+end
+
+###
+### AbstractAxis
+###
+Base.pairs(a::AbstractAxis) = Base.Iterators.Pairs(a, keys(a))
+
+check_iterate(r::AbstractAxis, i) = check_iterate(values(r), last(i))
+check_iterate(r::SimpleAxis, i) = check_iterate(values(r), i)
+

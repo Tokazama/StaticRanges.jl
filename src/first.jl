@@ -1,4 +1,3 @@
-
 ### first(x)
 Base.first(::OneToRange{T}) where {T} = one(T)
 
@@ -28,6 +27,7 @@ reflo(r::StepRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.lo
 
 Base.first(gr::GapRange) = first(first_range(gr))
 
+Base.first(a::AbstractAxis) = first(values(a))
 
 """
     can_set_first(x) -> Bool
@@ -41,6 +41,10 @@ can_set_first(::Type{T}) where {T<:StepMRangeLen} = true
 can_set_first(::Type{T}) where {T<:LinMRange} = true
 can_set_first(::Type{T}) where {T<:StepMRange} = true
 can_set_first(::Type{T}) where {T<:UnitMRange} = true
+
+# can_setfirst isn't sufficient here if the keys are like MVector where the first
+# elemnt can be set by size isn't dynamic
+can_set_first(::Type{T}) where {T<:AbstractAxis} = is_dynamic(T)
 
 """
     set_first!(x, val)
@@ -75,6 +79,18 @@ set_first!(r::StepMRangeLen{T,R,S}, val::R) where {T,R,S} = (setfield!(r, :ref, 
 function set_first!(r::StepMRangeLen{T,R,S}, val) where {T,R,S}
     return set_ref!(r, val - (1 - r.offset) * step_hp(r))
 end
+# TODO set_first!(AbstractAxis, val)
+function set_first!(x::AbstractAxis{name,K,V}, val::V) where {name,K,V}
+    can_set_first(x) || throw(MethodError(set_first!, (x, val)))
+    set_first!(values(x), val)
+    resize_first!(keys(x), length(values(x)))
+    return x
+end
+function set_first!(x::SimpleAxis{name,V}, val::V) where {name,K,V}
+    can_set_first(x) || throw(MethodError(set_first!, (x, val)))
+    set_first!(values(x), val)
+    return x
+end
 
 """
     set_first(x, val)
@@ -106,10 +122,18 @@ set_first(r::UnitRangeUnion{T}, val::T) where {T} = similar_type(r)(val, last(r)
 function set_first(r::StepRangeLenUnion{T}, val::T) where {T}
     return similar_type(r)(val, step(r), r.len, r.offset)
 end
-
+# TODO set_first(AbstractAxis, val)
+function set_first(x::AbstractAxis{name,K,V}, val::V) where {name,K,V}
+    vs = set_first(values(x), val)
+    return similar_type(x)(resize_first(keys(x), length(vs)), vs)
+end
+function set_first(x::SimpleAxis{name,V}, val::V) where {name,V}
+    return SimpleAxis{name}(set_first(values(x), val))
+end
 
 """
     set_ref!(x, val)
+
 Set the reference field of an instance of `StepMRangeLen`.
 """
 set_ref!(r::StepMRangeLen{T,R,S}, val::R) where {T,R,S} = (setfield!(r, :ref, val); r)

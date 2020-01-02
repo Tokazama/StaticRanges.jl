@@ -44,6 +44,8 @@ last_length(gr::GapRange) = length(last_range(gr))
 
 Base.length(gr::GapRange) = length(first_range(gr)) + length(last_range(gr))
 
+Base.length(a::AbstractAxis) = length(values(a))
+
 function start_step_stop_to_length(::Type{T}, start, step, stop) where {T}
     if (start != stop) & ((step > zero(step)) != (stop > start))
         return 0
@@ -91,6 +93,11 @@ can_set_length(::Type{T}) where {T<:StepMRangeLen} = true
 can_set_length(::Type{T}) where {T<:StepMRange} = true
 can_set_length(::Type{T}) where {T<:UnitMRange} = true
 can_set_length(::Type{T}) where {T<:OneToMRange} = true
+function can_set_length(::Type{T}) where {T<:AbstractAxis}
+    return can_set_length(keys_type(T)) & can_set_length(values_type(T))
+end
+can_set_length(::Type{T}) where {T<:SimpleAxis} = can_set_length(keys_type(T))
+
 """
     set_length!(x, len)
 
@@ -133,6 +140,17 @@ function set_length!(r::StepMRange{T}, len) where {T}
     setfield!(r, :stop, convert(T, first(r) + step(r) * (len - 1)))
     return r
 end
+function set_length!(a::AbstractAxis, len::Int)
+    can_set_length(a) || error("Cannot use set_length! for instances of typeof $(typeof(a)).")
+    set_length!(keys(a), len)
+    set_length!(values(a), len)
+    return a
+end
+function set_length!(a::SimpleAxis, len::Int)
+    can_set_length(a) || error("Cannot use set_length! for instances of typeof $(typeof(a)).")
+    set_length!(values(a), len)
+    return a
+end
 
 """
     set_length(x, len)
@@ -155,6 +173,12 @@ set_length(r::OneToUnion{T}, len::T) where {T} = similar_type(r)(len)
 set_length(r::UnitRangeUnion{T}, len) where {T} = set_last(r, T(first(r) + len - 1))
 function set_length(r::StepRangeUnion{T}, len) where {T}
     return set_last(r, convert(T, first(r) + step(r) * (len - 1)))
+end
+function set_length(a::Axis{name}, len::Int) where {name}
+    return Axis{name}(set_length(keys(a), len), set_length(values(a), len))
+end
+function set_length(a::SimpleAxis{name}, len::Int) where {name}
+    return SimpleAxis{name}(set_length(values(a), len))
 end
 
 """

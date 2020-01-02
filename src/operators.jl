@@ -42,15 +42,12 @@ Base.isempty(r::Union{AbstractLinRange,AbstractStepRangeLen}) = length(r) == 0
 ### ==(r1, r2)
 ###
 Base.:(==)(r::OneToRange, s::OneToRange) = last(r) == last(s)
-
 function Base.:(==)(r::StepMRangeLen{T,R,S}, s::StepMRangeLen{T,R,S}) where {T,R,S}
     return (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
 end
-
 function Base.:(==)(r::StepSRangeLen{T,R,S}, s::StepSRangeLen{T,R,S}) where {T,R,S}
     return (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
 end
-
 function Base.:(==)(r::AbstractLinRange{T}, s::AbstractLinRange{T}) where {T}
     return (first(r) == first(s)) & (length(r) == length(s)) & (last(r) == last(s))
 end
@@ -61,15 +58,12 @@ end
 Base.:(+)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::AbstractRange) = +(promote(r1, r2)...)
 Base.:(+)(r1::AbstractRange, r2::Union{AbstractStepRangeLen,AbstractLinRange}) =  +(promote(r1, r2)...)
 Base.:(+)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::Union{AbstractStepRangeLen,AbstractLinRange}) = +(promote(r1, r2)...)
-
 function Base.:(+)(r1::StepMRangeLen{T,S}, r2::StepMRangeLen{T,S}) where {T,S}
     len = length(r1)
     (len == length(r2) ||
         throw(DimensionMismatch("argument dimensions must match")))
     return StepMRangeLen(first(r1)+first(r2), step(r1)+step(r2), len)
 end
-
-
 function Base.:(+)(r1::StepMRangeLen{T,TwicePrecision{T}}, r2::StepMRangeLen{T,TwicePrecision{T}}) where {T}
     len = length(r1)
     (len == length(r2) || throw(DimensionMismatch("argument dimensions must match")))
@@ -106,6 +100,9 @@ end
 #_add(r1::StepSRangeLen{T,R,S}, r2::Union{OneToSRange,UnitSRange,StepSRange,LinSRange}) where {T,R,S} = +(r1, StepSRangeLen{T,R,S}(r2))
 #_add(r2::Union{OneToSRange,UnitSRange,StepSRange,LinSRange}, r1::StepSRangeLen{T,R,S}) where {T,R,S} = +(r1, StepSRangeLen{T,R,S}(r2))
 
+###
+### sum
+###
 function Base.sum(r::AbstractStepRangeLen)
     l = length(r)
     # Compute the contribution of step over all indices.
@@ -123,6 +120,7 @@ function Base.sum(r::AbstractStepRangeLen)
     sm_hi, sm_lo = add12(s_hi, ref.hi)
     return add12(sm_hi, sm_lo + ref.lo)[1]
 end
+Base.sum(x::AbstractAxis) = sum(values(x))
 
 ###
 ### -(r1, r2)

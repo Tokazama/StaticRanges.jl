@@ -22,9 +22,14 @@ false
 
 julia> is_dynamic(umr)
 true
+```
 """
 is_dynamic(::T) where {T} = is_dynamic(T)
 is_dynamic(::Type{T}) where {T} = is_fixed(T) | is_static(T) ? false : true
+function is_dynamic(::Type{T}) where {T<:AbstractAxis}
+    return is_dynamic(values_type(T)) & is_dynamic(keys_type(T))
+end
+is_dynamic(::Type{T}) where {T<:SimpleAxis} = is_dynamic(keys_type(T))
 
 """
     is_static(x) -> Bool
@@ -55,6 +60,11 @@ false
 is_static(::T) where {T} = is_static(T)
 is_static(::Type{T}) where {T} = false
 is_static(::Type{T}) where {T<:SRange} = true
+function is_static(::Type{T}) where {T<:AbstractAxis}
+    return is_static(values_type(T)) & is_static(keys_type(T))
+end
+is_static(::Type{T}) where {T<:SimpleAxis} = is_static(keys_type(T))
+
 """
     is_fixed(x) -> Bool
 
@@ -83,6 +93,11 @@ false
 """
 is_fixed(::T) where {T} = is_fixed(T)
 is_fixed(::Type{T}) where {T} = !T.mutable & !is_static(T) ? true : false
+function is_fixed(::Type{T}) where {T<:AbstractAxis}
+    return is_fixed(values_type(T)) & is_fixed(keys_type(T))
+end
+is_fixed(::Type{T}) where {T<:SimpleAxis} = is_fixed(keys_type(T))
+
 
 """
     as_dynamic(x)
@@ -122,6 +137,9 @@ as_dynamic(x::Union{LinRange,LinSRange}) = LinMRange(first(x), last(x), length(x
 
 as_dynamic(x::StepMRangeLen) = x
 as_dynamic(x::Union{StepRangeLen,StepSRangeLen}) = StepMRangeLen(first(x), step(x), length(x), x.offset)
+
+as_dynamic(x::Axis{name}) where {name} = Axis{name}(as_dynamic(keys(x)), as_dynamic(values(x)))
+as_dynamic(x::SimpleAxis{name}) where {name} = SimpleAxis{name}(as_dynamic(values(x)))
 
 """
     as_fixed(x)
@@ -163,6 +181,9 @@ as_fixed(x::AbstractLinRange) = LinRange(first(x), last(x), length(x))
 as_fixed(x::StepRangeLen) = x
 as_fixed(x::AbstractStepRangeLen) = StepRangeLen(first(x), step(x), length(x), x.offset)
 
+as_fixed(x::Axis{name}) where {name} = Axis{name}(as_fixed(keys(x)), as_fixed(values(x)))
+as_fixed(x::SimpleAxis{name}) where {name} = SimpleAxis{name}(as_fixed(values(x)))
+
 """
     as_static(x)
 
@@ -201,3 +222,6 @@ as_static(x::Union{LinRange,LinMRange}) = LinSRange(first(x), last(x), length(x)
 
 as_static(x::StepSRangeLen) = x
 as_static(x::Union{StepRangeLen,StepMRangeLen}) = StepSRangeLen(first(x), step(x), length(x), x.offset)
+
+as_static(x::Axis{name}) where {name} = Axis{name}(as_static(keys(x)), as_static(values(x)))
+as_static(x::SimpleAxis{name}) where {name} = SimpleAxis{name}(as_static(values(x)))

@@ -6,6 +6,8 @@
         @test @inferred(can_set_last(StepMRangeLen)) == true
         @test @inferred(can_set_last(UnitMRange)) == true
         @test @inferred(can_set_last(OneToMRange)) == true
+        @test @inferred(can_set_last(Axis(UnitMRange(1:2)))) == true
+        @test @inferred(can_set_last(Axis(UnitSRange(1:2)))) == false
     end
 
     for (r1,b,v,r2) in ((UnitMRange(1,3), true, 5, UnitMRange(1,5)),
@@ -15,7 +17,9 @@
                         (StepSRange(1,1,4), false, nothing, nothing),
                         (LinMRange(1,3,3), true, 4, LinMRange(1,4,3)),
                         (StepMRangeLen(1,1,3), true, 4, StepMRangeLen(1,1,4)),
-                        ([1,2,3], true, 2, [1,2,2]))
+                        ([1,2,3], true, 2, [1,2,2]),
+                        (SimpleAxis(UnitMRange(1,3)), true, 2, SimpleAxis(UnitMRange(1,2))),
+                        (Axis(UnitMRange(1,3),UnitMRange(1,3)), true, 2, Axis(UnitMRange(1,2),UnitMRange(1,2))))
         @testset "set_last-$(r1)" begin
             x = @inferred(can_set_last(r1))
             @test x == b

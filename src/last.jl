@@ -18,6 +18,8 @@ Base.last(r::LinMRange) = getfield(r, :stop)
 
 Base.last(gr::GapRange) = last(last_range(gr))
 
+Base.last(a::AbstractAxis) = last(values(a))
+
 """
     can_set_last(x) -> Bool
 
@@ -31,6 +33,10 @@ can_set_last(::Type{T}) where {T<:StepMRange} = true
 can_set_last(::Type{T}) where {T<:StepMRangeLen} = true
 can_set_last(::Type{T}) where {T<:UnitMRange} = true
 can_set_last(::Type{T}) where {T<:OneToMRange} = true
+
+# can_setlast isn't sufficient here if the keys are like MVector where the first
+# elemnt can be set by size isn't dynamic
+can_set_last(::Type{T}) where {T<:AbstractAxis} = is_dynamic(T)
 
 """
     set_last!(x, val)
@@ -72,6 +78,17 @@ function set_last!(r::StepMRangeLen{T}, val::T) where {T}
     setfield!(r, :len, len)
     return r
 end
+function set_last!(x::AbstractAxis{name,K,V}, val::V) where {name,K,V}
+    can_set_last(x) || throw(MethodError(set_last!, (x, val)))
+    set_last!(values(x), val)
+    resize_last!(keys(x), length(values(x)))
+    return x
+end
+function set_last!(x::SimpleAxis{name,V}, val::V) where {name,V}
+    can_set_last(x) || throw(MethodError(set_last!, (x, val)))
+    set_last!(values(x), val)
+    return x
+end
 
 """
     set_last(x, val)
@@ -104,3 +121,12 @@ set_last(r::OneToUnion{T}, val::T) where {T} = similar_type(r)(val)
 function set_last(r::StepRangeLenUnion{T}, val::T) where {T}
     return similar_type(r)(r.ref, r.step, unsafe_findvalue(val, r), r.offset)
 end
+# TODO set_last(AbstractAxis, val)
+function set_last(x::AbstractAxis{name,K,V}, val::V) where {name,K,V}
+    vs = set_last(values(x), val)
+    return similar_type(x)(resize_last(keys(x), length(vs)), vs)
+end
+function set_last(x::SimpleAxis{name,K}, val::K) where {name,K}
+    return SimpleAxis{name}(set_last(values(x), val))
+end
+

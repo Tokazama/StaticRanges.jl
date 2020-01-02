@@ -33,3 +33,19 @@ function Base.show(io::IO, r::AbstractLinRange)
     show(io, length(r))
     print(io, ')')
 end
+
+function Base.show(io::IO, a::A) where {A<:AbstractAxis}
+    if isnothing(dimnames(a))
+        print(io, "$(Symbol(A))($(keys(a)) => $(values(a)))")
+    else
+        print(io, "$(Symbol(A)){$(dimnames(a))}($(keys(a)) => $(values(a)))")
+    end
+end
+
+function Base.show(io::IO, a::SimpleAxis)
+    if isnothing(dimnames(a))
+        print(io, "SimpleAxis($(keys(a)))")
+    else
+        print(io, "SimpleAxis{$(dimnames(a))}($(keys(a)))")
+    end
+end

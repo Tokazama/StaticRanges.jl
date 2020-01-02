@@ -7,15 +7,24 @@ function StaticArrays.pop(v::AbstractVector)
     isempty(v) && error("array must be non-empty")
     return length(v) == 1 ? empty!(v) : @inbounds(v[1:end-1])
 end
-
 StaticArrays.pop(r::Union{OneTo,OneToRange}) = similar_type(r)(last(r) - one(eltype(r)))
+StaticArrays.pop(x::Axis) = Axis(pop(keys(x)), pop(values(x)))
+StaticArrays.pop(x::SimpleAxis) = SimpleAxis(pop(values(x)))
 
+###
+### popfirst
+###
 # FIXME this should be defined somewhere else
 function StaticArrays.popfirst(v::AbstractVector)
     isempty(v) && error("array must be non-empty")
     return length(v) == 1 ? empty!(v) : @inbounds(v[2:end])
 end
+StaticArrays.popfirst(x::Axis) = Axis(popfirst(keys(x)), popfirst(values(x)))
+StaticArrays.popfirst(x::SimpleAxis) = SimpleAxis(popfirst(values(x)))
 
+###
+### pop!
+###
 function Base.pop!(r::StepMRangeLen)
     isempty(r) && error("array must be non-empty")
     l = last(r)
@@ -51,8 +60,17 @@ function Base.pop!(r::Union{UnitMRange{T},OneToMRange{T}}) where {T}
     return l
 end
 
-### popfirst!
+function Base.pop!(a::AbstractAxis)
+    can_set_last(a) || error("Cannot change size of index of type $(typeof(a)).")
+    pop!(keys(a))
+    return pop!(values(a))
+end
 
+Base.pop!(si::SimpleAxis) = pop!(values(si))
+
+###
+### popfirst!
+###
 function Base.popfirst!(r::StepMRangeLen)
     isempty(r) && error("array must be non-empty")
     f = first(r)
@@ -85,3 +103,10 @@ function Base.popfirst!(r::Union{StepMRange,UnitMRange})
     length(r) == 1 ? empty!(r) : setfield!(r, :start, @inbounds(r[2]))
     return f
 end
+
+function Base.popfirst!(a::AbstractAxis)
+    can_set_first(a) || error("Cannot change size of index of type $(typeof(a)).")
+    popfirst!(keys(a))
+    return popfirst!(values(a))
+end
+Base.popfirst!(si::SimpleAxis) = popfirst!(values(si))
