@@ -1,5 +1,3 @@
-# TODO: temporary fix while working out details in Dictionary.jl
-
 """
     Axis
 """
@@ -127,42 +125,22 @@ function Axis(
     return Axis{indnames(ks)}(keys(ks), vs, uc, lc)
 end
 
-#function Axis{name1,K,V,Ks,Vs}(idx::Axis) where {name1,name2,K,V,Ks,Vs}
-#    return Axis{}()
-#end
+function Axis{name,K,V,Ks,Vs}(idx::AbstractAxis) where {name,K,V,Ks,Vs}
+    return Axis{name,K,V,Ks,Vs}(Ks(keys(idx)), Vs(values(idx)), AllUnique, LengthChecked)
+end
 
 Axis(idx::Axis) = Axis(keys(idx), values(idx), AllUnique, LengthChecked)
+
+# TODO: is this the best fall back for and AbstractAxis?
+AbstractAxis(x) = Axis(x)
 
 ###
 ### Interface
 ###
 function StaticArrays.similar_type(
-    idx::Axis{name},
-    ks_type::Type=keys_type(idx),
-    vs_type::Type=values_type(idx)
-   ) where {name}
-    return Axis{name,eltype(ks_type),eltype(vs_type),ks_type,vs_type}
+    ::Type{A},
+    ks_type::Type=keys_type(A),
+    vs_type::Type=values_type(A)
+   ) where {A<:Axis}
+    return Axis{axis_names(A),eltype(ks_type),eltype(vs_type),ks_type,vs_type}
 end
-
-# TODO: is this the best fall back for and AbstractAxis?
-AbstractAxis(x) = Axis(x)
-
-#=
-"""
-    Index{name,K,V}
-"""
-struct Index{name,K,V} <: AbstractIndex{name,K,V}
-    key::K
-    value::V
-
-    Index{name,K,V}(k::K, v::V) where {name,K,V<:Integer} = new{name,K,V}(k,v)
-end
-
-Base.keys(si::Index) = getfield(r, :key)
-Base.values(si::Index) = getfield(r, :value)
-
-Index(k, v) = Index{nothing}(k, v)
-Index{name}(k, v) where {name} = Index{name,typeof(k),typeof(v)}(k, v)
-Index{name,K,V}(k, v) where {name,K,V<:Integer} = Index{name,K,V}(K(k),v)
-Index{name,K,V}(k::K, v) where {name,K,V<:Integer} = Index{name,K,V}(k,V(v))
-=#

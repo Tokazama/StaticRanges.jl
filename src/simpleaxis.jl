@@ -11,6 +11,21 @@ Base.keys(si::SimpleAxis) = getfield(si, :_kv)
 SimpleAxis(vs) = SimpleAxis{nothing}(vs)
 SimpleAxis{name}(vs) where {name} = SimpleAxis{name,eltype(vs),typeof(vs)}(vs)
 
+function SimpleAxis{name,V,Vs}(idx::AbstractAxis) where {name,V,Vs}
+    return SimpleAxis{name,V,Vs}(Vs(values(idx)))
+end
+
+# This is a bit tricky b/c it requires that we permit both the keys and vals
+# to be set in order to have the same format as other AbstractAxis constructors
+function StaticArrays.similar_type(
+    ::Type{A},
+    ks_type::Type=keys_type(A),
+    vs_type::Type=values_type(A)
+   ) where {A<:SimpleAxis}
+    return SimpleAxis{axis_names(A),eltype(vs_type),vs_type}
+end
+
+
 ###
 ### Traits
 ###
@@ -19,22 +34,3 @@ index_by(a::SimpleAxis{name,K}, i::AbstractVector{K}) where {name,K<:Integer} = 
 index_by(a::SimpleAxis{name,K}, i::I) where {name,K,I<:Integer} = ByValue
 index_by(a::SimpleAxis{name,K}, i::AbstractVector{I}) where {name,K,I<:Integer} = ByValue
 
-#=
-"""
-    SimpleIndex{name,V}
-"""
-struct SimpleIndex{name,V} <: AbstractIndex{name,V,V}
-    value::V
-
-    SimpleIndex{name,V}(v::V) where {name,V} = new{name,V}(v)
-end
-Base.values(si::SimpleIndex) = getfield(r, :value)
-
-SimpleIndex(v) = SimpleIndex{nothing}(v)
-SimpleIndex{name}(v::V) where {name,V<:Integer} = SimpleIndex{name,V}(v)
-SimpleIndex{name,V}(v) where {name,V<:Integer} = SimpleIndex{name,V}(V(v))
-
-function Base.:+(x::SimpleIndex{name1,V1}, y::SimpleIndex{name1,V1}) where {name1,V1,name2,V2}
-    return SimpleIndex{combine_names(name1, name2)}(values(x) + values(y))
-end
-=#

@@ -21,3 +21,22 @@ end
 # TODO this needs to be in base
 Base.isassigned(r::AbstractRange, i::Integer) = checkindex(Bool, r, i)
 
+#
+function Base.checkindex(::Type{Bool}, inds::AbstractAxis, i)
+    return _checkindex(index_by(inds, i), inds, i)
+end
+
+_checkindex(::ByKeyTrait, inds::AbstractAxis, i::Function) = true
+_checkindex(::ByKeyTrait, inds::AbstractAxis, i::Any) = !isnothing(find_first(==(i), keys(a)))
+function _checkindex(::ByKeyTrait, inds::AbstractAxis, i::AbstractVector)
+    return _checkindex(ByKey, inds, minimum(i)) & _checkindex(ByKey, inds, maximum(i))
+end
+
+_checkindex(::ByValueTrait, inds::AbstractAxis, i::Function) = true
+function _checkindex(::ByValueTrait, inds::AbstractAxis, i::Any)
+    return checkindex(Bool, values(inds), i)
+end
+function _checkindex(::ByValueTrait, inds::AbstractAxis, i::AbstractVector)
+    return checkindex(Bool, values(inds), i)
+end
+

@@ -242,3 +242,96 @@ Base.promote_rule(a::Type{<:UnitRange}, b::Type{<:OneTo}) = UnitRange{promote_ty
 function Base.promote_rule(a::Type{StepRangeLen{T,R,S}}, ::Type{OR}) where {T,R,S,OR<:OneToMRange}
     return StepMRangeLen{promote_type(T, eltype(OR)),promote_type(R, eltype(OR)),promote_type(S, eltype(OR))}
 end
+
+# helps with static types that can't be easily inferred as same parametrically
+same_type(::X, ::Y) where {X,Y} =  same_type(X, Y)
+same_type(::Type{X}, ::Type{Y}) where {X<:OneToSRange,Y<:OneToSRange} = true
+same_type(::Type{X}, ::Type{Y}) where {X<:UnitSRange,Y<:UnitSRange} = true
+same_type(::Type{X}, ::Type{Y}) where {X<:StepSRange,Y<:StepSRange} = true
+same_type(::Type{X}, ::Type{Y}) where {X<:LinSRange,Y<:LinSRange} = true
+same_type(::Type{X}, ::Type{Y}) where {X<:StepSRangeLen,Y<:StepSRangeLen} = true
+same_type(::Type{X}, ::Type{X}) where {X} = true
+same_type(::Type{X}, ::Type{Y}) where {X,Y} = false
+function same_type(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractAxis}
+    return (X.name === Y.name)  & # TODO there should be a better way of doing this
+           same_type(keys_type(X), keys_type(Y)) &
+           same_type(values_type(X), values_type(Y))
+end
+
+promote_values_rule(::X, ::Y) where {X,Y} = promote_values_rule(X, Y)
+function promote_values_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractAxis}
+    xv = values_type(X)
+    yv = values_type(Y)
+    return same_type(xv, yv) ? xv : _promote_rule(xv, yv)
+end
+promote_values_rule(::Type{X}, ::Type{Y}) where {X,Y} = _promote_rule(X, Y)
+
+promote_keys_rule(::X, ::Y) where {X,Y} = promote_keys_rule(X, Y)
+function promote_keys_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractAxis}
+    xv = keys_type(X)
+    yv = keys_type(Y)
+    return same_type(xv, yv) ? xv : _promote_rule(xv, yv)
+end
+
+promote_axis_rule(::X, ::Y) where {X,Y} = promote_axis_rule(X, Y)
+promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:Axis,Y<:AbstractAxis} = Axis{combine_names(X,Y)}
+promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:Axis} = Axis{combine_names(X,Y)}
+promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:Axis,Y<:Axis} = Axis{combine_names(X,Y)}
+promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:Axis,Y<:SimpleAxis} = Axis{combine_names(X,Y)}
+promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:SimpleAxis,Y<:Axis} = Axis{combine_names(X,Y)}
+promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:SimpleAxis,Y<:AbstractAxis} = SimpleAxis{combine_names(X,Y)}
+promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:SimpleAxis} = SimpleAxis{combine_names(X,Y)}
+promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:SimpleAxis,Y<:SimpleAxis} = SimpleAxis{combine_names(X,Y)}
+
+function _promote_rule(::Type{X}, ::Type{Y}) where {X,Y}
+    out = promote_rule(X, Y)
+    return out <: Union{} ? promote_rule(Y, X) : out
+end
+
+function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractAxis}
+    return similar_type(
+        promote_axis_rule(X,Y),
+        promote_keys_rule(X, Y),
+        promote_values_rule(X, Y))
+end
+
+function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:SimpleAxis,Y<:SimpleAxis}
+    return SimpleAxis{combine_names(X,Y),
+                promote_type(valtype(X),valtype(Y)),
+                _promote_rule(values_type(X),values_type(Y))}
+end
+
+Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:Axis} = promote_rule(Y, X)
+function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:Axis,Y<:AbstractAxis}
+    return Axis{combine_names(X,Y),
+                promote_type(keytype(X),keytype(Y)),
+                promote_type(valtype(X),valtype(Y)),
+                _promote_rule(keys_type(X),keys_type(Y)),
+                _promote_rule(values_type(X),values_type(Y))}
+end
+function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:Axis,Y<:Axis}
+    return Axis{combine_names(X,Y),
+                promote_type(keytype(X),keytype(Y)),
+                promote_type(valtype(X),valtype(Y)),
+                _promote_rule(keys_type(X),keys_type(Y)),
+                _promote_rule(values_type(X),values_type(Y))}
+end
+
+function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractUnitRange}
+    return promote_rule(X, similar_type(X, index_keys_type(Y),Y))
+end
+
+function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:UnitRange,Y<:AbstractAxis}
+    return promote_rule(Y, X)
+end
+
+function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractVector}
+    return promote_rule(values_type(X), Y)
+end
+function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractVector,Y<:AbstractAxis}
+    return promote_rule(Y, X)
+end
+
+# TODO
+# MethodError: no method matching similar_type(::Type{SimpleAxis{nothing,Int64,UnitMRange{Int64}}}, ::Type{UnitMRange{Int64}}, ::Type{UnitMRange{Int64}})
+

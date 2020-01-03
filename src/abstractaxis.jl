@@ -36,3 +36,12 @@ Base.isempty(a::AbstractAxis) = isempty(values(a))
 Base.in(a, itr::AbstractAxis) = in(x, values(a))
 
 Base.eachindex(a::AbstractAxis) = keys(a)
+
+function StaticArrays.similar_type(
+    ::A,
+    ks_type::Type=keys_type(A),
+    vs_type::Type=values_type(A)
+   ) where {A<:AbstractAxis}
+    return similar_type(A, ks_type, vs_type)
+end
+

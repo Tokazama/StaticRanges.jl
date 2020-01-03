@@ -35,6 +35,7 @@ export
     as_static,
     as_dynamic,
     as_fixed,
+    axis_names,
     cmpmax,
     cmpmin,
     mrange,
@@ -137,5 +138,14 @@ include("pop.jl")
 include("push.jl")
 include("show.jl")
 include("vcat.jl")
+
+include("combine.jl")
+include("append.jl")
+include("cat_axes.jl")
+include("drop_axes.jl")
+include("filter_axes.jl")
+include("matmul_axes.jl")
+include("permute_axes.jl")
+include("reduce_axes.jl")
 
 end
