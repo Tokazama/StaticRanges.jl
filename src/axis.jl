@@ -18,36 +18,6 @@ Base.keys(idx::Axis) = getfield(idx, :_keys)
 
 Base.values(idx::Axis) = getfield(idx, :_values)
 
-function Base.setproperty!(idx::Axis{name,K,V,Ks,Vs}, p::Symbol, val) where {name,K,V,Ks,Vs}
-    if is_dynamic(idx)
-        if p === :keys
-            if val isa Ks
-                if length(val) == length(idx)
-                    return setfield!(idx, :_keys, val)
-                else
-                    error("`val` must be the same length as the provided index.")
-                end
-            else
-                return setproperty!(idx, p, convert(Ks, val))
-            end
-        elseif p === :values
-            if val isa Vs
-                if length(val) == length(idx)
-                    return setfield!(idx, :_values, val)
-                else
-                    error("`val` must be the same length as the provided index.")
-                end
-            else
-                return setproperty!(idx, p, convert(Vs, val))
-            end
-        else
-            error("No property named $p.")
-        end
-    else
-        error("The keys and values of an Axis must be mutable to use `setproperty!`, got $(typeof(idx)).")
-    end
-end
-
 ###
 ### Constructors
 ###
