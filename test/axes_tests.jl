@@ -2,6 +2,31 @@ using StaticRanges: append_axis!, drop_axes, to_axis, vcat_axes, hcat_axes,
     append_axes, append_axis!, matmul_axes, inverse_axes, covcor_axes, permute_axes,
     reduce_axes, reduce_axis, filter_axes, append_axis
 
+@testset "axis_names" begin
+    @test axis_names(Axis{:a}(1:10)) == :a
+    @test isnothing(axis_names(1:10))
+    @test axis_names((Axis{:a}(1:10), 1:10)) == (:a, nothing)
+end
+
+@testset "unname" begin
+    aidx, nidx, uidx, = Axis{:a}(1:10), Axis(1:10), 1:10
+    @test isnothing(axis_names(unname(aidx)))
+    @test isnothing(axis_names(unname(nidx)))
+    @test isnothing(axis_names(unname(uidx)))
+end
+
+@testset "to_axis" begin
+    axs = (Axis{:a}(1:10), Axis{:b}(1:10), Axis(1:10));
+    @test to_axis(axs, :a) == 1
+    @test to_axis(axs, :b) == 2
+    @test to_axis(axs, (:a, :b)) == (1, 2)
+
+    @test to_axis(axs, 1) == 1
+    @test to_axis(axs, 2) == 2
+
+    @test_throws ArgumentError to_axis(axs, :c)
+end
+
 @testset "drop_axes" begin
     axs = (Axis{:a}(1:10), Axis{:b}(1:10), Axis(1:10));
     @test drop_axes(axs, :a) == (Axis{:b}(1:10, OneTo(10)), Axis(1:10, OneTo(10)))

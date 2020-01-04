@@ -68,6 +68,7 @@ export
     set_last,
     set_length!,
     set_length,
+    unname,
     order,
     Continuity,
     Continuous,
