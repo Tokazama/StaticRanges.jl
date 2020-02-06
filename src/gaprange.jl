@@ -7,20 +7,17 @@ more compact storage of numbers where the majority are known to be continuous.
 
 ## Examples
 ```jldoctest
-julia> r = 1:10
-1:10
+julia> using StaticRanges
 
-julia> findall(or(<(4), >(12)), mr)
-7-element Array{Int64,1}:
-  1
-  2
-  3
-  7
-  8
-  9
- 10
+julia> findall(and(>(4), <(10)), 1:10)
+5-element Array{Int64,1}:
+ 5
+ 6
+ 7
+ 8
+ 9
 
-julia> find_all(or(<(4), >(6)), r)
+julia> find_all(or(<(4), >(6)), 1:10)
 7-element GapRange{Int64,UnitRange{Int64},UnitRange{Int64}}:
   1
   2
@@ -29,7 +26,6 @@ julia> find_all(or(<(4), >(6)), r)
   8
   9
  10
-
 ```
 """
 struct GapRange{T,F,L} <: AbstractVector{T}
@@ -102,18 +98,18 @@ function GapRange(f::AbstractVector{T}, l::AbstractVector{T}) where {T}
     end
 end
 
-"""
+#=
     first_range(gr::GapRange)
 
 Returns the first segment of a `GapRange`
-"""
+=#
 first_range(gr::GapRange) = getfield(gr, :first_range)
 
-"""
+#=
     last_range(gr::GapRange)
 
 Returns the last segment of a `GapRange`.
-"""
+=#
 last_range(gr::GapRange) = getfield(gr, :last_range)
 
 Base.firstindex(gr::GapRange) = firstindex(first_range(gr))

@@ -10,12 +10,9 @@ Indices or keys are of the same type as those returned by keys(A) and pairs(A).
 # Examples
 
 ```jldoctest
-julia> A = [1, 4, 2, 2]
-4-element Array{Int64,1}:
-1
-4
-2
-2
+julia> using StaticRanges
+
+julia> A = [1, 4, 2, 2];
 
 julia> find_first(iseven, A)
 2
@@ -25,12 +22,7 @@ julia> find_first(x -> x>10, A) # returns nothing, but not printed in the REPL
 julia> find_first(isequal(4), A)
 2
 
-julia> A = [1 4; 2 2]
-2×2 Array{Int64,2}:
-1  4
-2  2
-
-julia> find_first(iseven, A)
+julia> find_first(iseven, [1 4; 2 2])
 CartesianIndex(2, 1)
 ```
 """
@@ -43,12 +35,9 @@ unsafe_findfirst(val, a::LinearIndices, ::ReverseOrdering) = unsafe_findfirst(va
 unsafe_findfirst(val, a::LinearIndices, ::ForwardOrdering) = unsafe_findfirst(val, axes(a, 1), Forward)
 
 # FIXME: this needs an explicit method and not just a fallback
-function unsafe_findfirst(val, a::AbstractArray, ::ReverseOrdering)
-    return searchsortedfirst(a, val, Reverse)
-end
-function unsafe_findfirst(val, a::AbstractArray, ::ForwardOrdering)
-    return searchsortedfirst(a, val, Forward)
-end
+unsafe_findfirst(val, a::AbstractArray, ::ReverseOrdering) = searchsortedfirst(a, val, Reverse)
+unsafe_findfirst(val, a::AbstractArray, ::ForwardOrdering) = searchsortedfirst(a, val, Forward)
+unsafe_findfirst(val, a::AbstractArray, ::UnorderedOrdering) = findfirst(==(val), a)
 
 
 @propagate_inbounds find_first(f, x) = find_first(f, x, order(x))
@@ -79,7 +68,7 @@ function _find_first_eq(x, r, ro::Ordering)
         return idx
     end
 end
-function _find_first_eq(x, r, ::UnorderedOrdering)
+function _find_first_eq(x, r, ro::UnorderedOrdering)
     return r isa AbstractRange ? nothing : unsafe_findfirst(x, r, ro)
 end
 

@@ -44,8 +44,6 @@ last_length(gr::GapRange) = length(last_range(gr))
 
 Base.length(gr::GapRange) = length(first_range(gr)) + length(last_range(gr))
 
-Base.length(a::AbstractAxis) = length(values(a))
-
 function start_step_stop_to_length(::Type{T}, start, step, stop) where {T}
     if (start != stop) & ((step > zero(step)) != (stop > start))
         return 0
@@ -93,10 +91,6 @@ can_set_length(::Type{T}) where {T<:StepMRangeLen} = true
 can_set_length(::Type{T}) where {T<:StepMRange} = true
 can_set_length(::Type{T}) where {T<:UnitMRange} = true
 can_set_length(::Type{T}) where {T<:OneToMRange} = true
-function can_set_length(::Type{T}) where {T<:AbstractAxis}
-    return can_set_length(keys_type(T)) & can_set_length(values_type(T))
-end
-can_set_length(::Type{T}) where {T<:SimpleAxis} = can_set_length(keys_type(T))
 
 """
     set_length!(x, len)
@@ -105,6 +99,8 @@ Returns a similar type as `x` with a length equal to `len`.
 
 ## Examples
 ```jldoctest
+julia> using StaticRanges
+
 julia> mr = UnitMRange(1, 10)
 UnitMRange(1:10)
 
@@ -115,7 +111,7 @@ julia> length(mr)
 20
 ```
 """
-set_length!(r::AbstractRange, val) = set_length!(r, Int(val))
+set_length!(r, val) = set_length!(r, Int(val))
 function set_length!(r::LinMRange, len::Int)
     len >= 0 || throw(ArgumentError("set_length!($r, $len): negative length"))
     if len == 1
@@ -140,17 +136,6 @@ function set_length!(r::StepMRange{T}, len) where {T}
     setfield!(r, :stop, convert(T, first(r) + step(r) * (len - 1)))
     return r
 end
-function set_length!(a::AbstractAxis, len::Int)
-    can_set_length(a) || error("Cannot use set_length! for instances of typeof $(typeof(a)).")
-    set_length!(keys(a), len)
-    set_length!(values(a), len)
-    return a
-end
-function set_length!(a::SimpleAxis, len::Int)
-    can_set_length(a) || error("Cannot use set_length! for instances of typeof $(typeof(a)).")
-    set_length!(values(a), len)
-    return a
-end
 
 """
     set_length(x, len)
@@ -159,6 +144,8 @@ Change the length of `x` while maintaining it's first and last positions.
 
 ## Examples
 ```jldoctest
+julia> using StaticRanges
+
 julia> r = 1:10
 1:10
 
@@ -166,19 +153,13 @@ julia> set_length(r, 20)
 1:20
 ```
 """
-set_length(r::AbstractRange, val) = set_length(r, Int(val))
+set_length(r, val) = set_length(r, Int(val))
 set_length(r::LinRangeUnion, len::Int) = similar_type(r)(first(r), last(r), len)
 set_length(r::StepRangeLenUnion, len::Int) = similar_type(r)(r.ref, r.step, len, r.offset)
 set_length(r::OneToUnion{T}, len::T) where {T} = similar_type(r)(len)
 set_length(r::UnitRangeUnion{T}, len) where {T} = set_last(r, T(first(r) + len - 1))
 function set_length(r::StepRangeUnion{T}, len) where {T}
     return set_last(r, convert(T, first(r) + step(r) * (len - 1)))
-end
-function set_length(a::Axis{name}, len::Int) where {name}
-    return Axis{name}(set_length(keys(a), len), set_length(values(a), len))
-end
-function set_length(a::SimpleAxis{name}, len::Int) where {name}
-    return SimpleAxis{name}(set_length(values(a), len))
 end
 
 """
@@ -203,3 +184,4 @@ function set_lendiv!(r::LinMRange, d::Int)
     setfield!(r, :lendiv, d)
     return r
 end
+

@@ -1,3 +1,4 @@
+
 Base.show(io::IO, r::OneToRange) = print(io, typeof(r).name, "(", last(r), ")")
 
 function Base.show(io::IO, r::AbstractStepRangeLen)
@@ -34,18 +35,3 @@ function Base.show(io::IO, r::AbstractLinRange)
     print(io, ')')
 end
 
-function Base.show(io::IO, a::A) where {A<:AbstractAxis}
-    if isnothing(axis_names(a))
-        print(io, "$(Symbol(A))($(keys(a)) => $(values(a)))")
-    else
-        print(io, "$(Symbol(A)){$(axis_names(a))}($(keys(a)) => $(values(a)))")
-    end
-end
-
-function Base.show(io::IO, a::SimpleAxis)
-    if isnothing(axis_names(a))
-        print(io, "SimpleAxis($(keys(a)))")
-    else
-        print(io, "SimpleAxis{$(axis_names(a))}($(keys(a)))")
-    end
-end

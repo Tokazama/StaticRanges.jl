@@ -13,6 +13,8 @@ Returns `true` if `x` is sorted forward.
 
 ## Examples
 ```jldoctest
+julia> using StaticRanges
+
 julia> fr = 1:2:10
 1:2:9
 
@@ -40,6 +42,8 @@ Returns `true` if `x` is sorted in reverse.
 
 ## Examples
 ```jldoctest
+julia> using StaticRanges
+
 julia> fr = 1:2:10
 1:2:9
 
@@ -265,6 +269,8 @@ equivalent to `all(x .< y)`.
 
 ## Examples
 ```jldoctest
+julia> using StaticRanges
+
 julia> r1 = 1:5
 1:5
 
@@ -299,6 +305,8 @@ equivalent to `all(x .> y)`.
 
 ## Examples
 ```jldoctest
+julia> using StaticRanges
+
 julia> r1 = 1:5
 1:5
 
@@ -324,6 +332,8 @@ end of `y`.
 
 # Example
 ```
+julia> using StaticRanges
+
 julia> is_contiguous(1:3, 3:4) == true
 
 julia> is_contiguous(3:-1:1, 3:4) == true

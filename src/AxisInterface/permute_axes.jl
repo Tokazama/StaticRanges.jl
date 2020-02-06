@@ -7,8 +7,10 @@ Returns axes of `x` in the order of `p`.
 
 ## Examples
 ```jldoctest
-julia> permute_axes((Axis{:a}(1:10), Axis{:b}(1:10), Axis(1:10)), (:b, 3, :a))
-(Axis{a}(1:10 => Base.OneTo(10)), Axis(1:10 => Base.OneTo(10)), Axis{b}(1:10 => Base.OneTo(10)))
+julia> using StaticRanges
+
+julia> permute_axes((Axis(1:2), Axis(1:4), Axis(1:6)), (1, 3, 2))
+(Axis(1:2 => Base.OneTo(2)), Axis(1:6 => Base.OneTo(6)), Axis(1:4 => Base.OneTo(4)))
 ```
 """
 permute_axes(x::AbstractArray{T,N}, p::NTuple{N}) where {T,N} = permute_axes(axes(x), p)
@@ -22,12 +24,14 @@ Returns the permuted axes of `x` as axes of size 1 × length(x)
 
 ## Examples
 ```jldoctest
+julia> using StaticRanges
+
 julia> permute_axes((Axis(1:4),))
 (Axis(1:1 => Base.OneTo(1)), Axis(1:4 => Base.OneTo(4)))
 ```
 """
 permute_axes(x::AbstractVector) = permute_axes(axes(x))
-permute_axes(x::NTuple{1,Any}) = (reduce_axis(unname(first(x))), first(x))
+permute_axes(x::NTuple{1,Any}) = (reduce_axis(first(x)), first(x))
 
 """
     permute_axes(m::AbstractMatrix) -> NTuple{2}
@@ -38,9 +42,12 @@ not recursive.
 
 ## Examples
 ```jldoctest
-julia> permute_axes((Axis{:a}(1:4), Axis{:b}(1:4)))
-(Axis{b}(1:4 => Base.OneTo(4)), Axis{a}(1:4 => Base.OneTo(4)))
+julia> using StaticRanges
+
+julia> permute_axes((Axis(1:4), Axis(1:4)))
+(Axis(1:4 => Base.OneTo(4)), Axis(1:4 => Base.OneTo(4)))
 ```
 """
 permute_axes(x::AbstractMatrix) = permute_axes(axes(x))
 permute_axes(x::NTuple{2,Any}) = (last(x), first(x))
+

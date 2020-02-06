@@ -29,15 +29,83 @@ export
     StepSRange,
     UnitMRange,
     UnitSRange,
+    # interface
+    values_type,
+    keys_type,
+    # Swapping Axes
+    drop_axes,
+    permute_axes,
+    reduce_axes,
+    reduce_axis,
+    reduce_axis!,
+    # Matrix Multiplication and Axes
+    matmul_axes,
+    inverse_axes,
+    covcor_axes,
+    # Appending Axes
+    append_axes,
+    append_keys,
+    append_values,
+    append_axis,
+    append_axis!,
+    # Concatenating Axes
+    hcat_axes,
+    vcat_axes,
+    cat_axis,
+    cat_values,
+    cat_keys,
+    # Resizing Axes
+    resize_first,
+    resize_first!,
+    resize_last,
+    resize_last!,
+    grow_first,
+    grow_first!,
+    grow_last,
+    grow_last!,
+    shrink_first,
+    shrink_first!,
+    shrink_last,
+    shrink_last!,
+    next_type,
+    prev_type,
+    reindex,
+    # Combine Indices
+    combine_indices,
+    combine_index,
+    combine_values,
+    combine_keys,
+    # Order functions
+    is_forward,
+    is_reverse,
+    order,
+    is_ordered,
+    ordmax,
+    ordmin,
+    find_max,
+    find_min,
+    is_within,
+    gtmax,
+    ltmax,
+    eqmax,
+    gtmin,
+    ltmin,
+    eqmin,
+    group_max,
+    group_min,
+    cmpmax,
+    cmpmin,
+    min_of_group_max,
+    max_of_group_min,
+    is_before,
+    is_after,
+    is_contiguous,
     # methods
     and,
     or,
     as_static,
     as_dynamic,
     as_fixed,
-    axis_names,
-    cmpmax,
-    cmpmin,
     mrange,
     srange,
     find_first,
@@ -48,9 +116,6 @@ export
     first_segment,
     last_segment,
     # Traits
-    is_after,
-    is_before,
-    is_contiguous,
     is_dynamic,
     is_fixed,
     is_forward,
@@ -68,7 +133,6 @@ export
     set_last,
     set_length!,
     set_length,
-    unname,
     order,
     Continuity,
     Continuous,
@@ -96,9 +160,6 @@ include("unitrange.jl")
 include("abstractsteprange.jl")
 include("abstractlinrange.jl")
 include("abstractsteprangelen.jl")
-include("abstractaxis.jl")
-include("axis.jl")
-include("simpleaxis.jl")
 
 const LinRangeUnion{T} = Union{LinRange{T},AbstractLinRange{T}}
 const StepRangeLenUnion{T,R,S} = Union{StepRangeLen{T,R,S},AbstractStepRangeLen{T,R,S}}
@@ -113,14 +174,11 @@ const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRang
 
 ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = true
 
-include("to_index.jl")
-include("names.jl")
-include("reindex.jl")
+include("./AxisInterface/AxisInterface.jl")
 include("iterate.jl")
 include("staticness.jl")
 include("checkindex.jl")
 include("filter.jl")
-include("resize.jl")
 include("first.jl")
 include("last.jl")
 include("step.jl")
@@ -140,13 +198,5 @@ include("push.jl")
 include("show.jl")
 include("vcat.jl")
 
-include("combine.jl")
-include("append.jl")
-include("cat_axes.jl")
-include("drop_axes.jl")
-include("filter_axes.jl")
-include("matmul_axes.jl")
-include("permute_axes.jl")
-include("reduce_axes.jl")
 
 end

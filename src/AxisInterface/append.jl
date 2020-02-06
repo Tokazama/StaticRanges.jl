@@ -6,23 +6,16 @@ implement a unique `append_axis` method.
 
 ## Examples
 ```jldoctest
-julia> using AbstractAxis: append_axis!
+julia> using StaticRanges
 
 julia> x, y = Axis(UnitMRange(1, 10)), SimpleAxis(UnitMRange(1, 10));
 
-julia> append_axis(x, y)
-Axis(UnitMRange(1:20) => OneToMRange(20))
-
-julia> append_axis(y, x)
-SimpleAxis(UnitMRange(1:20))
+julia> length(append_axis(x, y))
+20
 ```
 """
-function append_axis(x::Axis, y::Axis)
-    return Axis{combine_names(x, y)}(append_keys(x, y), append_values(x, y))
-end
-function append_axis(x::SimpleAxis, y::SimpleAxis)
-    return SimpleAxis{combine_names(x, y)}(append_values(x, y))
-end
+append_axis(x::Axis, y::Axis) = Axis(append_keys(x, y), append_values(x, y))
+append_axis(x::SimpleAxis, y::SimpleAxis) = SimpleAxis(append_values(x, y))
 append_axis(x, y) = same_type(x, y) ? append_values(x, y) : append_axis(promote(x, y)...)
 #=
 function append_axis(x::AbstractVector, y::AbstractVector)
@@ -50,15 +43,19 @@ implement a unique `append_axis!` method.
 
 ## Examples
 ```jldoctest
-julia> using AbstractAxis: append_axis!
+julia> using StaticRanges
 
 julia> x, y = Axis(UnitMRange(1, 10)), SimpleAxis(UnitMRange(1, 10));
 
-julia> append_axis!(x, y)
-Axis(UnitMRange(1:20) => OneToMRange(20))
+julia> append_axis!(x, y);
 
-julia> append_axis!(y, x)
-SimpleAxis(UnitMRange(1:30))
+julia> length(x)
+20
+
+julia> append_axis!(y, x);
+
+julia> length(y)
+30
 ```
 """
 function append_axis!(x::Axis, y)
@@ -97,3 +94,4 @@ append_values(x, y) = cat_values(x, y)
 Returns the axes for `append!(x, y)`.
 """
 append_axes!(x::AbstractVector, y::AbstractVector) = (append_axis!(axes(x, 1), axes(y, 1)),)
+

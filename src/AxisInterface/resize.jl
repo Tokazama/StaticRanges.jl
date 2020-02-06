@@ -181,3 +181,4 @@ Returns a collection similar to `x` that shrinks by `n` elements from the last i
 """
 @propagate_inbounds shrink_last(x::AbstractVector, n::Integer) = x[firstindex(x):end - n]
 shrink_last(x::AbstractRange, n::Integer) = set_last(x, last(x) - step(x) * n)
+

@@ -120,7 +120,6 @@ function Base.sum(r::AbstractStepRangeLen)
     sm_hi, sm_lo = add12(s_hi, ref.hi)
     return add12(sm_hi, sm_lo + ref.lo)[1]
 end
-Base.sum(x::AbstractAxis) = sum(values(x))
 
 ###
 ### -(r1, r2)

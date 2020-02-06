@@ -24,8 +24,6 @@ steplo(r::StepRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.lo
 Base.step(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = S
 Base.step(r::StepMRange) = getfield(r, :step)
 
-Base.step(a::AbstractAxis) = step(values(a))
-
 """
     has_step(x) -> Bool
 
@@ -52,11 +50,11 @@ Sets the `step` of `x` to `val`.
 
 ## Examples
 ```jldoctest
-julia> mr = StepMRange(1, 1, 10)
-1:1:10
+julia> using StaticRanges
 
-julia> set_step!(mr, 2)
-StepMRange(1:2:9)
+julia> mr = StepMRange(1, 1, 10);
+
+julia> set_step!(mr, 2);
 
 julia> step(mr)
 2
@@ -84,10 +82,9 @@ Sets the `step` of `x` to `val`.
 
 ## Examples
 ```jldoctest
-julia> r = 1:1:10
-1:1:10
+julia> using StaticRanges
 
-julia> set_step(r, 2)
+julia> set_step(1:1:10, 2)
 1:2:9
 ```
 """

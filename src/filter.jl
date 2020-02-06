@@ -1,3 +1,4 @@
+
 # FIXME specify Bit operator filters here to <,<=,>=,>,==,isequal,isless
 # Currently will return incorrect order or repeated results otherwise
 @propagate_inbounds function Base.filter(f::Function, r::UnionRange)
@@ -61,3 +62,4 @@ function __fltr_not(r, inds1, inds2)
         end
     end
 end
+

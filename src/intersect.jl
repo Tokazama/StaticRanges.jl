@@ -1,3 +1,4 @@
+
 ### intersect
 for R in (:StepMRange,:LinMRange,:StepMRangeLen)
     @eval begin
@@ -87,3 +88,4 @@ function _intersect(r, s)
     n = min(stop1 - mod(stop1 - b, a), stop2 - mod(stop2 - b, a))
     range(m, step=a, stop=n)
 end
+

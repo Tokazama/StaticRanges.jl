@@ -1,3 +1,4 @@
+
 """
     is_dynamic(x) -> Bool
 
@@ -5,22 +6,24 @@ Returns true if the size of `x` is dynamic/can change.
 
 ## Examples
 ```jldoctest
-julia> usr = UnitSRange(1, 10)
+julia> using StaticRanges
+
+julia> sr = UnitSRange(1, 10)
 UnitSRange(1:10)
 
-julia> smr = StepMRange(1, 2, 20)
+julia> mr = StepMRange(1, 2, 20)
 StepMRange(1:2:19)
 
-julia> sfr = StepRange(1, 2, 20)
+julia> fr = StepRange(1, 2, 20)
 1:2:19
 
-julia> is_dynamic(usr)
+julia> is_dynamic(sr)
 false
 
-julia> is_dynamic(ufr)
+julia> is_dynamic(fr)
 false
 
-julia> is_dynamic(umr)
+julia> is_dynamic(mr)
 true
 ```
 """
@@ -38,22 +41,24 @@ Returns `true` if `x` is static.
 
 ## Examples
 ```jldoctest
-julia> usr = UnitSRange(1, 10)
+julia> using StaticRanges
+
+julia> sr = UnitSRange(1, 10)
 UnitSRange(1:10)
 
-julia> smr = StepMRange(1, 2, 20)
+julia> mr = StepMRange(1, 2, 20)
 StepMRange(1:2:19)
 
-julia> sfr = StepRange(1, 2, 20)
+julia> fr = StepRange(1, 2, 20)
 1:2:19
 
-julia> is_static(usr)
+julia> is_static(sr)
 true
 
-julia> is_static(ufr)
+julia> is_static(mr)
 false
 
-julia> is_static(umr)
+julia> is_static(fr)
 false
 ```
 """
@@ -72,22 +77,24 @@ Returns `true` if the size of `x` is fixed.
 
 ## Examples
 ```jldoctest
-julia> usr = UnitSRange(1, 10)
+julia> using StaticRanges
+
+julia> sr = UnitSRange(1, 10)
 UnitSRange(1:10)
 
-julia> smr = StepMRange(1, 2, 20)
+julia> mr = StepMRange(1, 2, 20)
 StepMRange(1:2:19)
 
-julia> sfr = StepRange(1, 2, 20)
+julia> fr = StepRange(1, 2, 20)
 1:2:19
 
-julia> is_fixed(usr)
+julia> is_fixed(sr)
 false
 
-julia> is_fixed(ufr)
+julia> is_fixed(fr)
 true
 
-julia> is_fixed(umr)
+julia> is_fixed(mr)
 false
 ```
 """
@@ -107,7 +114,9 @@ type to `x`.
 
 ## Examples
 ```jldoctest
-julia> as_dynamic(OneTo(10))
+julia> using StaticRanges
+
+julia> as_dynamic(Base.OneTo(10))
 OneToMRange(10)
 
 julia> as_dynamic(UnitRange(1, 10))
@@ -138,8 +147,8 @@ as_dynamic(x::Union{LinRange,LinSRange}) = LinMRange(first(x), last(x), length(x
 as_dynamic(x::StepMRangeLen) = x
 as_dynamic(x::Union{StepRangeLen,StepSRangeLen}) = StepMRangeLen(first(x), step(x), length(x), x.offset)
 
-as_dynamic(x::Axis{name}) where {name} = Axis{name}(as_dynamic(keys(x)), as_dynamic(values(x)))
-as_dynamic(x::SimpleAxis{name}) where {name} = SimpleAxis{name}(as_dynamic(values(x)))
+as_dynamic(x::Axis) = Axis(as_dynamic(keys(x)), as_dynamic(values(x)))
+as_dynamic(x::SimpleAxis) = SimpleAxis(as_dynamic(values(x)))
 
 """
     as_fixed(x)
@@ -149,6 +158,8 @@ type to `x`.
 
 ## Examples
 ```jldoctest
+julia> using StaticRanges
+
 julia> as_fixed(OneToMRange(10))
 Base.OneTo(10)
 
@@ -181,8 +192,8 @@ as_fixed(x::AbstractLinRange) = LinRange(first(x), last(x), length(x))
 as_fixed(x::StepRangeLen) = x
 as_fixed(x::AbstractStepRangeLen) = StepRangeLen(first(x), step(x), length(x), x.offset)
 
-as_fixed(x::Axis{name}) where {name} = Axis{name}(as_fixed(keys(x)), as_fixed(values(x)))
-as_fixed(x::SimpleAxis{name}) where {name} = SimpleAxis{name}(as_fixed(values(x)))
+as_fixed(x::Axis) = Axis(as_fixed(keys(x)), as_fixed(values(x)))
+as_fixed(x::SimpleAxis) = SimpleAxis(as_fixed(values(x)))
 
 """
     as_static(x)
@@ -192,7 +203,9 @@ type to `x`.
 
 ## Examples
 ```jldoctest
-julia> as_static(OneTo(10))
+julia> using StaticRanges
+
+julia> as_static(Base.OneTo(10))
 OneToSRange(10)
 
 julia> as_static(UnitRange(1, 10))
@@ -223,5 +236,6 @@ as_static(x::Union{LinRange,LinMRange}) = LinSRange(first(x), last(x), length(x)
 as_static(x::StepSRangeLen) = x
 as_static(x::Union{StepRangeLen,StepMRangeLen}) = StepSRangeLen(first(x), step(x), length(x), x.offset)
 
-as_static(x::Axis{name}) where {name} = Axis{name}(as_static(keys(x)), as_static(values(x)))
-as_static(x::SimpleAxis{name}) where {name} = SimpleAxis{name}(as_static(values(x)))
+as_static(x::Axis) = Axis(as_static(keys(x)), as_static(values(x)))
+as_static(x::SimpleAxis) = SimpleAxis(as_static(values(x)))
+

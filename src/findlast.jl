@@ -1,11 +1,37 @@
+"""
+    find_last(predicate::Function, A)
+
+Return the index or key of the last element of A for which predicate returns
+true. Return nothing if there is no such element.
+
+Indices or keys are of the same type as those returned by keys(A) and pairs(A).
+
+# Examples
+
+```jldoctest
+julia> using StaticRanges
+
+julia> find_last(iseven, [1, 4, 2, 2])
+4
+
+julia> find_last(x -> x>10, [1, 4, 2, 2]) # returns nothing, but not printed in the REPL
+
+julia> find_last(isequal(4), [1, 4, 2, 2])
+2
+
+julia> find_last(iseven, [1 4; 2 2])
+CartesianIndex(2, 2)
+```
+"""
 @propagate_inbounds find_last(f, x) = find_last(f, x, order(x))
+find_last(f, a, ro::Ordering) =  unsafe_findlast(f, a, ro)
 
 unsafe_findlast(f, r::AbstractRange, ::ForwardOrdering) = unsafe_findvalue(f.x, r)
 unsafe_findlast(f, r::AbstractRange, ::ReverseOrdering) = unsafe_findvalue(f.x, r)
 
 unsafe_findlast(f, a::AbstractArray, ::ReverseOrdering) = searchsortedlast(a, f.x, Reverse)
 unsafe_findlast(f, a::AbstractArray, ::ForwardOrdering) = searchsortedlast(a, f.x, Forward)
-function unsafe_findlast(f, a::AbstractArray, ro::Ordering)
+function unsafe_findlast(f, a, ro::Ordering)
     for (i, a_i) in Iterators.reverse(pairs(a))
         f(a_i) && return i
     end

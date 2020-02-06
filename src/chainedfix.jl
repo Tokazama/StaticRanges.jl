@@ -49,3 +49,4 @@ const F2Lt{T} = Fix2{<:Union{typeof(<),typeof(<=)},T}
 const F2Gt{T} = Fix2{<:Union{typeof(>),typeof(>=)},T}
 const F2Eq{T} = Fix2{<:Union{typeof(isequal),typeof(==)},T}
 const F2IsLess{T} = Fix2{<:Union{typeof(isless),typeof(<)},T}
+

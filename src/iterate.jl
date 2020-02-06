@@ -1,3 +1,4 @@
+
 function Base.iterate(r::Union{AbstractLinRange,AbstractStepRangeLen}, i=1)
     Base.@_inline_meta
     return check_iterate(r, i) ? unsafe_iterate(r, i) : nothing
@@ -29,12 +30,4 @@ function unsafe_iterate(v::AbstractVector, i)
     next = i + 1
     return @inbounds(v[next]), next
 end
-
-###
-### AbstractAxis
-###
-Base.pairs(a::AbstractAxis) = Base.Iterators.Pairs(a, keys(a))
-
-check_iterate(r::AbstractAxis, i) = check_iterate(values(r), last(i))
-check_iterate(r::SimpleAxis, i) = check_iterate(values(r), i)
 

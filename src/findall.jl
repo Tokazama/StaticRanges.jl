@@ -1,3 +1,4 @@
+
 @propagate_inbounds find_all(f, x) = find_all(f, x, order(x))
 find_all(f, x, xo) = findall(f, x)
 
@@ -100,3 +101,4 @@ find_all(f::Fix2{typeof(!=)}, r::AbstractRange, ::UnorderedOrdering) = _empty_ur
 function find_all(f::Fix2{typeof(!=)}, r::AbstractVector, ::UnorderedOrdering)
     return findall(f, r)
 end
+

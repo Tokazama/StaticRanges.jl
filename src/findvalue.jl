@@ -1,3 +1,4 @@
+
 # unsafe_findvalue doesn't confirm that the integer is in bounds or r[idx] == val
 unsafe_findvalue(val, r::Union{OneToRange,OneTo}) = round(Integer, val)
 
@@ -29,3 +30,4 @@ Base.findfirst(f::Function, r::UnionRange) = find_first(f, r)
 
 # TODO this could easily be optimized more
 @propagate_inbounds Base.count(f::Function, r::UnionRange) = length(find_all(f, r))
+

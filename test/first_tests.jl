@@ -1,3 +1,4 @@
+
 @testset "first" begin
     @testset "can_set_first" begin
         @test @inferred(can_set_first(LinRange)) == false
@@ -31,3 +32,4 @@
     end
     @test first(GapRange(2:5, 7:10)) == 2
 end
+

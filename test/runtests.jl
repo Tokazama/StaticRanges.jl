@@ -1,4 +1,4 @@
-using Test, StaticRanges, Dates
+using Test, StaticRanges, Dates, Documenter
 using StaticRanges: can_set_first, can_set_last, can_set_step, has_step, can_set_length,
     stephi, steplo, refhi, reflo, eqmax, eqmin, ltmax, ltmin, gtmax, gtmin, group_max,
     group_min, min_of_group_max, max_of_group_min, ordmin, ordmax, next_type, prev_type,
@@ -10,6 +10,7 @@ using StaticRanges: ArrayInterface.ismutable
 using Base: OneTo, step_hp
 using Base.Order
 
+include("find.jl")
 include("gaprange_tests.jl")
 include("vcat_tests.jl")
 include("merge_tests.jl")
@@ -28,7 +29,6 @@ include("size_tests.jl")
 include("length_tests.jl")
 
 include("staticness_tests.jl")
-include("find.jl")
 include("range_interface.jl")
 include("broadcast.jl")
 include("onetorange.jl")
@@ -40,7 +40,6 @@ include("reverse.jl")
 include("steprangelen_test.jl")
 include("getindex_tests.jl")
 include("reindex_tests.jl")
-include("axes_tests.jl")
 
 include("linrange_test.jl")
 for frange in (mrange, srange)
@@ -702,3 +701,7 @@ end
 #=
 #@test 1.0:(.3-.1)/.1 == 1.0:2.0
 =#
+
+@testset "docs" begin
+    doctest(StaticRanges; manual=false)
+end

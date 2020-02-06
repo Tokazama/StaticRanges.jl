@@ -1,4 +1,5 @@
 
+#=
 @testset "getindex" begin
     @testset "Axis" begin
         ax1 = Axis(1:10)
@@ -25,3 +26,4 @@
         @test getindex(ax2, 2:8) == 2:8
     end
 end
+=#

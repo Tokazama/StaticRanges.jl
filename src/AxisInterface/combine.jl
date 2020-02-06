@@ -19,10 +19,10 @@ Returns the combination of `x` and `y`, creating a new index. New subtypes of
 `AbstractAxis` should implement a `combine_index` method.
 """
 function combine_index(x::Axis, y::Axis)
-    return Axis{combine_names(x, y)}(combine_keys(x, y), combine_values(x, y))
+    return Axis(combine_keys(x, y), combine_values(x, y))
 end
 function combine_index(x::SimpleAxis, y::SimpleAxis)
-    return SimpleAxis{combine_names(x, y)}(combine_values(x, y))
+    return SimpleAxis(combine_values(x, y))
 end
 function combine_index(x::AbstractAxis, y::AbstractAxis)
     error("`combine_index` must be defined for new subtypes of AbstractAxis.")
@@ -49,7 +49,7 @@ needed. Default behavior is to use the return of `promote_rule(x, y)` for the
 type of the combined keys. 
 """
 function combine_keys(x::AbstractAxis, y::AbstractAxis)
-    return combine_keys(promote_keys_rule(x, y),keys(x), keys(y))
+    return combine_keys(promote_keys_rule(x, y), keys(x), keys(y))
 end
 
 combine_keys(::Union{}, x, y) = combine_keys(typeof(x), x, y)
@@ -66,41 +66,3 @@ function combine_keys(::Type{T}, x, y) where {T<:Union{StepRangeLen,AbstractStep
 end
 combine_keys(::Type{T}, x, y) where {T<:AbstractVector} = copy(x)
 
-"""
-    combine_names(a, b)
-
-Returns the combined name of `a` and `b`. The standard rules are:
-
-* nothing + nothing = name
-* nothing + name = name
-* name + nothing = name
-* name1 + name2 = name1
-
-## Examples
-```jldoctest
-julia> a, b, n, = Axis{:a}(1:10), Axis{:b}(1:10), Axis(1:10);
-
-julia> combine_names(a, b)
-:a
-
-julia> combine_names(a, n)
-:a
-
-julia> combine_names(b, n)
-:b
-
-julia> combine_names(n, n)
-
-julia> combine_names(b, a)
-:b
-```
-"""
-#combine_names(a::Union{Symbol,Nothing}, b::AbstractAxis) = combine_names(a, axis_names(b))
-#combine_names(a::AbstractAxis, b::Union{Symbol,Nothing}) = combine_names(axis_names(a), b)
-#combine_names(a::AbstractAxis, b::AbstractAxis) = combine_names(axis_names(a), axis_names(b))
-combine_names(a, b) = combine_names(axis_names(a), axis_names(b))
-
-combine_names(a::Symbol, b::Symbol) = a
-combine_names(::Nothing, b::Symbol) = b
-combine_names(a::Symbol, ::Nothing) = a
-combine_names(::Nothing, ::Nothing) = nothing

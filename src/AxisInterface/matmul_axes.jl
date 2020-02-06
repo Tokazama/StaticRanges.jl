@@ -1,3 +1,4 @@
+
 """
     matmul_axes(a, b) -> Tuple
 
@@ -6,16 +7,18 @@ vector or matrix.
 
 ## Examples
 ```jldoctest
-julia> axs2, axs1 = (Axis{:b}(1:10), Axis(1:10)), (Axis{:a}(1:10),);
+julia> using StaticRanges
+
+julia> axs2, axs1 = (Axis(1:2), Axis(1:4)), (Axis(1:6),);
 
 julia> matmul_axes(axs2, axs2)
-(Axis{b}(1:10 => Base.OneTo(10)), Axis(1:10 => Base.OneTo(10)))
+(Axis(1:2 => Base.OneTo(2)), Axis(1:4 => Base.OneTo(4)))
 
 julia> matmul_axes(axs1, axs2)
-(Axis{a}(1:10 => Base.OneTo(10)), Axis(1:10 => Base.OneTo(10)))
+(Axis(1:6 => Base.OneTo(6)), Axis(1:4 => Base.OneTo(4)))
 
 julia> matmul_axes(axs2, axs1)
-(Axis{b}(1:10 => Base.OneTo(10)),)
+(Axis(1:2 => Base.OneTo(2)),)
 
 julia> matmul_axes(axs1, axs1)
 ()
@@ -36,8 +39,10 @@ Returns the inverted axes of `a`, corresponding to the `inv` method from the
 
 ## Examples
 ```jldoctest
-julia> inverse_axes((Axis{:a}(1:4), Axis{:b}(1:4)))
-(Axis{b}(1:4 => Base.OneTo(4)), Axis{a}(1:4 => Base.OneTo(4)))
+julia> using StaticRanges
+
+julia> inverse_axes((Axis(1:2), Axis(1:4)))
+(Axis(1:4 => Base.OneTo(4)), Axis(1:2 => Base.OneTo(2)))
 ```
 """
 inverse_axes(x::AbstractMatrix) = inverse_axes(axes(x))
@@ -50,19 +55,14 @@ Returns appropriate axes for a `cov` or `var` method on array `x`.
 
 ## Examples
 ```jldoctest
-julia> covcor_axes((Axis{:a}(1:4), Axis{:b}(1:4)), 2)
-(Axis{a}(1:4 => Base.OneTo(4)), Axis{a}(1:4 => Base.OneTo(4)))
+julia> using StaticRanges
 
-julia> covcor_axes((Axis{:a}(1:4), Axis{:b}(1:4)), :b)
-(Axis{a}(1:4 => Base.OneTo(4)), Axis{a}(1:4 => Base.OneTo(4)))
+julia> covcor_axes((Axis(1:4), Axis(1:6)), 2)
+(Axis(1:4 => Base.OneTo(4)), Axis(1:4 => Base.OneTo(4)))
 
-julia> covcor_axes((Axis{:a}(1:4), Axis{:b}(1:4)), 1)
-(Axis{b}(1:4 => Base.OneTo(4)), Axis{b}(1:4 => Base.OneTo(4)))
-
-julia> covcor_axes((Axis{:a}(1:4), Axis{:b}(1:4)), :a)
-(Axis{b}(1:4 => Base.OneTo(4)), Axis{b}(1:4 => Base.OneTo(4)))
-```
+julia> covcor_axes((Axis(1:4), Axis(1:4)), 1)
+(Axis(1:4 => Base.OneTo(4)), Axis(1:4 => Base.OneTo(4)))
 """
-covcor_axes(x::AbstractMatrix, dim) = _covcor_axes(axes(x), to_axis(x, dim))
-covcor_axes(x::NTuple{2,Any}, dim) = _covcor_axes(x, to_axis(x, dim))
-_covcor_axes(x::NTuple{2,Any}, dim::Int) = dim === 1 ? (x[2], x[2]) : (x[1], x[1])
+covcor_axes(x::AbstractMatrix, dim::Int) = covcor_axes(axes(x), dim)
+covcor_axes(x::NTuple{2,Any}, dim::Int) = dim === 1 ? (x[2], x[2]) : (x[1], x[1])
+
