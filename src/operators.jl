@@ -189,7 +189,7 @@ function Base.empty!(r::StepMRange{T}) where {T}
     return r
 end
 Base.empty!(r::UnitMRange{T}) where {T} = (setfield!(r, :stop, first(r) - one(T)); r)
-Base.empty!(r::OneToMRange{T}) where {T} = (setfield!(r, :start, zero(T)); r)
+Base.empty!(r::OneToMRange{T}) where {T} = (setfield!(r, :stop, zero(T)); r)
 
 Base.empty(r::LinSRange) = LinSRange(first(r), last(r), 0)
 Base.empty(r::LinMRange) = LinMRange(first(r), last(r), 0)

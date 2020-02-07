@@ -146,13 +146,10 @@ export
 include("gaprange.jl")
 include("chainedfix.jl")
 include("continuity.jl")
-#include("uniqueness.jl")
-#include("length_checks.jl")
 include("order.jl")
 include("findall.jl")
 include("findlast.jl")
 include("findfirst.jl")
-include("nextval.jl")
 
 include("twiceprecision.jl")
 include("onetorange.jl")

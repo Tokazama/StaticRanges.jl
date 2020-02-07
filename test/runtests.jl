@@ -41,6 +41,26 @@ include("steprangelen_test.jl")
 include("./AxisInterface/runtests.jl")
 include("linrange_test.jl")
 
+
+@testset "empty" begin
+    for r in (OneToSRange(10),
+              OneToMRange(10),
+              srange(1.0, step=1, stop=10.0),
+              mrange(1.0, step=1, stop=10.0),
+              StepSRange(1, 1, 10),
+              StepMRange(1, 1, 10),
+              UnitSRange(1, 10),
+              UnitMRange(1, 10),
+              LinMRange(1.5, 5.5, 9),
+              LinSRange(1.5, 5.5, 9))
+        @test isempty(empty(r))
+        if is_dynamic(r)
+            empty!(r)
+            @test isempty(r)
+        end
+    end
+end
+
 for frange in (mrange, srange)
     @testset "$frange" begin
         @test_throws ArgumentError frange(1)
