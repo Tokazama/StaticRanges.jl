@@ -51,9 +51,9 @@ Base.keys(idx::Axis) = getfield(idx, :_keys)
 
 Base.values(idx::Axis) = getfield(idx, :_values)
 
-Axis(ks, vs) = Axis{eltype(ks),eltype(vs),typeof(ks),typeof(vs)}(ks, vs, false, false)
+Axis(ks, vs, check_unique::Bool=true, check_length::Bool=true) = Axis{eltype(ks),eltype(vs),typeof(ks),typeof(vs)}(ks, vs, check_unique, check_length)
 
-function Axis(ks)
+function Axis(ks, check_unique::Bool=true, check_length::Bool=false)
     if is_static(ks)
         return Axis(ks, OneToSRange(length(ks)))
     elseif is_fixed(ks)
