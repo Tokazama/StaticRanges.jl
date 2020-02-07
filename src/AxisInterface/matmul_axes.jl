@@ -71,6 +71,7 @@ julia> covcor_axes((Axis(1:4), Axis(1:6)), 2)
 
 julia> covcor_axes((Axis(1:4), Axis(1:4)), 1)
 (Axis(1:4 => Base.OneTo(4)), Axis(1:4 => Base.OneTo(4)))
+```
 """
 covcor_axes(x::AbstractMatrix, dim::Int) = covcor_axes(axes(x), dim)
 covcor_axes(x::NTuple{2,Any}, dim::Int) = dim === 1 ? (x[2], x[2]) : (x[1], x[1])

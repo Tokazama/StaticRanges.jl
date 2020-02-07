@@ -18,12 +18,8 @@ combine_indices(x::Tuple{}, y::Tuple{}) = ()
 Returns the combination of `x` and `y`, creating a new index. New subtypes of
 `AbstractAxis` should implement a `combine_index` method.
 """
-function combine_index(x::Axis, y::Axis)
-    return Axis(combine_keys(x, y), combine_values(x, y))
-end
-function combine_index(x::SimpleAxis, y::SimpleAxis)
-    return SimpleAxis(combine_values(x, y))
-end
+combine_index(x::Axis, y::Axis) = Axis(combine_keys(x, y), combine_values(x, y))
+combine_index(x::SimpleAxis, y::SimpleAxis) = SimpleAxis(combine_values(x, y))
 function combine_index(x::AbstractAxis, y::AbstractAxis)
     error("`combine_index` must be defined for new subtypes of AbstractAxis.")
 end

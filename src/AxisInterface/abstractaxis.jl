@@ -51,7 +51,7 @@ function set_last!(x::AbstractAxis{K,V}, val::V) where {K,V}
     resize_last!(keys(x), length(values(x)))
     return x
 end
-function set_last(x::AbstractAxis{name,K,V}, val::V) where {name,K,V}
+function set_last(x::AbstractAxis{K,V}, val::V) where {K,V}
     vs = set_last(values(x), val)
     return similar_type(x)(resize_last(keys(x), length(vs)), vs)
 end
@@ -87,7 +87,7 @@ Base.allunique(a::AbstractAxis) = true
 
 Base.isempty(a::AbstractAxis) = isempty(values(a))
 
-Base.in(a, itr::AbstractAxis) = in(x, values(a))
+Base.in(x, a::AbstractAxis) = in(x, values(a))
 
 Base.eachindex(a::AbstractAxis) = eachindex(values(a))
 
@@ -107,7 +107,7 @@ Base.convert(::Type{T}, a) where {T<:AbstractAxis} = T(a)
 ###
 Base.checkbounds(a::AbstractAxis, i) = checkbounds(Bool, a, i)
 Base.checkbounds(::Type{Bool}, a::AbstractAxis, i) = checkindex(Bool, a, i)
-Base.checkbounds(::Type{Bool}, a::AbstractAxis, i::CartesianIndex{1}) = checkindex(Bool, a, i)
+Base.checkbounds(::Type{Bool}, a::AbstractAxis, i::CartesianIndex{1}) = checkindex(Bool, a, first(i.I))
 function Base.checkindex(::Type{Bool}, a::AbstractAxis, i)
     return checkindexlo(a, i) & checkindexhi(a, i)
     #return _checkindex(index_by(inds, i), inds, i)

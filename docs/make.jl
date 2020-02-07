@@ -6,7 +6,6 @@ makedocs(;
     pages=[
         "Introduction" => "index.md",
         "Range Types" => "range_types.md",
-        "Indexing" => "indexing.md",
         "AbstractAxis" => "abstractaxis.md",
         "Order Functions" => "order_functions.md",
         "Traits" => "traits.md",
@@ -22,4 +21,5 @@ makedocs(;
 deploydocs(
     repo = "github.com/Tokazama/StaticRanges.jl.git",
 )
+
 

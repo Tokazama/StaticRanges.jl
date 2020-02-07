@@ -1,13 +1,3 @@
-
-struct Axis2{K,V,Ks,Vs} <: AbstractAxis{K,V,Ks,Vs}
-    keys::Ks
-    values::Vs
-end
-
-Axis2(ks, vs) = Axis2{eltype(ks),eltype(vs),typeof(ks),typeof(vs)}(ks, vs)
-Base.keys(a::Axis2) = getfield(a, :keys)
-Base.values(a::Axis2) = getfield(a, :values)
-
 @testset "AbstractAxis promotions" begin
     a1 = Axis(1:10)
     a2 = Axis(1.0:10.0)

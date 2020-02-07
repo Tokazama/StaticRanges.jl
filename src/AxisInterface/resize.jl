@@ -216,6 +216,19 @@ end
     grow_first!(x, n)
 
 Returns the collection `x` after growing from the first index by `n` elements.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> mr = UnitMRange(1, 10)
+UnitMRange(1:10)
+
+julia> grow_first!(mr, 2);
+
+julia> mr
+UnitMRange(-1:10)
+```
 """
 function grow_first!(x::AbstractVector, n::Integer)
     i = first(x)
@@ -227,6 +240,19 @@ grow_first!(x::AbstractRange, n::Integer) = set_first!(x, first(x) - step(x) * n
     grow_last!(x, n)
 
 Returns the collection `x` after growing from the last index by `n` elements.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> mr = UnitMRange(1, 10)
+UnitMRange(1:10)
+
+julia> grow_last!(mr, 2);
+
+julia> mr
+UnitMRange(1:12)
+```
 """
 function grow_last!(x::AbstractVector, n::Integer)
     i = last(x)
@@ -238,6 +264,17 @@ grow_last!(x::AbstractRange, n::Integer) = set_last!(x, last(x) + step(x) * n)
     grow_first(x, n)
 
 Returns a collection similar to `x` that grows by `n` elements from the first index.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> mr = UnitMRange(1, 10)
+UnitMRange(1:10)
+
+julia> grow_first(mr, 2)
+UnitMRange(-1:10)
+```
 """
 function grow_first(x::AbstractVector, n::Integer)
     i = first(x)
@@ -246,9 +283,20 @@ end
 grow_first(x::AbstractRange, n::Integer) = set_first(x, first(x) - step(x) * n)
 
 """
-    grow_first(x, n)
+    grow_last(x, n)
 
 Returns a collection similar to `x` that grows by `n` elements from the last index.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> mr = UnitMRange(1, 10)
+UnitMRange(1:10)
+
+julia> grow_last(mr, 2)
+UnitMRange(1:12)
+```
 """
 function grow_last(x::AbstractVector, n::Integer)
     i = last(x)
@@ -286,6 +334,17 @@ shrink_last!(x::AbstractRange, n::Integer) = set_last!(x, last(x) - step(x) * n)
     shrink_first(x, n)
 
 Returns a collection similar to `x` that shrinks by `n` elements from the first index.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> mr = UnitMRange(1, 10)
+UnitMRange(1:10)
+
+julia> shrink_first(mr, 2)
+UnitMRange(3:10)
+```
 """
 @propagate_inbounds shrink_first(x::AbstractVector, n::Integer) = x[(firstindex(x) + n):end]
 shrink_first(x::AbstractRange, n::Integer) = set_first(x, first(x) + step(x) * n)
@@ -294,6 +353,19 @@ shrink_first(x::AbstractRange, n::Integer) = set_first(x, first(x) + step(x) * n
     shrink_last(x, n)
 
 Returns a collection similar to `x` that shrinks by `n` elements from the last index.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> mr = UnitMRange(1, 10)
+UnitMRange(1:10)
+
+julia> shrink_first!(mr, 2);
+
+julia> mr
+UnitMRange(3:10)
+```
 """
 @propagate_inbounds shrink_last(x::AbstractVector, n::Integer) = x[firstindex(x):end - n]
 shrink_last(x::AbstractRange, n::Integer) = set_last(x, last(x) - step(x) * n)

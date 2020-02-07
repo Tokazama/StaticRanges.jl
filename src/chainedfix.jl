@@ -15,6 +15,20 @@ end
 
 Synonymous with bitwise `&` operator but may be used to chain multiple `Fix1` or
 `Fix2` operations.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> and(<(5), true)(1)
+true
+
+julia> and(<(5), false)(1)
+false
+
+julia> and(and(<(5), >(1)), >(2))(3)
+true
+```
 """
 and(x, y) = x & y
 and(x::Function, y) = ChainedFix(and, x, y)
@@ -26,6 +40,20 @@ and(x::Function, y::Function) = ChainedFix(and, x, y)
 
 Synonymous with bitwise `|` operator but may be used to chain multiple `Fix1` or
 `Fix2` operations.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> or(<(5), true)(1)
+true
+
+julia> or(<(5), false)(1)
+true
+
+julia> or(or(<(5), >(1)), >(2))(3)
+true
+```
 """
 or(x, y) = x | y
 or(x::Function, y) = ChainedFix(or, x, y)

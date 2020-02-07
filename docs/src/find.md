@@ -72,27 +72,3 @@ julia> @btime filter(or(<(4), >(6)), $mr)
  10
 
 ```
-
-## Experimental Syntax
-
-Currently there's some experimental syntax that can be used to chain together
-functions. This functionality is an obvious case of type piracy and is currently
-only included as a proof of concept.
-```julia
-julia> findall(>(4) & <(8), fr)
-2-element Array{Int64,1}:
-  3
-  4
-
-julia> findall(<(4) | >(8), fr)
-8-element Array{Int64,1}:
-  1
-  2
-  5
-  6
-  7
-  8
-  9
- 10
-```
-

@@ -20,9 +20,6 @@ vcat_axes(x::AbstractArray, y::AbstractArray) = vcat_axes(axes(x), axes(y))
 function vcat_axes(x::Tuple{Any,Vararg}, y::Tuple{Any,Vararg})
     return (cat_axis(first(x), first(y)), combine_indices(tail(x), tail(y))...)
 end
-vcat_axes(x::Tuple{Any,Vararg}, y::Tuple{}) = x
-vcat_axes(x::Tuple{}, y::Tuple{Any,Vararg}) = y
-
 
 """
     hcat_axes(x, y) -> Tuple
