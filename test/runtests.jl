@@ -40,7 +40,8 @@ include("reverse.jl")
 include("steprangelen_test.jl")
 include("getindex_tests.jl")
 include("reindex_tests.jl")
-
+include("./AxisInterface/range_tests.jl")
+include("./AxisInterface/reduce.jl")
 include("linrange_test.jl")
 for frange in (mrange, srange)
     @testset "$frange" begin
