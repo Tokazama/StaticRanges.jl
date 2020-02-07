@@ -34,8 +34,8 @@ end
 
 function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractAxis}
     return promote_axis_rule(X,Y){
-        promote_type(keytype(X),keytype(X)),
-        promote_type(valtype(X),valtype(X)),
+        promote_type(keytype(X),keytype(Y)),
+        promote_type(valtype(X),valtype(Y)),
         _promote_rule(keys_type(X),keys_type(Y)),
         _promote_rule(values_type(X),values_type(Y))}
 end

@@ -42,6 +42,8 @@ include("getindex_tests.jl")
 include("reindex_tests.jl")
 include("./AxisInterface/range_tests.jl")
 include("./AxisInterface/reduce.jl")
+include("./AxisInterface/promotions.jl")
+
 include("linrange_test.jl")
 for frange in (mrange, srange)
     @testset "$frange" begin
