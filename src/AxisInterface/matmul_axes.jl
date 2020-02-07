@@ -22,9 +22,12 @@ julia> matmul_axes(axs2, axs1)
 
 julia> matmul_axes(axs1, axs1)
 ()
+
+julia> matmul_axes(rand(2, 4), rand(4, 2))
+(Base.OneTo(2), Base.OneTo(2))
 ```
 """
-matmul_axes(a::AbstractArray,  b::AbstractArray ) = matmul_axes(indices(a), indices(b))
+matmul_axes(a::AbstractArray,  b::AbstractArray ) = matmul_axes(axes(a), axes(b))
 matmul_axes(a::Tuple{Any},     b::Tuple{Any,Any}) = (first(a), last(b))
 matmul_axes(a::Tuple{Any,Any}, b::Tuple{Any,Any}) = (first(a), last(b))
 matmul_axes(a::Tuple{Any,Any}, b::Tuple{Any}    ) = (first(a),)
@@ -41,6 +44,9 @@ Returns the inverted axes of `a`, corresponding to the `inv` method from the
 ```jldoctest
 julia> using StaticRanges
 
+julia> inverse_axes(rand(2,4))
+(Base.OneTo(4), Base.OneTo(2))
+
 julia> inverse_axes((Axis(1:2), Axis(1:4)))
 (Axis(1:4 => Base.OneTo(4)), Axis(1:2 => Base.OneTo(2)))
 ```
@@ -56,6 +62,9 @@ Returns appropriate axes for a `cov` or `var` method on array `x`.
 ## Examples
 ```jldoctest
 julia> using StaticRanges
+
+julia> covcor_axes(rand(2,4), 1)
+(Base.OneTo(4), Base.OneTo(4))
 
 julia> covcor_axes((Axis(1:4), Axis(1:6)), 2)
 (Axis(1:4 => Base.OneTo(4)), Axis(1:4 => Base.OneTo(4)))

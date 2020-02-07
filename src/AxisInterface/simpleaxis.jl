@@ -1,5 +1,29 @@
 """
-    SimpleAxis
+    SimpleAxis(v)
+
+Povides an `AbstractAxis` interface for any `AbstractUnitRange`, `v `. `v` will
+be considered both the `values` and `keys` of the return instance. 
+
+## Examples
+
+```jldoctest
+julia> using StaticRanges
+
+julia> x = SimpleAxis(2:10)
+SimpleAxis(2:10)
+
+julia> x[2]
+3
+
+julia> x[==(2)]
+2
+
+julia> x[2] == x[==(3)]
+true
+
+julia> x[>(2)]
+SimpleAxis(3:10)
+```
 """
 struct SimpleAxis{V,Vs<:AbstractUnitRange{V}} <: AbstractAxis{V,V,Vs,Vs}
     _kv::Vs

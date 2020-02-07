@@ -28,7 +28,7 @@ julia> is_forward(rr)
 false
 ```
 """
-is_forward(x) = issorted(x)
+is_forward(x) = isempty(x) ? false : issorted(x)
 is_forward(::ForwardOrdering) = true
 is_forward(::Ordering) = false
 is_forward(::AbstractUnitRange) = true
@@ -57,7 +57,7 @@ julia> is_reverse(rr)
 true
 ```
 """
-is_reverse(x) = issorted(x, order=Reverse)
+is_reverse(x) = isempty(x) ? false : issorted(x, order=Reverse)
 is_reverse(::ReverseOrdering) = true
 is_reverse(::Ordering) = false
 is_reverse(::AbstractUnitRange) = false

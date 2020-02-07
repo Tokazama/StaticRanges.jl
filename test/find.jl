@@ -81,7 +81,7 @@ end
                                 end
 
                                 for f2 in (<, >, <=, >=, ==)
-                                    for bitop in (&, |)
+                                    for bitop in (and, or)
                                         @testset "filter($f($i1) $bitop $f2($i2), $b)" begin
                                             @test filter(bitop(f(i1),  f2(i2)), m) == filter(x -> bitop(f(i1)(x), f2(i2)(x)), b)
                                             @test filter(bitop(f(i2),  f2(i1)), m) == filter(x -> bitop(f(i2)(x), f2(i1)(x)), b)

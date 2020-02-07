@@ -9,6 +9,15 @@ dimensions `dims`.
 ```jldoctest
 julia> using StaticRanges
 
+julia> reduce_axes(rand(2, 4), 2)
+(Base.OneTo(2), Base.OneTo(1))
+
+julia> reduce_axes(rand(2, 4), (1,2))
+(Base.OneTo(1), Base.OneTo(1))
+
+julia> reduce_axes(rand(2, 4), :)
+()
+
 julia> reduce_axes((Axis(1:4), Axis(1:4)), 2)
 (Axis(1:4 => Base.OneTo(4)), Axis(1:1 => Base.OneTo(1)))
 ```

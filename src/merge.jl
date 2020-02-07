@@ -1,6 +1,5 @@
 """
     merge_sort(x, y)
-
 Merge's and sorts collections `x`, and `y`.
 """
 merge_sort(x, y) = _merge_sort(x, order(x), y, order(y))
@@ -43,3 +42,4 @@ function __weave_sort(cmin, cmax, x, xo, y, yo)
         _last_segment(cmin, cmax, x, xo, y, yo)
     )
 end
+

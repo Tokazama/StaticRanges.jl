@@ -17,9 +17,9 @@ Synonymous with bitwise `&` operator but may be used to chain multiple `Fix1` or
 `Fix2` operations.
 """
 and(x, y) = x & y
-and(x::Function, y) = ChainedFix(&, x, y)
-and(x, y::Function) = ChainedFix(&, x, y)
-and(x::Function, y::Function) = ChainedFix(&, x, y)
+and(x::Function, y) = ChainedFix(and, x, y)
+and(x, y::Function) = ChainedFix(and, x, y)
+and(x::Function, y::Function) = ChainedFix(and, x, y)
 
 """
     or(x, y)
@@ -28,22 +28,13 @@ Synonymous with bitwise `|` operator but may be used to chain multiple `Fix1` or
 `Fix2` operations.
 """
 or(x, y) = x | y
-or(x::Function, y) = ChainedFix(|, x, y)
-or(x, y::Function) = ChainedFix(|, x, y)
-or(x::Function, y::Function) = ChainedFix(|, x, y)
+or(x::Function, y) = ChainedFix(or, x, y)
+or(x, y::Function) = ChainedFix(or, x, y)
+or(x::Function, y::Function) = ChainedFix(or, x, y)
 
-const BitAnd{F1,F2} = ChainedFix{typeof(&),F1,F2}
+const BitAnd{F1,F2} = ChainedFix{typeof(and),F1,F2}
 
-const BitOr{F1,F2} = ChainedFix{typeof(|),F1,F2}
-
-# TODO get this in base or remove it
-Base.:&(x::Function, y) = ChainedFix(&, x, y)
-Base.:&(x, y::Function) = ChainedFix(&, x, y)
-Base.:&(x::Function, y::Function) = ChainedFix(&, x, y)
-
-Base.:|(x::Function, y) = ChainedFix(|, x, y)
-Base.:|(x, y::Function) = ChainedFix(|, x, y)
-Base.:|(x::Function, y::Function) = ChainedFix(|, x, y)
+const BitOr{F1,F2} = ChainedFix{typeof(or),F1,F2}
 
 const F2Lt{T} = Fix2{<:Union{typeof(<),typeof(<=)},T}
 const F2Gt{T} = Fix2{<:Union{typeof(>),typeof(>=)},T}

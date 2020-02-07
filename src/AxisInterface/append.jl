@@ -8,10 +8,11 @@ implement a unique `append_axis` method.
 ```jldoctest
 julia> using StaticRanges
 
-julia> x, y = Axis(UnitMRange(1, 10)), SimpleAxis(UnitMRange(1, 10));
+julia> append_axis(Axis(UnitMRange(1, 10)), SimpleAxis(UnitMRange(1, 10)))
+Axis(UnitMRange(1:20) => UnitMRange(1:20))
 
-julia> length(append_axis(x, y))
-20
+julia> append_axis(SimpleAxis(UnitMRange(1, 10)), SimpleAxis(UnitMRange(1, 10)))
+SimpleAxis(UnitMRange(1:20))
 ```
 """
 append_axis(x::Axis, y::Axis) = Axis(append_keys(x, y), append_values(x, y))
@@ -76,6 +77,14 @@ __append_keys!(::DiscreteTrait, x, y) = make_unique!(x, keys(y))
     append_axes(x, y)
 
 Returns the axes for `append(x, y)`.
+
+```jldoctest
+julia> using StaticRanges
+
+julia> append_axes(1:10, 1:10)
+(Base.OneTo(20),)
+
+```
 """
 append_axes(x::AbstractVector, y::AbstractVector) = (append_axis(axes(x, 1), axes(y, 1)),)
 

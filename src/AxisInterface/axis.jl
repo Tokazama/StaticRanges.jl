@@ -31,7 +31,16 @@ struct Axis{K,V,Ks,Vs} <: AbstractAxis{K,V,Ks,Vs}
     _keys::Ks
     _values::Vs
 
-    function Axis{K,V,Ks,Vs}(ks::Ks, vs::Vs) where {K,V,Ks,Vs}
+    function Axis{K,V,Ks,Vs}(ks::Ks, vs::Vs, check_unique::Bool=true, check_length::Bool=true) where {K,V,Ks,Vs}
+        if check_unique
+            allunique(ks) || error("All keys must be unique.")
+            allunique(vs) || error("All values must be unique.")
+        end
+
+        if check_length
+            length(ks) == length(vs) || error("Length of keys and values must be equal, got length(keys) = $(length(ks)) and length(values) = $(length(vs)).")
+        end
+
         eltype(Ks) <: K || error("keytype of keys and keytype do no match, got $(eltype(Ks)) and $K")
         eltype(Vs) <: V || error("valtype of values and valtype do no match, got $(eltype(Vs)) and $V")
         return new{K,V,Ks,Vs}(ks, vs)
@@ -42,7 +51,7 @@ Base.keys(idx::Axis) = getfield(idx, :_keys)
 
 Base.values(idx::Axis) = getfield(idx, :_values)
 
-Axis(ks, vs) = Axis{eltype(ks),eltype(vs),typeof(ks),typeof(vs)}(ks, vs)
+Axis(ks, vs) = Axis{eltype(ks),eltype(vs),typeof(ks),typeof(vs)}(ks, vs, false, false)
 
 function Axis(ks)
     if is_static(ks)

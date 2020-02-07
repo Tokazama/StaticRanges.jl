@@ -8,7 +8,9 @@ end
     return getindex(a, to_index(a, inds))
 end
 
-_getindex(a::Axis, inds) = Axis(@inbounds(keys(a)[inds]), @inbounds(values(a)[inds]))
+function _getindex(a::Axis, inds)
+    return Axis(@inbounds(keys(a)[inds]), @inbounds(values(a)[inds]), allunique(inds), false)
+end
 _getindex(a::Axis, i::Int) = @inbounds(values(a)[i])
 
 _getindex(a::SimpleAxis, inds) = SimpleAxis(@inbounds(values(a)[inds]))
@@ -16,3 +18,4 @@ _getindex(a::SimpleAxis, i::Int) = @inbounds(values(a)[i])
 
 @propagate_inbounds Base.to_index(x::AbstractAxis, f::F2Eq) = find_first(f, keys(x))
 @propagate_inbounds Base.to_index(x::AbstractAxis, f::Function) = find_all(f, keys(x))
+

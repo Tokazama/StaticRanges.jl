@@ -6,8 +6,6 @@
         @test @inferred(can_set_first(StepMRange)) == true
         @test @inferred(can_set_first(UnitMRange)) == true
         @test @inferred(can_set_first(StepMRangeLen)) == true
-        @test @inferred(can_set_first(Axis(UnitMRange(1, 2)))) == true
-        @test @inferred(can_set_first(Axis(UnitSRange(1, 2)))) == false
     end
 
  
@@ -17,9 +15,7 @@
                         (LinMRange(1,3,3), true, 2, LinMRange(2,3,3)),
                         (StepMRangeLen(1,1,3), true, 2, StepMRangeLen(2,1,3)),
                         (StepSRangeLen(1,1,3), false, 2, StepSRangeLen(2,1,3)),
-                        ([1,2,3], true, 2, [2,2,3]),
-                        (SimpleAxis(UnitMRange(1,3)), true, 2, SimpleAxis(UnitMRange(2,3))),
-                        (Axis(UnitMRange(1,3),UnitMRange(1,3)), true, 2, Axis(UnitMRange(2,3),UnitMRange(2,3))))
+                        ([1,2,3], true, 2, [2,2,3]))
         @testset "set_first-$(r1)" begin
             x = @inferred(can_set_first(r1))
             @test x == b

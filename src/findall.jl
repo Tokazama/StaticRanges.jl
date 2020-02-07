@@ -1,6 +1,6 @@
 
 @propagate_inbounds find_all(f, x) = find_all(f, x, order(x))
-find_all(f, x, xo) = findall(f, x)
+find_all(f, x, xo) = _fallback_find_all(f, x)
 
 find_all(f::Fix2{typeof(in)}, y, yo) = _findin(f.x, order(f.x), y, yo)
 
@@ -91,14 +91,13 @@ end
 =#
 
 @propagate_inbounds function find_all(f::Fix2{typeof(!=)}, r, ro::ForwardOrdering)
-    return find_all(<(f.x) | >(f.x), r, ro)
+    return find_all(or(<(f.x), >(f.x)), r, ro)
 end
 @propagate_inbounds function find_all(f::Fix2{typeof(!=)}, r, ro::ReverseOrdering)
-    return find_all(>(f.x) | <(f.x), r, ro)
+    return find_all(or(>(f.x), <(f.x)), r, ro)
 end
 
-find_all(f::Fix2{typeof(!=)}, r::AbstractRange, ::UnorderedOrdering) = _empty_ur(keytype(r))
-function find_all(f::Fix2{typeof(!=)}, r::AbstractVector, ::UnorderedOrdering)
-    return findall(f, r)
-end
+find_all(f::Fix2{typeof(!=)}, r, ::UnorderedOrdering) = _find_all_unordered(f, r)
+_find_all_unordered(f, x::AbstractRange) = _empty_ur(keytype(r))
+_find_all_unordered(f, x) = _fallback_find_all(f, x)
 

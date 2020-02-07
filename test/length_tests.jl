@@ -10,8 +10,6 @@
                       (StepSRange(UInt32(1), UInt32(2), UInt32(10)), StepRange(UInt32(1), UInt32(2), UInt32(10))),
                       (mrange(1.0, step=2.0, stop=10.0), 1.0:2.0:10.0),
                       (srange(UInt32(1), step=UInt32(2), stop=UInt32(10)), UInt32(1):UInt32(2):UInt32(10)),
-                      (SimpleAxis(UnitMRange(1,3)), 1:3),
-                      (Axis(UnitMRange(1,3),UnitMRange(1,3)), 1:3)
                      )
             @test @inferred(length(r)) == length(b)
             @test @inferred(length(r)) == length(b)
@@ -32,8 +30,6 @@
         @test @inferred(can_set_length(StepMRange)) == true
         @test @inferred(can_set_length(UnitMRange)) == true
         @test @inferred(can_set_length(OneToMRange)) == true
-        @test @inferred(can_set_length(Axis(UnitMRange(1:2)))) == true
-        @test @inferred(can_set_length(Axis(UnitSRange(1:2)))) == false
     end
 
     @testset "set_length!" begin
@@ -45,8 +41,6 @@
         @test @inferred(set_length!(StepMRange(1, 1, 10), UInt32(11))) == StepMRange(1, 1, 11)
         @test @inferred(set_length!(UnitMRange(2, 10), 10)) == UnitMRange(2, 11)
         @test @inferred(set_length!(OneToMRange(10), UInt32(11))) == OneToMRange(11)
-        @test @inferred(set_length!(SimpleAxis(OneToMRange(10)), UInt32(11))) == SimpleAxis(OneToMRange(11))
-        @test @inferred(set_length!(Axis(OneToMRange(10), OneToMRange(10)), UInt32(11))) == Axis(OneToMRange(11), OneToMRange(11))
     end
 
     @testset "set_length" begin
@@ -58,11 +52,9 @@
         @test @inferred(set_length(StepMRange(1, 1, 10), UInt32(11))) == StepMRange(1, 1, 11)
         @test @inferred(set_length(UnitMRange(2, 10), 10)) == UnitMRange(2, 11)
         @test @inferred(set_length(OneToMRange(10), UInt32(11))) == OneToMRange(11)
-        @test @inferred(set_length(SimpleAxis(OneToMRange(10)), UInt32(11))) == SimpleAxis(OneToMRange(11))
-        @test @inferred(set_length(Axis(OneToMRange(10), OneToMRange(10)), UInt32(11))) == Axis(OneToMRange(11), OneToMRange(11))
     end
 
-    @testset "set_lediv!" begin
+    @testset "set_lendiv!" begin
         @test @inferred(set_lendiv!(LinMRange(1, 10, 5), 9)) == LinMRange(1, 10, 10)
         @test @inferred(set_lendiv!(LinMRange(1, 10, 5), UInt32(9))) == LinMRange(1, 10, 10)
     end

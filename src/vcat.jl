@@ -1,12 +1,8 @@
+
 maybe_flip(::O, ::O, x) where {O<:Ordering} = x
 maybe_flip(::Ordering, ::Ordering, x) = reverse(x)
 
-"""
-    first_segment(x, y)
 
-Given two collections `x` and `y`, returns the first non-overlapping segment.
-"""
-@inline first_segment(x, y) = first_segment(x, order(x), y, order(y))
 function first_segment(x, xo, y, yo)
    return _first_segment(
         max_of_group_min(x, xo, y, yo),
@@ -44,12 +40,11 @@ function _first_segment_index(cmin, cmax, x, xo, y, yo)
     end
 end
 
-"""
+#=
     middle_segment(x, y)
 
 Given two collections `x` and `y`, returns the first non-overlapping segment.
-"""
-middle_segment(x, y) = middle_segment(x, order(x), y, order(y))
+=#
 function middle_segment(x, xo, y, yo)
     return _middle_segment(
         max_of_group_min(x, xo, y, yo),
@@ -69,12 +64,11 @@ end
 
 _middle_segment_index(cmin, cmax, x, xo) = find_all(and(>=(cmin), <=(cmax)), x, xo)
 
-"""
+#=
     last_segment(x, y)
 
 Given two collections `x` and `y`, returns the last non-overlapping segment.
-"""
-last_segment(x, y) = last_segment(x, order(x), y, order(y))
+=#
 function last_segment(x, xo, y, yo)
    return _last_segment(
         max_of_group_min(x, xo, y, yo),
@@ -109,7 +103,25 @@ vcat_sort(x::AbstractVector) = _vcat_sort_one(order(x), x)
 _vcat_sort_one(::UnorderedOrdering, x) = sort(x)
 _vcat_sort_one(::Ordering, x) = x
 
-vcat_sort(x::AbstractVector, y::AbstractVector) = _vcat_sort(x, order(x), y, order(y))
+function vcat_sort(x::AbstractVector, y::AbstractVector)
+    xo = order(x)
+    yo = order(y)
+    if xo isa UnorderedOrdering && isempty(x)
+        if yo isa UnorderedOrdering
+            return sort(y)
+        else
+            return y
+        end
+    elseif yo isa UnorderedOrdering && isempty(y)
+        if xo isa UnorderedOrdering
+            return sort(x)
+        else
+            return x
+        end
+    else
+        return _vcat_sort(x, xo, y, yo)
+    end
+end
 function _vcat_sort(x, xo, y, yo)
     if is_before(x, xo, y, yo)
         return _vcat_before(x, xo, y, yo)
@@ -131,6 +143,7 @@ function __vcat_sort(cmin, cmax, x, xo, y, yo)
     )
 end
 
+#=
 function _vcat_before(x, xo, y, yo)
     if is_forward(xo)
         return is_forward(yo) ? vcat(x, y) : vcat(x, reverse(y))
@@ -138,11 +151,59 @@ function _vcat_before(x, xo, y, yo)
         return is_forward(yo) ? vcat(reverse(y), x) : vcat(y, x)
     end
 end
-
-function _vcat_after(x, xo, y, yo)
+=#
+function _vcat_before(x, xo, y, yo)
     if is_forward(xo)
-        return is_forward(yo) ? vcat(y, x) : vcat(reverse(y), x)
+        if is_forward(yo)
+            return vcat(x, y)
+        elseif is_reverse(yo)
+            return vcat(x, reverse(y))
+        else
+            return vcat(x, sort(y))
+        end
+    elseif is_reverse(xo)
+        if is_forward(yo)
+            return vcat(reverse(y), x)
+        elseif is_reverse(yo)
+            return vcat(y, x)
+        else
+            return vcat(sort(y, rev=true), x)
+        end
     else
-        return is_forward(yo) ? vcat(x, reverse(y)) : vcat(x, y)
+        if is_forward(yo)
+            return vcat(sort(x), y)
+        elseif is_reverse(yo)
+            return vcat(y, sort(x, rev=true))
+        else
+            return vcat(sort(x), sort(y))
+        end
     end
 end
+function _vcat_after(x, xo, y, yo)
+    if is_forward(xo)
+        if is_forward(yo)
+            return vcat(y, x)
+        elseif is_reverse(yo)
+            return vcat(reverse(y), x)
+        else
+            return vcat(sort(y), x)
+        end
+    elseif is_reverse(xo)
+        if is_forward(yo)
+            return vcat(x, reverse(y))
+        elseif is_reverse(yo)
+            return vcat(x, y)
+        else
+            return vcat(x, sort(y, rev=true))
+        end
+    else
+        if is_forward(yo)
+            return vcat(y, sort(x))
+        elseif is_reverse(yo)
+            return vcat(sort(x, rev=true), y)
+        else
+            return vcat(sort(y), sort(x))
+        end
+    end
+end
+

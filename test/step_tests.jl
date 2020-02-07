@@ -36,7 +36,6 @@
 
     for (r,b) in ((OneToMRange(10), OneTo(10)),
                   (OneToSRange(UInt(10)), OneTo(UInt(10))),
-                  (SimpleAxis(OneToMRange(10)), OneToMRange(10)),
                   (UnitMRange(1, 10), UnitRange(1, 10)),
                   (UnitSRange(1.,10.), UnitRange(1.0, 10.0)),
                   (StepMRange(1, 2, 10), StepRange(1, 2, 10)),

@@ -33,6 +33,17 @@ doesn't check that `inds` is inbounds. New subtypes of `AbstractAxis` must
 implement a unique `unsafe_reindex` method.
 
 See also: [`reindex`](@ref)
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> StaticRanges.unsafe_reindex(SimpleAxis(OneToMRange(10)), 1:5)
+SimpleAxis(OneToMRange(5))
+
+julia> StaticRanges.unsafe_reindex(SimpleAxis(OneToSRange(10)), 1:5)
+SimpleAxis(OneToSRange(5))
+```
 """
 function unsafe_reindex(a::AbstractAxis, inds)
     error("New subtypes of `AbstractAxis` must implement a unique `unsafe_reindex` method.")

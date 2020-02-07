@@ -17,6 +17,9 @@ julia> drop_axes(axs, 1)
 
 julia> drop_axes(axs, 2)
 (Axis(1:5 => Base.OneTo(5)),)
+
+julia> drop_axes(rand(2, 4), 2)
+(Base.OneTo(2),)
 ```
 """
 drop_axes(x::AbstractArray, dims) = drop_axes(axes(x), dims)
