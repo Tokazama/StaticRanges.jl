@@ -31,6 +31,33 @@ prev_type(x::T) where {T} = x - one(T)
     resize_first!(x, n::Integer)
 
 Returns the collection `x` after growing or shrinking the first index to be of size `n`.
+
+## Examples
+
+```jldoctest
+julia> using StaticRanges
+
+julia> x = collect(1:5);
+
+julia> resize_first!(x, 2);
+
+julia> x
+2-element Array{Int64,1}:
+ 4
+ 5
+
+julia> resize_first!(x, 6);
+
+julia> x
+6-element Array{Int64,1}:
+ 0
+ 1
+ 2
+ 3
+ 4
+ 5
+
+```
 """
 function resize_first!(x, n::Integer)
     d = n - length(x)
@@ -47,6 +74,32 @@ end
     resize_last!(x, n::Integer)
 
 Returns the collection `x` after growing or shrinking the last index to be of size `n`.
+
+## Examples
+
+```jldoctest
+julia> using StaticRanges
+
+julia> x = collect(1:5);
+
+julia> resize_last!(x, 2);
+
+julia> x
+2-element Array{Int64,1}:
+ 1
+ 2
+
+julia> resize_last!(x, 5);
+
+julia> x
+5-element Array{Int64,1}:
+ 1
+ 2
+ 3
+ 4
+ 5
+
+```
 """
 function resize_last!(x, n::Integer)
     d = n - length(x)
@@ -64,6 +117,37 @@ end
 
 Returns a collection similar to `x` that grows or shrinks from the first index
 to be of size `n`.
+
+## Examples
+
+```jldoctest
+julia> using StaticRanges
+
+julia> x = collect(1:5);
+
+julia> resize_first(x, 2)
+2-element Array{Int64,1}:
+ 4
+ 5
+
+julia> resize_first(x, 7)
+7-element Array{Int64,1}:
+ -1
+  0
+  1
+  2
+  3
+  4
+  5
+
+julia> resize_first(x, 5)
+5-element Array{Int64,1}:
+ 1
+ 2
+ 3
+ 4
+ 5
+```
 """
 function resize_first(x, n::Integer)
     d = n - length(x)
@@ -81,6 +165,38 @@ end
 
 Returns a collection similar to `x` that grows or shrinks from the last index
 to be of size `n`.
+
+## Examples
+
+```jldoctest
+julia> using StaticRanges
+
+julia> x = collect(1:5);
+
+julia> resize_last(x, 2)
+2-element Array{Int64,1}:
+ 1
+ 2
+
+julia> resize_last(x, 7)
+7-element Array{Int64,1}:
+ 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+
+julia>  resize_last(x, 5)
+5-element Array{Int64,1}:
+ 1
+ 2
+ 3
+ 4
+ 5
+
+```
 """
 function resize_last(x, n::Integer)
     d = n - length(x)
@@ -113,7 +229,7 @@ grow_first!(x::AbstractRange, n::Integer) = set_first!(x, first(x) - step(x) * n
 Returns the collection `x` after growing from the last index by `n` elements.
 """
 function grow_last!(x::AbstractVector, n::Integer)
-    i = first(x)
+    i = last(x)
     return append!(x, [i = next_type(i) for _ in 1:n])
 end
 grow_last!(x::AbstractRange, n::Integer) = set_last!(x, last(x) + step(x) * n)
@@ -125,7 +241,7 @@ Returns a collection similar to `x` that grows by `n` elements from the first in
 """
 function grow_first(x::AbstractVector, n::Integer)
     i = first(x)
-    return prepend(x, reverse!([i = prev_type(i) for _ in 1:n]))
+    return vcat(reverse!([i = prev_type(i) for _ in 1:n]), x)
 end
 grow_first(x::AbstractRange, n::Integer) = set_first(x, first(x) - step(x) * n)
 
@@ -135,8 +251,8 @@ grow_first(x::AbstractRange, n::Integer) = set_first(x, first(x) - step(x) * n)
 Returns a collection similar to `x` that grows by `n` elements from the last index.
 """
 function grow_last(x::AbstractVector, n::Integer)
-    i = first(x)
-    return append(x, [i = next_type(i) for _ in 1:n])
+    i = last(x)
+    return vcat(x, [i = next_type(i) for _ in 1:n])
 end
 grow_last(x::AbstractRange, n::Integer) = set_last(x, last(x) + step(x) * n)
 
@@ -171,7 +287,7 @@ shrink_last!(x::AbstractRange, n::Integer) = set_last!(x, last(x) - step(x) * n)
 
 Returns a collection similar to `x` that shrinks by `n` elements from the first index.
 """
-@propagate_inbounds shrink_first(x::AbstractVector, n::Integer) = x[(firstindex(x) - n):end]
+@propagate_inbounds shrink_first(x::AbstractVector, n::Integer) = x[(firstindex(x) + n):end]
 shrink_first(x::AbstractRange, n::Integer) = set_first(x, first(x) + step(x) * n)
 
 """

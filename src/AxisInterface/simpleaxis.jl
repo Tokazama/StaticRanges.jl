@@ -27,12 +27,20 @@ SimpleAxis(3:10)
 """
 struct SimpleAxis{V,Vs<:AbstractUnitRange{V}} <: AbstractAxis{V,V,Vs,Vs}
     _kv::Vs
+
+    function SimpleAxis{V,Vs}(vs::Vs, check_unique::Bool=true) where {V,Vs}
+        if check_unique
+            allunique(vs) || error("All values must be unique.")
+        end
+        eltype(vs) <: V || error("keytype of keys and keytype do no match, got $(eltype(Vs)) and $K")
+        return new{V,Vs}(vs)
+    end
 end
 
 Base.values(si::SimpleAxis) = getfield(si, :_kv)
 Base.keys(si::SimpleAxis) = getfield(si, :_kv)
 
-SimpleAxis(vs) = SimpleAxis{eltype(vs),typeof(vs)}(vs)
+SimpleAxis(vs, check_unique::Bool=true) = SimpleAxis{eltype(vs),typeof(vs)}(vs, check_unique)
 
 SimpleAxis{V,Vs}(idx::AbstractAxis) where {V,Vs} = SimpleAxis{V,Vs}(Vs(values(idx)))
 

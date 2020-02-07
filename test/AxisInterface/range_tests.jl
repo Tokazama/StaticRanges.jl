@@ -86,3 +86,58 @@ end
         @test @inferred(set_length(Axis(OneToMRange(10), OneToMRange(10)), UInt32(11))) == Axis(OneToMRange(11), OneToMRange(11))
     end
 end
+
+
+@testset "pop" begin
+    for x in (Axis(UnitMRange(1,10),UnitMRange(1,10)),
+              SimpleAxis(UnitMRange(1,10)))
+        y = collect(x)
+        @test pop(x) == pop(y)
+        @test pop!(x) == pop!(y)
+        @test x == y
+    end
+
+    r = UnitMRange(1, 1)
+    y = collect(r)
+    @test pop!(r) == pop!(y)
+    @test isempty(r) == true
+end
+
+@testset "popfirst" begin
+    for x in (Axis(UnitMRange(1,10),UnitMRange(1,10)),
+              SimpleAxis(UnitMRange(1,10)))
+        y = collect(x)
+        @test popfirst(x) == popfirst(y)
+        @test popfirst!(x) == popfirst!(y)
+        @test x == y
+    end
+    r = UnitMRange(1, 1)
+    y = collect(r)
+    @test popfirst!(r) == popfirst!(y)
+    @test isempty(r) == true
+end
+
+@testset "Staticness" begin
+    # as_[mutable/immutable/static]
+    for (i,m,s) in ((SimpleAxis(UnitRange(1, 3)), SimpleAxis(UnitMRange(1, 3)), SimpleAxis(UnitSRange(1, 3))),
+                    (Axis(UnitRange(1, 3),UnitRange(1, 3)), Axis(UnitMRange(1, 3),UnitMRange(1, 3)), Axis(UnitSRange(1, 3),UnitSRange(1, 3))),
+                   )
+        @testset "as_dynamic($(typeof(i).name))" begin
+            @test is_dynamic(as_dynamic(i)) == true
+            @test is_dynamic(as_dynamic(m)) == true
+            @test is_dynamic(as_dynamic(s)) == true
+        end
+
+        @testset "as_fixed($(typeof(i).name))" begin
+            @test is_fixed(as_fixed(i)) == true
+            @test is_fixed(as_fixed(m)) == true
+            @test is_fixed(as_fixed(s)) == true
+        end
+
+        @testset "as_static($(typeof(i).name))" begin
+            @test is_static(as_static(i)) == true
+            @test is_static(as_static(m)) == true
+            @test is_static(as_static(s)) == true
+        end
+    end
+end

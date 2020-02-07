@@ -5,8 +5,6 @@
                     (StepRange(1, 1, 4), StepMRange(1, 1, 4), StepSRange(1, 1, 4)),
                     (StepRangeLen(1, 1, 4), StepMRangeLen(1, 1, 4), StepSRangeLen(1, 1, 4)),
                     (LinRange(1, 4, 4), LinMRange(1, 4, 4), LinSRange(1, 4, 4)),
-                    (SimpleAxis(UnitRange(1, 3)), SimpleAxis(UnitMRange(1, 3)), SimpleAxis(UnitSRange(1, 3))),
-                    (Axis(UnitRange(1, 3),UnitRange(1, 3)), Axis(UnitMRange(1, 3),UnitMRange(1, 3)), Axis(UnitSRange(1, 3),UnitSRange(1, 3))),
                    )
         @testset "as_dynamic($(typeof(i).name))" begin
             @test is_dynamic(as_dynamic(i)) == true
