@@ -20,6 +20,6 @@ makedocs(;
 )
 
 deploydocs(
-    repo = "github.com/Tokazma/StaticRanges.jl.git",
+    repo = "github.com/Tokazama/StaticRanges.jl.git",
 )
 

@@ -101,11 +101,9 @@ Returns a similar type as `x` with a length equal to `len`.
 ```jldoctest
 julia> using StaticRanges
 
-julia> mr = UnitMRange(1, 10)
-UnitMRange(1:10)
+julia> mr = UnitMRange(1, 10);
 
-julia> set_length!(mr, 20)
-UnitMRange(1:20)
+julia> set_length!(mr, 20);
 
 julia> length(mr)
 20
@@ -146,10 +144,7 @@ Change the length of `x` while maintaining it's first and last positions.
 ```jldoctest
 julia> using StaticRanges
 
-julia> r = 1:10
-1:10
-
-julia> set_length(r, 20)
+julia> set_length(1:10, 20)
 1:20
 ```
 """
