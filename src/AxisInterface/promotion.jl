@@ -18,6 +18,10 @@ function promote_keys_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:Abstr
 end
 
 promote_axis_rule(::X, ::Y) where {X,Y} = promote_axis_rule(X, Y)
+promote_axis_rule(::Type{<:Axis}) = Axis
+promote_axis_rule(::Type{<:SimpleAxis}) = SimpleAxis
+promote_axis_rule(::Type{X}, ::Type{Y}) where {X,Y<:AbstractAxis} = promote_axis_rule(Y)
+promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y} = promote_axis_rule(Y, X)
 promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:Axis,Y<:AbstractAxis} = Axis
 promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:Axis} = Axis
 promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:Axis,Y<:Axis} = Axis
@@ -60,8 +64,27 @@ function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:Axis,Y<:Axis}
 end
 =#
 
-#Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractUnitRange} = promote_rule(X, similar_type(X, index_keys_type(Y),Y))
-#Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:UnitRange,Y<:AbstractAxis} = promote_rule(Y, X)
+#=
+function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractUnitRange}
+    return promote_axis_rule(X,Y){
+        promote_type(keytype(X),keytype(Y)),
+        promote_type(valtype(X),valtype(Y)),
+        _promote_rule(keys_type(X),keys_type(Y)),
+        _promote_rule(values_type(X),values_type(Y))}
+end
+function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractUnitRange{<:Integer}}
+    return promote_rule(X, promote_axis_rule(X,Y){keytype(Y),valtype(Y),keys_type(Y),values_type(Y)})
+end
+function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:SimpleAxis,Y<:AbstractUnitRange{<:Integer}}
+    return promote_rule(X, promote_axis_rule(X,Y){valtype(Y),values_type(Y)})
+end
+Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:UnitRange,Y<:AbstractAxis} = promote_rule(Y, X)
+=#
+
+Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractUnitRange,Y<:AbstractAxis} = promote_rule(Y, X)
+Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractUnitRange} = promote_rule(values_type(X), Y)
+
+Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:UnitRange,Y<:AbstractAxis} = promote_rule(Y, X)
 
 Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractVector,Y<:AbstractAxis} = promote_rule(Y, X)
 Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractVector} = promote_rule(values_type(X), Y)

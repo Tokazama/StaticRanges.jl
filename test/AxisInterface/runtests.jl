@@ -25,9 +25,8 @@ Base.values(a::Axis2) = getfield(a, :values)
     @test !in(3, a1)
     @test checkbounds(Bool, a1, CartesianIndex(1))
     @test !checkbounds(Bool, a1, CartesianIndex(5))
+    # TODO test checkbounds by key indexing
     @test values_type(a1) <: UnitRange{Int64}
-
-
 end
 
 @testset "resize tests" begin

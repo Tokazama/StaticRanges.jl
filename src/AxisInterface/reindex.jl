@@ -24,6 +24,9 @@ SimpleAxis(1:5)
 ```
 """
 @propagate_inbounds reindex(a::AbstractAxis, inds) = unsafe_reindex(a, to_index(a, inds))
+#@propagate_inbounds function reindex(A::AxisIndices, inds...)
+#    return unsafe_reindex(A, to_indices(A, axes(A), Tuple(inds))
+#end
 
 """
     unsafe_reindex(a::AbstractAxis, inds::AbstractVector) -> AbstractAxis
@@ -56,3 +59,6 @@ _reindex(a::OneToMRange{T}, inds) where {T} = OneToMRange{T}(length(inds))
 _reindex(a::OneToSRange{T}, inds) where {T} = OneToSRange{T}(length(inds))
 _reindex(a::T, inds) where {T<:AbstractUnitRange} = T(first(a), first(a) + length(inds) - 1)
 
+#function unsafe_reindex(A::AxisIndices, inds::Tuple)
+#    return AxisIndices(map(unsafe_reindex, axes(A), inds), IndexStyle(A))
+#end

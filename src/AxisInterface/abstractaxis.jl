@@ -4,7 +4,7 @@
 
 An `AbstractUnitRange` subtype optimized for indexing.
 """
-abstract type AbstractAxis{K,V,Ks,Vs} <: AbstractVector{V} end
+abstract type AbstractAxis{K,V<:Integer,Ks,Vs<:AbstractUnitRange{V}} <: AbstractUnitRange{V} end
 
 Base.valtype(::Type{<:AbstractAxis{K,V,Ks,Vs}}) where {K,V,Ks,Vs} = V
 
@@ -12,6 +12,8 @@ Base.valtype(::Type{<:AbstractAxis{K,V,Ks,Vs}}) where {K,V,Ks,Vs} = V
     values_type(::AbstractAxis)
 """
 values_type(::T) where {T} = values_type(T)
+# if it's not a subtype of AbstractAxis assume it is the collection of values
+values_type(::Type{T}) where {T} = T  
 values_type(::Type{<:AbstractAxis{K,V,Ks,Vs}}) where {K,V,Ks,Vs} = Vs
 
 Base.keytype(::Type{<:AbstractAxis{K}}) where {K} = K
@@ -20,6 +22,7 @@ Base.keytype(::Type{<:AbstractAxis{K}}) where {K} = K
     keys_type(::AbstractAxis)
 """
 keys_type(::T) where {T} = keys_type(T)
+keys_type(::Type{T}) where {T} = OneTo{Int}  # default for things is usually LinearIndices{1}
 keys_type(::Type{<:AbstractAxis{K,V,Ks,Vs}}) where {K,V,Ks,Vs} = Ks
 
 Base.size(a::AbstractAxis) = (length(a),)
@@ -87,7 +90,7 @@ Base.allunique(a::AbstractAxis) = true
 
 Base.isempty(a::AbstractAxis) = isempty(values(a))
 
-Base.in(x, a::AbstractAxis) = in(x, values(a))
+Base.in(x::Integer, a::AbstractAxis) = in(x, values(a))
 
 Base.eachindex(a::AbstractAxis) = eachindex(values(a))
 
@@ -99,8 +102,8 @@ function StaticArrays.similar_type(
     return similar_type(A, ks_type, vs_type)
 end
 
-Base.convert(::Type{T}, a::T) where {T<:AbstractAxis} = a
-Base.convert(::Type{T}, a) where {T<:AbstractAxis} = T(a)
+#Base.convert(::Type{T}, a::T) where {T<:AbstractAxis} = a
+#Base.convert(::Type{T}, a) where {T<:AbstractAxis} = T(a)
 
 ###
 ### checkbounds
@@ -108,10 +111,11 @@ Base.convert(::Type{T}, a) where {T<:AbstractAxis} = T(a)
 Base.checkbounds(a::AbstractAxis, i) = checkbounds(Bool, a, i)
 Base.checkbounds(::Type{Bool}, a::AbstractAxis, i) = checkindex(Bool, a, i)
 Base.checkbounds(::Type{Bool}, a::AbstractAxis, i::CartesianIndex{1}) = checkindex(Bool, a, first(i.I))
-function Base.checkindex(::Type{Bool}, a::AbstractAxis, i)
+function Base.checkindex(::Type{Bool}, a::AbstractAxis, i::Integer)
     return checkindexlo(a, i) & checkindexhi(a, i)
-    #return _checkindex(index_by(inds, i), inds, i)
 end
+
+# TODO implement checkbounds by key indexing
 
 ###
 ### pop
@@ -156,3 +160,5 @@ Base.pairs(a::AbstractAxis) = Base.Iterators.Pairs(a, keys(a))
 check_iterate(r::AbstractAxis, i) = check_iterate(values(r), last(i))
 
 Base.collect(a::AbstractAxis) = collect(values(a))
+
+Base.UnitRange(a::AbstractAxis) = UnitRange(values(a))

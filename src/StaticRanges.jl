@@ -16,8 +16,10 @@ using StaticArrays: Dynamic
 export
     # Types
     AbstractAxis,
+    CartesianAxes,
     Axis,
     GapRange,
+    LinearAxes,
     LinMRange,
     LinSRange,
     OneToMRange,
