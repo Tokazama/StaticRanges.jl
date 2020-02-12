@@ -1,0 +1,132 @@
+"""
+    GapRange{T,F,L}
+
+Represents a range that is broken up by gaps making it noncontinuous. This allows
+more compact storage of numbers where the majority are known to be continuous.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> findall(and(>(4), <(10)), 1:10)
+5-element Array{Int64,1}:
+ 5
+ 6
+ 7
+ 8
+ 9
+
+julia> find_all(or(<(4), >(6)), 1:10)
+7-element GapRange{Int64,UnitRange{Int64},UnitRange{Int64}}:
+  1
+  2
+  3
+  7
+  8
+  9
+ 10
+```
+"""
+struct GapRange{T,F,L} <: AbstractVector{T}
+    first_range::F
+    last_range::L
+
+   function GapRange{T,F,L}(fr::F, lr::L) where {T,F,L}
+       if (eltype(fr) <: T) & (eltype(lr) <: T)
+           return new{T,F,L}(fr, lr)
+       else
+           error("element type of first and last range must be the same, got $(eltype(fr)) and $(eltype(lr)).")
+       end
+    end
+end
+
+const SubGapRange{T} = Union{<:AbstractRange{T},<:GapRange{T}}
+
+function GapRange(f::T, l::SubGapRange{T}) where {T}
+    if is_forward(l)
+        if is_before(f, l)
+            return GapRange{T,T,typeof(l)}(f, l)
+        elseif is_after(f, l)
+            return GapRange{T,typeof(l),T}(l, f)
+        else
+            error("The two ranges composing a GapRange can't overlap.")
+        end
+    else  # is_reverse(f)
+        if is_after(f, l)
+            return GapRange{T,T,typeof(l)}(f, l)
+        elseif is_after(l, f)
+            return GapRange{T,typeof(l),T}(l, f)
+        else
+            error("The two ranges composing a GapRange can't overlap.")
+        end
+    end
+end
+
+function GapRange(f::SubGapRange{T}, l::T) where {T}
+    if is_forward(f)
+        if is_before(f, l)
+            return GapRange{T,typeof(f),T}(f, l)
+        elseif is_before(l, f)
+            return GapRange{T,T,typeof(f)}(l, f)
+        else
+            error("The two ranges composing a GapRange can't overlap.")
+        end
+    else  # is_reverse(f)
+        if is_after(f, l)
+            return GapRange{T,typeof(f),T}(f, l)
+        elseif is_after(l, f)
+            return GapRange{T,T,typeof(f)}(l, f)
+        else
+            error("The two ranges composing a GapRange can't overlap.")
+        end
+    end
+end
+
+function GapRange(f::SubGapRange{T}, l::SubGapRange{T}) where {T}
+    if is_forward(f)
+        if is_forward(f)
+            if is_before(f, l)
+                return GapRange{T,typeof(f),typeof(l)}(f, l)
+            elseif is_before(l, f)
+                return GapRange{T,typeof(l),typeof(f)}(l, f)
+            else
+                error("The two ranges composing a GapRange can't overlap.")
+            end
+        else
+            error("Both arguments to GapRange must have the same sorting, got forward and reverse ordered ranges.")
+        end
+    else  # is_reverse(f)
+        if is_forward(f)
+            error("Both arguments to GapRange must have the same sorting, got reverse and forward ordered ranges.")
+        else
+            if is_after(f, l)
+                return GapRange{T,typeof(f),typeof(l)}(f, l)
+            elseif is_after(l, f)
+                return GapRange{T,typeof(l),typeof(f)}(l, f)
+            else
+                error("The two ranges composing a GapRange can't overlap.")
+            end
+        end
+    end
+end
+
+first_range(gr::GapRange) = getfield(gr, :first_range)
+
+last_range(gr::GapRange) = getfield(gr, :last_range)
+
+first_length(gr::GapRange) = length(first_range(gr))
+first_length(gr::GapRange{T,T}) where {T} = 1
+
+last_length(gr::GapRange) = length(last_range(gr))
+last_length(gr::GapRange{T,F,T}) where {T,F} = 1
+
+Base.length(gr::GapRange) = length(first_range(gr)) + length(last_range(gr))
+Base.length(gr::GapRange{T,T,T}) where {T} = 2
+
+Base.first(gr::GapRange) = first(first_range(gr))
+
+Base.last(gr::GapRange) = last(last_range(gr))
+
+# bypasses order checking
+_unsafe_gaprange(f, l) = GapRange{eltype(f),typeof(f),typeof(l)}(f, l)
+
