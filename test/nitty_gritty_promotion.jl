@@ -51,8 +51,12 @@
         @test promote_rule(stepsrangelen_type, typeof(StepSRangeLen(1,3,9))) <: StepSRangeLen
         @test promote_rule(stepmrangelen_type, typeof(StepMRangeLen(1,3,9))) <: StepMRangeLen
 
+        # many combinations
         @test promote_rule(unitsrange_type, onetosrange_type) <: UnitSRange
         @test promote_rule(onetosrange_type, unitsrange_type) <: UnitSRange
+
+        @test promote_rule(unitmrange_type, stepmrange_type) <: StepMRange
+        @test promote_rule(stepmrange_type, unitmrange_type) <: StepMRange
 
         @test promote_rule(unitmrange_type, onetomrange_type) <: UnitMRange
         @test promote_rule(onetomrange_type, unitmrange_type) <: UnitMRange
@@ -60,8 +64,14 @@
         @test promote_rule(onetomrange_type, onetorange_type) <: OneToMRange
         @test promote_rule(onetorange_type, onetomrange_type) <: OneToMRange
 
+        @test promote_rule(onetorange_type, onetosrange_type) <: OneTo
+        @test promote_rule(onetomrange_type, onetorange_type) <: OneToMRange
+
         @test promote_rule(unitmrange_type, linmrange_type) <: LinMRange
         @test promote_rule(linmrange_type, unitmrange_type) <: LinMRange
+
+        @test promote_rule(linmrange_type, stepmrange_type) <: LinMRange
+        @test promote_rule(stepmrange_type, linmrange_type) <: LinMRange
 
         @test promote_rule(onetomrange_type, linmrange_type) <: LinMRange
         @test promote_rule(linmrange_type, onetomrange_type) <: LinMRange

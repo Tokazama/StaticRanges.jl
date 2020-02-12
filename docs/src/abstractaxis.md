@@ -115,6 +115,8 @@ StaticRanges.unsafe_reindex
 StaticRanges.AbstractAxis
 StaticRanges.Axis
 StaticRanges.SimpleAxis
+StaticRanges.CartesianAxes
+StaticRanges.LinearAxes
 ```
 
 ## Interface

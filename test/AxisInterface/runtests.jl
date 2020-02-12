@@ -39,4 +39,5 @@ end
 include("range_tests.jl")
 include("reduce.jl")
 include("promotions.jl")
+include("axisindices_tests.jl")
 
