@@ -10,6 +10,26 @@ using StaticRanges: ArrayInterface.ismutable
 using Base: OneTo, step_hp
 using Base.Order
 
+@testset "checkindex" begin
+    r = 1:5
+    all_inbounds = 1:5
+    top_outbounds = 1:6
+    bottom_outbounds = 0:5
+    @testset "checkindexlo" begin
+        @test StaticRanges.checkindexlo(r, all_inbounds)
+        @test StaticRanges.checkindexlo(r, top_outbounds)
+        @test !StaticRanges.checkindexlo(r, bottom_outbounds)
+        @test StaticRanges.checkindexlo(r, CartesianIndex((1,)))
+    end
+
+    @testset "checkindexhi" begin
+        @test StaticRanges.checkindexhi(r, all_inbounds)
+        @test !StaticRanges.checkindexhi(r, top_outbounds)
+        @test StaticRanges.checkindexhi(r, bottom_outbounds)
+        @test StaticRanges.checkindexhi(r, CartesianIndex((1,)))
+    end
+end
+
 include("find.jl")
 include("gaprange_tests.jl")
 include("vcat_tests.jl")
