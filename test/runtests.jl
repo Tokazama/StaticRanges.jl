@@ -20,6 +20,8 @@ include("order_tests.jl")
 include("unitrange_tests.jl")
 include("twiceprecision.jl")
 include("promotion_tests.jl")
+include("nitty_gritty_promotion.jl")
+
 include("mutate.jl")
 
 include("first_tests.jl")

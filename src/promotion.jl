@@ -1,16 +1,21 @@
-similar_range(::SRange, ::SRange) = srange
 
-similar_range(::SRange, ::FRange) = range
-similar_range(::FRange, ::SRange) = range
-similar_range(::FRange, ::FRange) = range
+similar_range(::X, ::Y) where {X,Y} = similar_range(X, Y)
 
-similar_range(::MRange, ::FRange) = mrange
-similar_range(::FRange, ::MRange) = mrange
-similar_range(::SRange, ::MRange) = mrange
-similar_range(::MRange, ::SRange) = mrange
-similar_range(::MRange, ::MRange) = mrange
+similar_range(::Type{<:SRange}, ::Type{<:SRange}) = srange
 
+similar_range(::Type{<:SRange}, ::Type{<:FRange}) = range
+similar_range(::Type{<:FRange}, ::Type{<:SRange}) = range
+similar_range(::Type{<:FRange}, ::Type{<:FRange}) = range
 
+similar_range(::Type{<:MRange}, ::Type{<:FRange}) = mrange
+similar_range(::Type{<:FRange}, ::Type{<:MRange}) = mrange
+similar_range(::Type{<:SRange}, ::Type{<:MRange}) = mrange
+similar_range(::Type{<:MRange}, ::Type{<:SRange}) = mrange
+similar_range(::Type{<:MRange}, ::Type{<:MRange}) = mrange
+
+###
+### similar_type
+###
 for RANGE_TYPE in (:OneTo,:OneToMRange,:OneToSRange)
     @eval begin
         function StaticArrays.similar_type(
@@ -21,10 +26,6 @@ for RANGE_TYPE in (:OneTo,:OneToMRange,:OneToSRange)
         end
     end
 end
-
-lower_rangetype(::Type{<:OneToSRange{T,E}}) where {T,E} = OneTo{T}
-lower_rangetype(::Type{OneTo{T}}) where {T} = OneToMRange{T}
-lower_rangetype(::Type{OneToMRange{T}}) where {T} = OneToMRange{T}
 
 for RANGE_TYPE in (:UnitRange,:UnitMRange,:UnitSRange)
     @eval begin
@@ -37,10 +38,6 @@ for RANGE_TYPE in (:UnitRange,:UnitMRange,:UnitSRange)
     end
 end
 
-lower_rangetype(::Type{<:UnitSRange{T}}) where {T} = UnitRange{T}
-lower_rangetype(::Type{UnitRange{T}}) where {T} = UnitMRange{T}
-lower_rangetype(::Type{UnitMRange{T}}) where {T} = UnitMRange{T}
-
 for RANGE_TYPE in (:LinRange,:LinMRange,:LinSRange)
     @eval begin
         function StaticArrays.similar_type(
@@ -51,10 +48,6 @@ for RANGE_TYPE in (:LinRange,:LinMRange,:LinSRange)
         end
     end
 end
-
-lower_rangetype(::Type{<:LinSRange{T}}) where {T} = LinRange{T}
-lower_rangetype(::Type{LinRange{T}}) where {T} = LinMRange{T}
-lower_rangetype(::Type{LinMRange{T}}) where {T} = LinMRange{T}
 
 for RANGE_TYPE in (:StepRangeLen,:StepMRangeLen,:StepSRangeLen)
     @eval begin
@@ -69,10 +62,6 @@ for RANGE_TYPE in (:StepRangeLen,:StepMRangeLen,:StepSRangeLen)
     end
 end
 
-lower_rangetype(::Type{<:StepSRangeLen{T,R,S}}) where {T,R,S} = StepRangeLen{T,R,S}
-lower_rangetype(::Type{StepRangeLen{T,R,S}}) where {T,R,S} = StepMRangeLen{T,R,S}
-lower_rangetype(::Type{StepMRangeLen{T,R,S}}) where {T,R,S} = StepMRangeLen{T,R,S}
-
 for RANGE_TYPE in (:StepRange,:StepMRange,:StepSRange)
     @eval begin
         function StaticArrays.similar_type(
@@ -85,10 +74,36 @@ for RANGE_TYPE in (:StepRange,:StepMRange,:StepSRange)
     end
 end
 
+###
+### lower_rangetype
+###
+
+lower_rangetype(::Type{<:OneToSRange{T,E}}) where {T,E} = OneTo{T}
+lower_rangetype(::Type{OneTo{T}}) where {T} = OneToMRange{T}
+lower_rangetype(::Type{OneToMRange{T}}) where {T} = OneToMRange{T}
+
+lower_rangetype(::Type{<:UnitSRange{T}}) where {T} = UnitRange{T}
+lower_rangetype(::Type{UnitRange{T}}) where {T} = UnitMRange{T}
+lower_rangetype(::Type{UnitMRange{T}}) where {T} = UnitMRange{T}
+
+lower_rangetype(::Type{<:LinSRange{T}}) where {T} = LinRange{T}
+lower_rangetype(::Type{LinRange{T}}) where {T} = LinMRange{T}
+lower_rangetype(::Type{LinMRange{T}}) where {T} = LinMRange{T}
+
+lower_rangetype(::Type{<:StepSRangeLen{T,R,S}}) where {T,R,S} = StepRangeLen{T,R,S}
+lower_rangetype(::Type{StepRangeLen{T,R,S}}) where {T,R,S} = StepMRangeLen{T,R,S}
+lower_rangetype(::Type{StepMRangeLen{T,R,S}}) where {T,R,S} = StepMRangeLen{T,R,S}
+
 lower_rangetype(::Type{<:StepSRange{T,S}}) where {T,S} = StepRange{T,S}
 lower_rangetype(::Type{StepRange{T,S}}) where {T,S} = StepMRange{T,S}
 lower_rangetype(::Type{StepMRange{T,S}}) where {T,S} = StepMRange{T,S}
 
+
+###
+### promot_rule
+###
+
+#Base.promote_rule(::X, ::Y) where {X<:SRange,Y<:SRange} = promote_rule(X, Y)
 
 for S in (:OneToSRange,:UnitSRange,:StepSRange,:LinSRange,:StepSRangeLen)
     for M in (:OneToMRange,:UnitMRange,:StepMRange,:LinMRange,:StepMRangeLen)
@@ -252,4 +267,3 @@ same_type(::Type{X}, ::Type{Y}) where {X<:LinSRange,Y<:LinSRange} = true
 same_type(::Type{X}, ::Type{Y}) where {X<:StepSRangeLen,Y<:StepSRangeLen} = true
 same_type(::Type{X}, ::Type{X}) where {X} = true
 same_type(::Type{X}, ::Type{Y}) where {X,Y} = false
-

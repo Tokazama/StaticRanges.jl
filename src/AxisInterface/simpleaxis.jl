@@ -6,6 +6,8 @@ be considered both the `values` and `keys` of the return instance.
 
 ## Examples
 
+A `SimpleAxis` is useful for giving a standard set of indices the ability to use
+the filtering syntax for indexing.
 ```jldoctest
 julia> using StaticRanges
 
@@ -20,6 +22,9 @@ julia> x[==(2)]
 
 julia> x[2] == x[==(3)]
 true
+
+julia> x[>(2)]
+SimpleAxis(3:10)
 
 julia> x[>(2)]
 SimpleAxis(3:10)
@@ -100,3 +105,16 @@ function Base.show(io::IO, a::SimpleAxis)
 end
 
 check_iterate(r::SimpleAxis, i) = check_iterate(values(r), i)
+
+StaticRanges.is_dynamic(::Type{T}) where {T<:SimpleAxis} = is_dynamic(keys_type(T))
+
+StaticRanges.is_static(::Type{T}) where {T<:SimpleAxis} = is_static(keys_type(T))
+
+StaticRanges.is_fixed(::Type{T}) where {T<:SimpleAxis} = is_fixed(keys_type(T))
+
+StaticRanges.as_dynamic(x::SimpleAxis) = SimpleAxis(as_dynamic(values(x)))
+
+StaticRanges.as_fixed(x::SimpleAxis) = SimpleAxis(as_fixed(values(x)))
+
+StaticRanges.as_static(x::SimpleAxis) = SimpleAxis(as_static(values(x)))
+

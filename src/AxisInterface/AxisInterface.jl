@@ -1,5 +1,7 @@
 
 include("abstractaxis.jl")
+include("axisindices.jl")
+
 include("axis.jl")
 include("simpleaxis.jl")
 include("reindex.jl")
@@ -14,4 +16,3 @@ include("reduce_axes.jl")
 include("getindex.jl")
 include("promotion.jl")
 include("reshape_axes.jl")
-include("axisindices.jl")

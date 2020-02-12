@@ -2,7 +2,7 @@ module StaticRanges
 
 import Base: OneTo, TwicePrecision, el_same, unsafe_getindex, nbitslen, rat,
              IEEEFloat, floatrange, sumpair, add12, twiceprecision, step_hp,
-             truncbits, Fix1, Fix2, tail, front, to_index
+             truncbits, Fix1, Fix2, tail, front, to_index, unsafe_length
 
 using Base.Order
 using Base: @propagate_inbounds, @pure
@@ -16,8 +16,9 @@ using StaticArrays: Dynamic
 export
     # Types
     AbstractAxis,
-    CartesianAxes,
+    AxisIndices,
     Axis,
+    CartesianAxes,
     GapRange,
     LinearAxes,
     LinMRange,
@@ -145,7 +146,8 @@ export
     popfirst,
     vcat_sort
 
-include("gaprange.jl")
+include("./GapRange/GapRange.jl")
+
 include("chainedfix.jl")
 include("continuity.jl")
 include("order.jl")
@@ -173,7 +175,8 @@ const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRang
 
 ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = true
 
-include("./AxisInterface/AxisInterface.jl")
+
+
 include("iterate.jl")
 include("staticness.jl")
 include("checkindex.jl")
@@ -197,5 +200,6 @@ include("push.jl")
 include("show.jl")
 include("vcat.jl")
 
+include("./AxisInterface/AxisInterface.jl")
 
 end

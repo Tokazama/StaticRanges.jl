@@ -2,11 +2,13 @@
 """
     AbstractAxis
 
-An `AbstractUnitRange` subtype optimized for indexing.
+An `AbstractVector` subtype optimized for indexing.
 """
-abstract type AbstractAxis{K,V<:Integer,Ks,Vs<:AbstractUnitRange{V}} <: AbstractUnitRange{V} end
+abstract type AbstractAxis{K,V<:Integer,Ks,Vs} <: AbstractVector{V} end
 
 Base.valtype(::Type{<:AbstractAxis{K,V,Ks,Vs}}) where {K,V,Ks,Vs} = V
+
+const AbstractAxisBaseOne{K,V,Ks} = AbstractAxis{K,V,Ks,OneTo{V}}
 
 """
     values_type(::AbstractAxis)
@@ -102,20 +104,8 @@ function StaticArrays.similar_type(
     return similar_type(A, ks_type, vs_type)
 end
 
-#Base.convert(::Type{T}, a::T) where {T<:AbstractAxis} = a
-#Base.convert(::Type{T}, a) where {T<:AbstractAxis} = T(a)
-
-###
-### checkbounds
-###
-Base.checkbounds(a::AbstractAxis, i) = checkbounds(Bool, a, i)
-Base.checkbounds(::Type{Bool}, a::AbstractAxis, i) = checkindex(Bool, a, i)
-Base.checkbounds(::Type{Bool}, a::AbstractAxis, i::CartesianIndex{1}) = checkindex(Bool, a, first(i.I))
-function Base.checkindex(::Type{Bool}, a::AbstractAxis, i::Integer)
-    return checkindexlo(a, i) & checkindexhi(a, i)
-end
-
-# TODO implement checkbounds by key indexing
+Base.convert(::Type{T}, a::T) where {T<:AbstractAxis} = a
+Base.convert(::Type{T}, a) where {T<:AbstractAxis} = T(a)
 
 ###
 ### pop
@@ -135,6 +125,7 @@ function Base.popfirst!(a::AbstractAxis)
     popfirst!(keys(a))
     return popfirst!(values(a))
 end
+
 ###
 ### show
 ###
@@ -161,4 +152,31 @@ check_iterate(r::AbstractAxis, i) = check_iterate(values(r), last(i))
 
 Base.collect(a::AbstractAxis) = collect(values(a))
 
+# TODO does this make sense with vector values
 Base.UnitRange(a::AbstractAxis) = UnitRange(values(a))
+Base.UnitRange{T}(a::AbstractAxis) where {T} = UnitRange{T}(values(a))
+
+###
+### StaticRanges Interface
+###
+
+StaticArrays.Size(::Type{T}) where {T<:AbstractAxis} = Size(values_type(T))
+
+function StaticRanges.is_dynamic(::Type{T}) where {T<:AbstractAxis}
+    return is_dynamic(values_type(T)) & is_dynamic(keys_type(T))
+end
+
+function StaticRanges.is_static(::Type{T}) where {T<:AbstractAxis}
+    return is_static(values_type(T)) & is_static(keys_type(T))
+end
+
+function StaticRanges.is_fixed(::Type{T}) where {T<:AbstractAxis}
+    return is_fixed(values_type(T)) & is_fixed(keys_type(T))
+end
+
+StaticRanges.as_dynamic(x::AbstractAxis) = Axis(as_dynamic(keys(x)), as_dynamic(values(x)))
+
+StaticRanges.as_fixed(x::AbstractAxis) = Axis(as_fixed(keys(x)), as_fixed(values(x)))
+
+StaticRanges.as_static(x::AbstractAxis) = Axis(as_static(keys(x)), as_static(values(x)))
+

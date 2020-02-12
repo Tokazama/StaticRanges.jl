@@ -37,13 +37,6 @@ end
 
 lendiv(r::LinMRange) = getfield(r, :lendiv)
 
-# TODO document
-first_length(gr::GapRange) = length(first_range(gr))
-
-last_length(gr::GapRange) = length(last_range(gr))
-
-Base.length(gr::GapRange) = length(first_range(gr)) + length(last_range(gr))
-
 function start_step_stop_to_length(::Type{T}, start, step, stop) where {T}
     if (start != stop) & ((step > zero(step)) != (stop > start))
         return 0
