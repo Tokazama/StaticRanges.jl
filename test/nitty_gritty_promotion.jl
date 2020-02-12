@@ -65,6 +65,8 @@
         @test promote_rule(onetorange_type, onetomrange_type) <: OneToMRange
 
         @test promote_rule(onetorange_type, onetosrange_type) <: OneTo
+
+        @test promote_rule(onetorange_type, onetomrange_type) <: OneToMRange
         @test promote_rule(onetomrange_type, onetorange_type) <: OneToMRange
 
         @test promote_rule(unitmrange_type, linmrange_type) <: LinMRange

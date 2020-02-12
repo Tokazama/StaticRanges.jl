@@ -1,6 +1,8 @@
 
+# TODO this might be completely unecessary
 to_axis(x) = Axis(x)
 to_axis(x::AbstractAxis) = x
+to_axis(x::Integer) = SimpleAxis(OneTo(x))
 
 abstract type AxisIndices{T,N,Ax<:Tuple{Vararg{<:AbstractAxis,N}}} <: AbstractArray{T,N} end
 
@@ -10,10 +12,10 @@ end
 
 @propagate_inbounds function Base.getindex(
     A::AxisIndices{T,N},
-    inds::Vararg{Union{Integer,AbstractVector{Integer}},N}
+    inds::Vararg{Union{Integer,<:AbstractVector{<:Integer}},N}
    ) where {T,N}
-    @boundscheck checkbounds(A, inds)
-    @inbounds Base._getindex(A, inds...)
+    @boundscheck checkbounds(A, inds...)
+    @inbounds Base._getindex(IndexStyle(A), A, inds...)
 end
 
 Base.axes(A::AxisIndices, i) = axes(A)[i]
@@ -93,6 +95,7 @@ struct LinearAxes{T<:Integer,N,Ax<:Tuple{Vararg{<:AbstractAxisBaseOne,N}}} <: Ax
 end
 
 Base.axes(A::LinearAxes) = getfield(A, :axes)
+
 
 function LinearAxes(x::Tuple{Vararg{<:AbstractAxis,N}}) where {N}
     return LinearAxes{promote_type(eltype.(x)...),N,typeof(x)}(x)

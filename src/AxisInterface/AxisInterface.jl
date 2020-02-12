@@ -19,4 +19,5 @@ include("reduce_axes.jl")
 include("getindex.jl")
 include("promotion.jl")
 include("reshape_axes.jl")
+include("promote_shape.jl")
 

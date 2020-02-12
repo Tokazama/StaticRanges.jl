@@ -1,4 +1,4 @@
-
+# TODO reverse indexing (e.g., reverse(::AxisIndices))
 Base.IteratorSize(::Type{<:AxisIndices{<:Any,N}}) where {N} = Base.HasShape{N}()
 
 @inline function Base.iterate(iter::CartesianAxes)
@@ -68,12 +68,12 @@ end
     end
 end
 
-function Base.nextind(a::AxisIndices{<:Any,N}, i::Tuple{Vararg{<:Any,N}}) where {N}
+function Base.nextind(A::AxisIndices{<:Any,N}, i::Tuple{Vararg{<:Any,N}}) where {N}
     return inc(i, map(first, axes(A)), map(last, axes(A)))
 end
 
-function Base.prevind(a::AxisIndices{<:Any,N}, i::Tuple{Vararg{<:Any,N}}) where {N}
-    return dec(i, map(first, axes(A)), map(last, axes(A)))
+function Base.prevind(A::AxisIndices{<:Any,N}, i::Tuple{Vararg{<:Any,N}}) where {N}
+    return dec(i, map(last, axes(A)), map(first, axes(A)))
 end
 
 #Base.to_shape(x::Tuple{Vararg{<:AbstractAxis}}) = Base.to_shape()

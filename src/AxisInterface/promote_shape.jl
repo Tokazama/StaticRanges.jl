@@ -1,12 +1,12 @@
-function Base.promote_shape(a::Tuple{Vararg{Union{AbstractUnitRange,AbstractIndices}}}, b)
+function Base.promote_shape(a::Tuple{Vararg{Union{AbstractUnitRange,<:AbstractAxis}}}, b)
     return _promote_shape(a, b)
 end
-function Base.promote_shape(a, b::Tuple{Vararg{Union{AbstractUnitRange,AbstractIndices}}})
+function Base.promote_shape(a, b::Tuple{Vararg{Union{AbstractUnitRange,<:AbstractAxis}}})
     return _promote_shape(a, b)
 end
 function Base.promote_shape(
-    a::Tuple{Vararg{Union{AbstractUnitRange,AbstractIndices}}},
-    b::Tuple{Vararg{Union{AbstractUnitRange,AbstractIndices}}}
+    a::Tuple{Vararg{Union{AbstractUnitRange,<:AbstractAxis}}},
+    b::Tuple{Vararg{Union{AbstractUnitRange,<:AbstractAxis}}}
    )
     return _promote_shape(a, b)
 end
