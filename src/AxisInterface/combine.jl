@@ -62,29 +62,3 @@ function combine_keys(::Type{T}, x, y) where {T<:Union{StepRangeLen,AbstractStep
 end
 combine_keys(::Type{T}, x, y) where {T<:AbstractVector} = copy(x)
 
-
-### TODO
-names_are_unifiable(names_a, names_b) = try_unify_names(names_a, names_b) !== nothing
-
-function try_unify_names(names_a, names_b)
-    if names_a === names_b
-        return names_a
-    elseif length(names_a) !== length(names_b)
-        return nothing
-    end
-
-    ret = ntuple(length(names_a)) do ii  # remove :_ wildcards
-        a = getfield(names_a, ii)
-        b = names_b[ii]
-        a === :_ && return b
-        b === :_ && return a
-        a === b && return a
-        return false  # mismatch occured, we mark this with a non-Symbol result
-    end
-
-    if ret isa Tuple{Vararg{Symbol}}
-        return compile_time_return_hack(ret)
-    else
-        return nothing
-    end
-end

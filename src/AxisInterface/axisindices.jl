@@ -96,7 +96,6 @@ end
 
 Base.axes(A::LinearAxes) = getfield(A, :axes)
 
-
 function LinearAxes(x::Tuple{Vararg{<:AbstractAxis,N}}) where {N}
     return LinearAxes{promote_type(eltype.(x)...),N,typeof(x)}(x)
 end
@@ -116,4 +115,6 @@ end
 function Base.similar(A::LinearAxes{T}, dims::Tuple{Vararg{<:Integer}}=size(A)) where {T}
     return Array{T}(undef, dims)
 end
+
+Base.eachindex(A::LinearAxes) = OneTo(length(A))
 

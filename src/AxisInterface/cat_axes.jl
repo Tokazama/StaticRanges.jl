@@ -14,6 +14,11 @@ julia> a, b = [1 2 3 4 5], [6 7 8 9 10; 11 12 13 14 15];
 
 julia> vcat_axes(a, b) == axes(vcat(a, b))
 true
+
+julia> c, d = LinearAxes((1:1, 1:5,)), LinearAxes((1:2, 1:5));
+
+julia> length.(vcat_axes(c, d)) == length.(vcat_axes(a, b))
+true
 ```
 """
 vcat_axes(x::AbstractArray, y::AbstractArray) = vcat_axes(axes(x), axes(y))
@@ -37,14 +42,29 @@ julia> a, b = [1; 2; 3; 4; 5], [6 7; 8 9; 10 11; 12 13; 14 15];
 
 julia> hcat_axes(a, b) == axes(hcat(a, b))
 true
+
+julia> c, d = CartesianAxes((Axis(1:5),)), CartesianAxes((Axis(1:5), Axis(1:2)));
+
+julia> length.(hcat_axes(c, d)) == length.(hcat_axes(a, b))
+true
 ```
 """
 hcat_axes(x::AbstractArray, y::AbstractArray) = hcat_axes(axes(x), axes(y))
-hcat_axes(x::Tuple, y::Tuple) = _hcat_axes(x, y)
+function hcat_axes(x::Tuple, y::Tuple)
+    if length(x) > length(y)
+        return (front(x)..., grow_last(last(x), 1))
+    elseif length(x) < length(y)
+        return (front(y)..., grow_last(last(y), 1))
+    else  # length(x) == length(y)
+        return (front(x)..., cat_axis(last(x), last(y)))
+    end
+end
 function hcat_axes(x::Tuple{Any}, y::Tuple{Any})
     return (combine_index(first(x), first(y)), SimpleAxis(OneTo(2)))
 end
+#=
 function _hcat_axes(x::Tuple, y::Tuple)
+    (front(), cat_axis(last(x), last(y)),)
     return (combine_index(first(x), first(y)), _hcat_axes(tail(x), tail(y))...)
 end
 _hcat_axes(x::Tuple{Any}, y::Tuple{Any}) = (cat_axis(first(x), first(y)),)
@@ -55,8 +75,7 @@ end
 function _hcat_axes(x::Tuple{}, y::Tuple{Any})
     ax = first(y)
     return (set_length(ax, length(ax) + 1),)
-end
-_hcat_axes(x::Tuple{}, y::Tuple{}) = ()
+    =#
 
 """
     cat_axis(x, y)
