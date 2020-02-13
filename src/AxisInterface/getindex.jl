@@ -39,19 +39,57 @@ end
     return inds
 end
 
-@propagate_inbounds function Base.to_indices(A, inds::Tuple{<:AbstractAxis, Vararg{Any}}, I::Tuple{Any, Vararg{Any}})
+function Base.to_indices(A, inds::Tuple{<:AbstractAxis, Vararg{Any}}, I::Tuple{Any, Vararg{Any}})
     Base.@_inline_meta
     return (to_index(first(inds), first(I)), to_indices(A, maybetail(inds), tail(I))...)
 end
 
-@propagate_inbounds function Base.to_indices(A, inds::Tuple{<:AbstractAxis, Vararg{Any}}, I::Tuple{Colon, Vararg{Any}})
+function Base.to_indices(
+    A,
+    inds::Tuple{<:AbstractAxis, Vararg{Any}},
+    I::Tuple{Colon, Vararg{Any}}
+   )
     Base.@_inline_meta
     return (values(first(inds)), to_indices(A, maybetail(inds), tail(I))...)
 end
 
-@propagate_inbounds function Base.to_indices(A, inds::Tuple{<:AbstractAxis, Vararg{Any}}, I::Tuple{CartesianIndex{1}, Vararg{Any}})
+#=
+function Base.to_indices(
+    A,
+    inds::Tuple{<:AbstractAxis, Vararg{Any}},
+    I::Tuple{CartesianIndex{1}, Vararg{Any}}
+   )
     Base.@_inline_meta
     return (to_index(first(inds), first(I)), to_indices(A, maybetail(inds), tail(I))...)
+end
+=#
+
+function Base.to_indices(
+    A,
+    inds::Tuple{<:AbstractAxis, Vararg{Any}},
+    I::Tuple{CartesianIndex, Vararg{Any}}
+   )
+    Base.@_inline_meta
+    to_indices(A, inds, (I[1].I..., tail(I)...))
+end
+
+function Base.to_indices(
+    A,
+    inds::Tuple{<:AbstractAxis, Vararg{Any}},
+    I::Tuple{AbstractArray{CartesianIndex{N}},Vararg{Any}}
+   ) where N
+    Base.@_inline_meta
+    _, indstail = Base.IteratorsMD.split(inds, Val(N))
+    return (to_index(A, first(I)), to_indices(A, indstail, tail(I))...)
+end
+# And boolean arrays behave similarly; they also skip their number of dimensions
+@inline function Base.to_indices(
+    A,
+    inds::Tuple{<:AbstractAxis, Vararg{Any}},
+    I::Tuple{AbstractArray{Bool, N}, Vararg{Any}}
+   ) where N
+    _, indstail = Base.IteratorsMD.split(inds, Val(N))
+    (to_index(A, I[1]), to_indices(A, indstail, tail(I))...)
 end
 
 @inline function Base.to_indices(A, inds::Tuple{<:AbstractAxis, Vararg{Any}}, I::Tuple{CartesianIndex, Vararg{Any}})
@@ -78,3 +116,6 @@ function Base.checkindex(::Type{Bool}, a::AbstractAxis, i::AbstractUnitRange)
     return checkindexlo(a, i) & checkindexhi(a, i)
 end
 
+@inline function Base.checkindex(::Type{Bool}, indx::AbstractAxis, I::Base.LogicalIndex)
+    return length(indx) == length(axes(I.mask, 1))
+end

@@ -40,5 +40,14 @@
 
     @test promote_shape(CartesianAxes((3,4,1,1,1)), CartesianIndices((3, 4))) ==
             (Base.OneTo(3), Base.OneTo(4), Base.OneTo(1), Base.OneTo(1), Base.OneTo(1))
+
+    @test getindex(CartesianAxes((2,2)), 1, :) == CartesianAxes((2,2))[1, 1:2]
+    @test getindex(CartesianAxes((2,2)), :, 1) == CartesianAxes((2,2))[1:2, 1]
+
+
+    @test getindex(CartesianAxes((2,2)), CartesianIndex(1, 1)) == CartesianIndex(1,1)
+    @test getindex(CartesianAxes((2,2)), [true, true], :) == CartesianAxes((2,2))
+    @test getindex(CartesianAxes((2,)), [CartesianIndex(1)]) == [CartesianIndex(1)]
+
 end
 

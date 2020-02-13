@@ -154,7 +154,7 @@ Base.collect(a::AbstractAxis) = collect(values(a))
 
 # TODO does this make sense with vector values
 Base.UnitRange(a::AbstractAxis) = UnitRange(values(a))
-Base.UnitRange{T}(a::AbstractAxis) where {T} = UnitRange{T}(values(a))
+#Base.UnitRange{T}(a::AbstractAxis) where {T} = UnitRange{T}(values(a))
 
 ###
 ### StaticRanges Interface
