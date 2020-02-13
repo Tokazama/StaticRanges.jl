@@ -22,6 +22,8 @@ _getindex(a::SimpleAxis, i::Integer) = @inbounds(values(a)[i])
 
 @propagate_inbounds Base.to_index(x::AbstractAxis, f::F2Eq) = _maybe_throw_boundserror(x, find_first(f, keys(x)))
 @propagate_inbounds Base.to_index(x::AbstractAxis, f::Function) = _maybe_throw_boundserror(x, find_all(f, keys(x)))
+@propagate_inbounds Base.to_index(x::AbstractAxis, f::CartesianIndex{1}) = first(f.I)
+
 
 @propagate_inbounds function _maybe_throw_boundserror(x, i)::Integer
     @boundscheck if i isa Nothing
@@ -39,17 +41,21 @@ end
 
 @propagate_inbounds function Base.to_indices(A, inds::Tuple{<:AbstractAxis, Vararg{Any}}, I::Tuple{Any, Vararg{Any}})
     Base.@_inline_meta
-    (to_index(first(inds), first(I)), to_indices(A, maybetail(inds), tail(I))...)
+    return (to_index(first(inds), first(I)), to_indices(A, maybetail(inds), tail(I))...)
 end
 
 @propagate_inbounds function Base.to_indices(A, inds::Tuple{<:AbstractAxis, Vararg{Any}}, I::Tuple{Colon, Vararg{Any}})
     Base.@_inline_meta
-    (values(first(inds)), to_indices(A, maybetail(inds), tail(I))...)
+    return (values(first(inds)), to_indices(A, maybetail(inds), tail(I))...)
 end
 
 @propagate_inbounds function Base.to_indices(A, inds::Tuple{<:AbstractAxis, Vararg{Any}}, I::Tuple{CartesianIndex{1}, Vararg{Any}})
     Base.@_inline_meta
-    (to_index(first(inds), first(I)), to_indices(A, maybetail(inds), tail(I))...)
+    return (to_index(first(inds), first(I)), to_indices(A, maybetail(inds), tail(I))...)
+end
+
+@inline function Base.to_indices(A, inds::Tuple{<:AbstractAxis, Vararg{Any}}, I::Tuple{CartesianIndex, Vararg{Any}})
+    return to_indices(A, inds, (I[1].I..., tail(I)...))
 end
 
 maybetail(::Tuple{}) = ()
@@ -59,9 +65,18 @@ maybetail(t::Tuple) = tail(t)
 
 Base.checkbounds(a::AbstractAxis, i) = checkbounds(Bool, a, i)
 Base.checkbounds(::Type{Bool}, a::AbstractAxis, i) = checkindex(Bool, a, i)
-Base.checkbounds(::Type{Bool}, a::AbstractAxis, i::CartesianIndex{1}) = checkindex(Bool, a, first(i.I))
-Base.checkindex(::Type{Bool}, a::AbstractAxis, i::Integer) = checkindexlo(a, i) & checkindexhi(a, i)
-Base.checkindex(::Type{Bool}, a::AbstractAxis, i::AbstractVector) = checkindexlo(a, i) & checkindexhi(a, i)
+function Base.checkbounds(::Type{Bool}, a::AbstractAxis, i::CartesianIndex{1})
+    return checkindex(Bool, a, first(i.I))
+end
+function Base.checkindex(::Type{Bool}, a::AbstractAxis, i::Integer)
+    return checkindexlo(a, i) & checkindexhi(a, i)
+end
+function Base.checkindex(::Type{Bool}, a::AbstractAxis, i::AbstractVector)
+    return checkindexlo(a, i) & checkindexhi(a, i)
+end
+function Base.checkindex(::Type{Bool}, a::AbstractAxis, i::AbstractUnitRange)
+    return checkindexlo(a, i) & checkindexhi(a, i)
+end
 
 nextL(L, r) = L * length(r)
 nextL(L, r::Base.Slice) = L * length(r.indices)

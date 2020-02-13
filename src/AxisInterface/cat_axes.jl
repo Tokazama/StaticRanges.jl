@@ -23,7 +23,7 @@ true
 """
 vcat_axes(x::AbstractArray, y::AbstractArray) = vcat_axes(axes(x), axes(y))
 function vcat_axes(x::Tuple{Any,Vararg}, y::Tuple{Any,Vararg})
-    return (cat_axis(first(x), first(y)), combine_indices(tail(x), tail(y))...)
+    return (cat_axis(first(x), first(y)), Broadcast.broadcast_shape(tail(x), tail(y))...)
 end
 
 """
@@ -60,12 +60,12 @@ function hcat_axes(x::Tuple, y::Tuple)
     end
 end
 function hcat_axes(x::Tuple{Any}, y::Tuple{Any})
-    return (combine_index(first(x), first(y)), SimpleAxis(OneTo(2)))
+    return (combine_axis(first(x), first(y)), SimpleAxis(OneTo(2)))
 end
 #=
 function _hcat_axes(x::Tuple, y::Tuple)
     (front(), cat_axis(last(x), last(y)),)
-    return (combine_index(first(x), first(y)), _hcat_axes(tail(x), tail(y))...)
+    return (combine_axis(first(x), first(y)), _hcat_axes(tail(x), tail(y))...)
 end
 _hcat_axes(x::Tuple{Any}, y::Tuple{Any}) = (cat_axis(first(x), first(y)),)
 function _hcat_axes(x::Tuple{Any}, y::Tuple{})
@@ -128,7 +128,7 @@ function cat_axes(x::Tuple, y::Tuple; dims)
     return _cat_axes(x, to_axis(x, dims), y, to_axis(y, dims))
 end
 
-(combine_index(first(x), first(y)), vcat_axes(tail(x), tail(y))...)
+(combine_axis(first(x), first(y)), vcat_axes(tail(x), tail(y))...)
 function _cat_axes(x, x_axes, y, y_axes)
     for (x_i, y_i) in zip(x, y)
     end
@@ -136,7 +136,7 @@ end
 
 __cat_axis(x, x_axes, y, y_axes)
 
-cat_axes(x::NTuple{1,Any}, y::NTuple{1,Any}) = _cat_axes(combine_index(first(x), first(y)))
+cat_axes(x::NTuple{1,Any}, y::NTuple{1,Any}) = _cat_axes(combine_axis(first(x), first(y)))
 _cat_axes(x) = (x, set_length(unname(x), 2))
 
 cat_axes()

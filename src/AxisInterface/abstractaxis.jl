@@ -4,7 +4,7 @@
 
 An `AbstractVector` subtype optimized for indexing.
 """
-abstract type AbstractAxis{K,V<:Integer,Ks,Vs} <: AbstractVector{V} end
+abstract type AbstractAxis{K,V<:Integer,Ks,Vs} <: AbstractUnitRange{V} end
 
 Base.valtype(::Type{<:AbstractAxis{K,V,Ks,Vs}}) where {K,V,Ks,Vs} = V
 
@@ -104,8 +104,8 @@ function StaticArrays.similar_type(
     return similar_type(A, ks_type, vs_type)
 end
 
-Base.convert(::Type{T}, a::T) where {T<:AbstractAxis} = a
-Base.convert(::Type{T}, a) where {T<:AbstractAxis} = T(a)
+#Base.convert(::Type{T}, a::T) where {T<:AbstractAxis} = a
+#Base.convert(::Type{T}, a) where {T<:AbstractAxis} = T(a)
 
 ###
 ### pop

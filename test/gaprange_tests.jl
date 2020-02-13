@@ -31,4 +31,10 @@
     @test_throws ErrorException GapRange(8:-1:1, 8:-1:1)
     @test_throws ErrorException GapRange(8:-1:1, 1:8)
     @test_throws ErrorException GapRange(1:8, 8:-1:1)
+
+    @testset "iterate" begin
+        for (gr_i, r_i) in zip(GapRange(1:5, 6:10), 1:10)
+            @test gr_i == r_i
+        end
+    end
 end

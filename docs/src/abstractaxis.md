@@ -1,6 +1,6 @@
 # AbstractAxis
 
-Currently this functionality is exerimental. If the `AbstractAxis` interface proves useful it will likely be moved to a different package.
+Currently this functionality is experimental. If the `AbstractAxis` interface proves useful it will likely be moved to a different package.
 
 ## Indexing
 

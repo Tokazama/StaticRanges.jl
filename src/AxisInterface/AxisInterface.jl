@@ -6,12 +6,11 @@ export
     prev_type,
     reindex,
     # Combine Indices
-    combine_indices,
-    combine_index,
+    #combine_indices,
+    combine_axis,
     combine_values,
     combine_keys,
     AbstractAxis,
-    AxisIndices,
     Axis,
     CartesianAxes,
     LinearAxes,
@@ -69,5 +68,4 @@ include("permute_axes.jl")
 include("reduce_axes.jl")
 include("getindex.jl")
 include("promotion.jl")
-include("promote_shape.jl")
 

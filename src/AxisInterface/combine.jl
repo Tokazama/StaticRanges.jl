@@ -1,4 +1,5 @@
 # TODO combine_axes_shortest like https://github.com/invenia/NamedDims.jl/blob/master/src/name_core.jl#L243
+#=
 """
     combine_indices(x, y)
 
@@ -6,24 +7,25 @@ Returns the combined axes of `x` and `y` for broadcasting operations.
 """
 combine_indices(x::AbstractArray, y::AbstractArray) = combine_indices(axes(x), axes(y))
 function combine_indices(x::Tuple, y::Tuple)
-    return (combine_index(first(x), first(y)), combine_indices(tail(x), tail(y))...)
+    return (combine_axis(first(x), first(y)), combine_indices(tail(x), tail(y))...)
 end
 combine_indices(x::Tuple{Any}, y::Tuple{}) = (first(x),)
 combine_indices(x::Tuple{}, y::Tuple{Any}) = (first(y),)
 combine_indices(x::Tuple{}, y::Tuple{}) = ()
+=#
 
 """
-    combine_index(x, y)
+    combine_axis(x, y)
 
 Returns the combination of `x` and `y`, creating a new index. New subtypes of
-`AbstractAxis` should implement a `combine_index` method.
+`AbstractAxis` should implement a `combine_axis` method.
 """
-combine_index(x::Axis, y::Axis) = Axis(combine_keys(x, y), combine_values(x, y))
-combine_index(x::SimpleAxis, y::SimpleAxis) = SimpleAxis(combine_values(x, y))
-function combine_index(x::AbstractAxis, y::AbstractAxis)
-    error("`combine_index` must be defined for new subtypes of AbstractAxis.")
+combine_axis(x::Axis, y::Axis) = Axis(combine_keys(x, y), combine_values(x, y))
+combine_axis(x::SimpleAxis, y::SimpleAxis) = SimpleAxis(combine_values(x, y))
+function combine_axis(x::AbstractAxis, y::AbstractAxis)
+    error("`combine_axis` must be defined for new subtypes of AbstractAxis.")
 end
-combine_index(x::AbstractUnitRange, y::AbstractUnitRange) = combine_values(x, y)
+combine_axis(x::AbstractUnitRange, y::AbstractUnitRange) = combine_values(x, y)
 
 """
     combine_values(x, y)
@@ -62,48 +64,54 @@ function combine_keys(::Type{T}, x, y) where {T<:Union{StepRangeLen,AbstractStep
 end
 combine_keys(::Type{T}, x, y) where {T<:AbstractVector} = copy(x)
 
-
-###
-###
-###
-Broadcast.combine_axes(A::AxisIndices, B::AxisIndices) = _combine_axes(axes(A), axes(B))
-Broadcast.combine_axes(A::AxisIndices, B::AbstractArray) = _combine_axes(axes(A), axes(B))
-Broadcast.combine_axes(A::AbstractArray, B::AxisIndices) = _combine_axes(axes(A), axes(B))
-Broadcast.combine_axes(A::AxisIndices) = indices(A)
-
-_combine_axes(a::Tuple{Any,Vararg{Any}}, b::Tuple{Any,Vararg{Any}}) = combine_indices(a, b)
-#    (combine_indices(first(a), first(b))..., _combine_axes(tail(a), tail(b))...)
-#end
-_combine_axes(a::Tuple{Any,Vararg{Any}}, b::Tuple{}) = a
-_combine_axes(a::Tuple{}, b::Tuple{Any,Vararg{Any}}) = b
-_combine_axes(a::Tuple{}, b::Tuple{}) = ()
-
-function Broadcast.combine_axes(
-    A::Tuple{<:AbstractAxis, Vararg{Any}},
-    B::Tuple{<:AbstractAxis, Vararg{Any}}
+function Broadcast.broadcast_shape(
+    shape1::Tuple,
+    shape2::Tuple{Vararg{<:AbstractAxis}},
+    shapes::Tuple...
    )
-    return (combine_indices(first(A), first(B))..., combine_axes(tail(A), tail(B))...)
+    return Broadcast.broadcast_shape(_bcs(shape1, shape2), shapes...)
 end
 
-function Broadcast.combine_axes(
-    A::Tuple{<:AbstractAxis, Vararg{Any}},
-    B::Tuple{Any, Vararg{Any}}
+function Broadcast.broadcast_shape(
+    shape1::Tuple{Vararg{<:AbstractAxis}},
+    shape2::Tuple,
+    shapes::Tuple...
    )
-    return (combine_indices(first(A), first(B))..., combine_axes(tail(A), tail(B))...)
+    return Broadcast.broadcast_shape(_bcs(shape1, shape2), shapes...)
 end
-
-function Broadcast.combine_axes(
-    A::Tuple{Any, Vararg{Any}},
-    B::Tuple{<:AbstractAxis, Vararg{Any}}
+function Broadcast.broadcast_shape(
+    shape1::Tuple{Vararg{<:AbstractAxis}},
+    shape2::Tuple{Vararg{<:AbstractAxis}},
+    shapes::Tuple...
    )
-    return (combine_indices(first(A), first(B))..., combine_axes(tail(A), tail(B))...)
+    return Broadcast.broadcast_shape(_bcs(shape1, shape2), shapes...)
 end
 
-function Broadcast.combine_axes(A::Tuple{}, B::Tuple{<:AbstractAxis, Vararg{Any}})
-    return (combine_indices(first(B))..., combine_axes(A, tail(B))...)
+# _bcs consolidates two shapes into a single output shape
+_bcs(::Tuple{}, ::Tuple{}) = ()
+_bcs(::Tuple{}, newshape::Tuple) = (newshape[1], _bcs((), tail(newshape))...)
+_bcs(shape::Tuple, ::Tuple{}) = (shape[1], _bcs(tail(shape), ())...)
+function _bcs(shape::Tuple, newshape::Tuple)
+    return (_bcs1(first(shape), first(newshape)), _bcs(tail(shape), tail(newshape))...)
 end
+# _bcs1 handles the logic for a single dimension
+_bcs1(a::Integer, b::Integer) = a == 1 ? b : (b == 1 ? a : (a == b ? a : throw(DimensionMismatch("arrays could not be broadcast to a common size; got a dimension with lengths $a and $b"))))
+_bcs1(a::Integer, b) = a == 1 ? b : (first(b) == 1 && last(b) == a ? b : throw(DimensionMismatch("arrays could not be broadcast to a common size; got a dimension with lengths $a and $(length(b))")))
+_bcs1(a, b::Integer) = _bcs1(b, a)
+function _bcs1(a, b)
+    if _bcsm(b, a)
+        return combine_axis(b, a)
+    else
+        if _bcsm(a, b)
+            return combine_axis(a, b)
+        else
+            throw(DimensionMismatch("arrays could not be broadcast to a common size; got a dimension with lengths $(length(a)) and $(length(b))"))
+        end
+    end
+end
+# _bcsm tests whether the second index is consistent with the first
+_bcsm(a, b) = a == b || length(b) == 1
+_bcsm(a, b::Number) = b == 1
+_bcsm(a::Number, b::Number) = a == b || b == 1
 
-function Broadcast.combine_axes(A::Tuple{<:AbstractAxis, Vararg{Any}}, B::Tuple{})
-    return (combine_indices(first(A))..., combine_axes(tail(A), B)...)
-end
 
