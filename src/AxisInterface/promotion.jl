@@ -87,9 +87,6 @@ Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:UnitRange,Y<:AbstractAxis} = p
 Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractVector,Y<:AbstractAxis} = promote_rule(Y, X)
 Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractVector} = promote_rule(values_type(X), Y)
 
-# TODO
-# MethodError: no method matching similar_type(::Type{SimpleAxis{nothing,Int64,UnitMRange{Int64}}}, ::Type{UnitMRange{Int64}}, ::Type{UnitMRange{Int64}})
-
 function same_type(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractAxis}
     return (X.name === Y.name)  & # TODO there should be a better way of doing this
        same_type(keys_type(X), keys_type(Y)) &
