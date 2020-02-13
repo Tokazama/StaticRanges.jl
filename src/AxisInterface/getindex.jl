@@ -78,24 +78,3 @@ function Base.checkindex(::Type{Bool}, a::AbstractAxis, i::AbstractUnitRange)
     return checkindexlo(a, i) & checkindexhi(a, i)
 end
 
-nextL(L, r) = L * length(r)
-nextL(L, r::Base.Slice) = L * length(r.indices)
-offsetin(i, r) = i - first(r)
-to_linear(A, axs::Tuple, i::Integer) = i
-
-function to_linear(A, axs::Tuple, I::Tuple)
-    Base.@_inline_meta
-    return _to_linear(axs, 1, 1, I)
-end
-
-_to_linear(::Tuple{}, L, ind, ::Tuple{}) = ind
-_to_linear(::Any, L, ind, ::Tuple{}) = ind
-function _to_linear(::Tuple{}, L, ind, I::Tuple)
-    Base.@_inline_meta
-    return _to_linear((), L, ind + (first(I) - 1) * L, tail(I))
-end
-function _to_linear(inds::Tuple, L, ind, I::Tuple)
-    Base.@_inline_meta
-    r1 = first(inds)
-    return _to_linear(tail(inds), nextL(L, r1), ind + offsetin(first(I), r1) * L, tail(I))
-end
