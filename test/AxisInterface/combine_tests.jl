@@ -18,13 +18,13 @@
                       )
 
         @testset "$(v1)-$(v2)" begin
-            @test combine(v1, v2) == v3
-            @test combine(v2, v1) == v3
+            @test combine_index(v1, v2) == v3
+            @test combine_index(v2, v1) == v3
         end
         rv1 = reverse(v1)
         @testset "$(rv1)-$(v2)" begin
-            @test combine(rv1, v2) == reverse(v3)
-            @test combine(v2, rv1) == combine(v2, reverse(rv1))
+            @test combine_index(rv1, v2) == reverse(v3)
+            @test combine_index(v2, rv1) == combine(v2, reverse(rv1))
         end
         #=
         @testset "$(v4)-$(v5)" begin

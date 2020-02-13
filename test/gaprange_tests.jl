@@ -11,7 +11,15 @@
     @test last(gr) == 10
 
     @test GapRange(1, 2:9) == 1:9
+    @test GapRange(2:9, 1) == 1:9
+    @test GapRange(9, 1:8) == 1:9
     @test GapRange(1:8, 9) == 1:9
+    @test GapRange(8:-1:1, 0) == 8:-1:0
+    @test GapRange(0, 8:-1:1) == 8:-1:0
+    @test GapRange(8:-1:1, 9) == 9:-1:1
+    @test GapRange(9, 8:-1:1) == 9:-1:1
+
+
     @test length(GapRange(1, 2:9)) == 9
     @test length(GapRange(1:8, 9)) == 9
     # TODO get gaprange tests working with exceptions

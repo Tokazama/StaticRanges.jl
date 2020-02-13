@@ -139,24 +139,6 @@
         @test @inferred(is_contiguous(1:3, 2:4)) == false
     end
 
-    @testset "next_type" begin
-        @test next_type("a") == "b"
-        @test next_type(:a) == :b
-        @test next_type('a') == 'b'
-        @test next_type(1) == 2
-        @test next_type(1.0) == nextfloat(1.0)
-        @test next_type("") == ""
-    end
-
-    @testset "prev_type" begin
-        @test prev_type("b") == "a"
-        @test prev_type(:b) == :a
-        @test prev_type('b') == 'a'
-        @test prev_type(1) == 0
-        @test prev_type(nextfloat(1.0)) == prevfloat(nextfloat(1.0))
-        @test prev_type("") == ""
-    end
-
     @testset "is_forward" begin
         @test @inferred(is_forward([1, 2, 3])) == true
         @test @inferred(is_forward(Forward)) == true

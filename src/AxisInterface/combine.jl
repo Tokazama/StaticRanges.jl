@@ -62,3 +62,48 @@ function combine_keys(::Type{T}, x, y) where {T<:Union{StepRangeLen,AbstractStep
 end
 combine_keys(::Type{T}, x, y) where {T<:AbstractVector} = copy(x)
 
+
+###
+###
+###
+Broadcast.combine_axes(A::AxisIndices, B::AxisIndices) = _combine_axes(axes(A), axes(B))
+Broadcast.combine_axes(A::AxisIndices, B::AbstractArray) = _combine_axes(axes(A), axes(B))
+Broadcast.combine_axes(A::AbstractArray, B::AxisIndices) = _combine_axes(axes(A), axes(B))
+Broadcast.combine_axes(A::AxisIndices) = indices(A)
+
+_combine_axes(a::Tuple{Any,Vararg{Any}}, b::Tuple{Any,Vararg{Any}}) = combine_indices(a, b)
+#    (combine_indices(first(a), first(b))..., _combine_axes(tail(a), tail(b))...)
+#end
+_combine_axes(a::Tuple{Any,Vararg{Any}}, b::Tuple{}) = a
+_combine_axes(a::Tuple{}, b::Tuple{Any,Vararg{Any}}) = b
+_combine_axes(a::Tuple{}, b::Tuple{}) = ()
+
+function Broadcast.combine_axes(
+    A::Tuple{<:AbstractAxis, Vararg{Any}},
+    B::Tuple{<:AbstractAxis, Vararg{Any}}
+   )
+    return (combine_indices(first(A), first(B))..., combine_axes(tail(A), tail(B))...)
+end
+
+function Broadcast.combine_axes(
+    A::Tuple{<:AbstractAxis, Vararg{Any}},
+    B::Tuple{Any, Vararg{Any}}
+   )
+    return (combine_indices(first(A), first(B))..., combine_axes(tail(A), tail(B))...)
+end
+
+function Broadcast.combine_axes(
+    A::Tuple{Any, Vararg{Any}},
+    B::Tuple{<:AbstractAxis, Vararg{Any}}
+   )
+    return (combine_indices(first(A), first(B))..., combine_axes(tail(A), tail(B))...)
+end
+
+function Broadcast.combine_axes(A::Tuple{}, B::Tuple{<:AbstractAxis, Vararg{Any}})
+    return (combine_indices(first(B))..., combine_axes(A, tail(B))...)
+end
+
+function Broadcast.combine_axes(A::Tuple{<:AbstractAxis, Vararg{Any}}, B::Tuple{})
+    return (combine_indices(first(A))..., combine_axes(tail(A), B)...)
+end
+

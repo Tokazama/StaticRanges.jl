@@ -59,24 +59,24 @@ function StaticArrays.similar_type(
     return SimpleAxis{eltype(vs_type),vs_type}
 end
 
-function set_first(x::SimpleAxis{V}, val::V) where {V}
+function StaticRanges.set_first(x::SimpleAxis{V}, val::V) where {V}
     return SimpleAxis(set_first(values(x), val))
 end
 
 
-function set_first!(x::SimpleAxis{V}, val::V) where {K,V}
+function StaticRanges.set_first!(x::SimpleAxis{V}, val::V) where {K,V}
     can_set_first(x) || throw(MethodError(set_first!, (x, val)))
     set_first!(values(x), val)
     return x
 end
 
-function set_last!(x::SimpleAxis{V}, val::V) where {V}
+function StaticRanges.set_last!(x::SimpleAxis{V}, val::V) where {V}
     can_set_last(x) || throw(MethodError(set_last!, (x, val)))
     set_last!(values(x), val)
     return x
 end
 
-set_last(x::SimpleAxis{K}, val::K) where {K} = SimpleAxis(set_last(values(x), val))
+StaticRanges.set_last(x::SimpleAxis{K}, val::K) where {K} = SimpleAxis(set_last(values(x), val))
 
 
 can_set_length(::Type{T}) where {T<:SimpleAxis} = can_set_length(keys_type(T))
@@ -86,7 +86,7 @@ function set_length!(a::SimpleAxis, len::Int)
     return a
 end
 
-set_length(a::SimpleAxis, len::Int) = SimpleAxis(set_length(values(a), len))
+StaticRanges.set_length(a::SimpleAxis, len::Int) = SimpleAxis(set_length(values(a), len))
 
 StaticArrays.pop(x::SimpleAxis) = SimpleAxis(pop(values(x)))
 

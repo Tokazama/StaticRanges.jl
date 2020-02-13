@@ -1,8 +1,8 @@
 using Test, StaticRanges, Dates, Documenter
 using StaticRanges: can_set_first, can_set_last, can_set_step, has_step, can_set_length,
     stephi, steplo, refhi, reflo, eqmax, eqmin, ltmax, ltmin, gtmax, gtmin, group_max,
-    group_min, min_of_group_max, max_of_group_min, ordmin, ordmax, next_type, prev_type,
-    Unordered, set_ref!, set_offset!, set_lendiv!, Size, Length, reindex
+    group_min, min_of_group_max, max_of_group_min, ordmin, ordmax,
+    Unordered, set_ref!, set_offset!, set_lendiv!, Size, Length
 
 # Uniqueness methods
 using StaticRanges: ArrayInterface.ismutable

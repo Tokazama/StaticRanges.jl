@@ -6,7 +6,6 @@
               UnitSRange(1,3),
               UnitSRange(UInt(1), UInt(3)),
               OneToSRange(3),
-              Axis(UnitSRange(1, 3), UnitSRange(1, 3)),
               OneToSRange(UInt(3))
              )
         @test Size(typeof(S)) === Size{(3,)}()

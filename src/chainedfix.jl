@@ -20,7 +20,7 @@ Synonymous with bitwise `&` operator but may be used to chain multiple `Fix1` or
 ```jldoctest
 julia> using StaticRanges
 
-julia> and(<(5), true)(1)
+julia> and(true, <(5))(1)
 true
 
 julia> and(<(5), false)(1)
@@ -45,7 +45,7 @@ Synonymous with bitwise `|` operator but may be used to chain multiple `Fix1` or
 ```jldoctest
 julia> using StaticRanges
 
-julia> or(<(5), true)(1)
+julia> or(true, <(5))(1)
 true
 
 julia> or(<(5), false)(1)

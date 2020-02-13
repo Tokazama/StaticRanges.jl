@@ -142,3 +142,7 @@ end
     end
 end
 
+@testset "size" begin
+    S = Axis(UnitSRange(1, 3), UnitSRange(1, 3))
+    @test Size(typeof(S)) === Size{(3,)}()
+end

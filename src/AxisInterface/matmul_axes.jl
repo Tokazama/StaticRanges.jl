@@ -25,6 +25,9 @@ julia> matmul_axes(axs1, axs1)
 
 julia> matmul_axes(rand(2, 4), rand(4, 2))
 (Base.OneTo(2), Base.OneTo(2))
+
+julia> matmul_axes(CartesianAxes((2,4)), CartesianAxes((4, 2))) == matmul_axes(rand(2, 4), rand(4, 2))
+true
 ```
 """
 matmul_axes(a::AbstractArray,  b::AbstractArray ) = matmul_axes(axes(a), axes(b))

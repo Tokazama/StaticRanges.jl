@@ -49,14 +49,14 @@ end
 ### last
 ###
 Base.last(a::AbstractAxis) = last(values(a))
-can_set_last(::Type{T}) where {T<:AbstractAxis} = is_dynamic(T)
-function set_last!(x::AbstractAxis{K,V}, val::V) where {K,V}
+StaticRanges.can_set_last(::Type{T}) where {T<:AbstractAxis} = is_dynamic(T)
+function StaticRanges.set_last!(x::AbstractAxis{K,V}, val::V) where {K,V}
     can_set_last(x) || throw(MethodError(set_last!, (x, val)))
     set_last!(values(x), val)
     resize_last!(keys(x), length(values(x)))
     return x
 end
-function set_last(x::AbstractAxis{K,V}, val::V) where {K,V}
+function StaticRanges.set_last(x::AbstractAxis{K,V}, val::V) where {K,V}
     vs = set_last(values(x), val)
     return similar_type(x)(resize_last(keys(x), length(vs)), vs)
 end
@@ -65,16 +65,16 @@ end
 ### length
 ###
 Base.length(a::AbstractAxis) = length(values(a))
-function can_set_length(::Type{T}) where {T<:AbstractAxis}
+function StaticRanges.can_set_length(::Type{T}) where {T<:AbstractAxis}
     return can_set_length(keys_type(T)) & can_set_length(values_type(T))
 end
-function set_length!(a::AbstractAxis, len::Int)
+function StaticRanges.set_length!(a::AbstractAxis, len::Int)
     can_set_length(a) || error("Cannot use set_length! for instances of typeof $(typeof(a)).")
     set_length!(keys(a), len)
     set_length!(values(a), len)
     return a
 end
-function set_length(a::AbstractAxis, len::Int)
+function StaticRanges.set_length(a::AbstractAxis, len::Int)
     return similar_type(a)(set_length(keys(a), len), set_length(values(a), len))
 end
 
@@ -148,7 +148,7 @@ Base.sum(x::AbstractAxis) = sum(values(x))
 ###
 Base.pairs(a::AbstractAxis) = Base.Iterators.Pairs(a, keys(a))
 
-check_iterate(r::AbstractAxis, i) = check_iterate(values(r), last(i))
+StaticRanges.check_iterate(r::AbstractAxis, i) = check_iterate(values(r), last(i))
 
 Base.collect(a::AbstractAxis) = collect(values(a))
 

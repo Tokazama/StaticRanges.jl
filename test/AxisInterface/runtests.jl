@@ -41,3 +41,20 @@ include("reduce.jl")
 include("promotions.jl")
 include("axisindices_tests.jl")
 
+@testset "next_type" begin
+    @test next_type("a") == "b"
+    @test next_type(:a) == :b
+    @test next_type('a') == 'b'
+    @test next_type(1) == 2
+    @test next_type(1.0) == nextfloat(1.0)
+    @test next_type("") == ""
+end
+
+@testset "prev_type" begin
+    @test prev_type("b") == "a"
+    @test prev_type(:b) == :a
+    @test prev_type('b') == 'a'
+    @test prev_type(1) == 0
+    @test prev_type(nextfloat(1.0)) == prevfloat(nextfloat(1.0))
+    @test prev_type("") == ""
+end
