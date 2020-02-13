@@ -27,7 +27,7 @@ julia> a[2:3]
 Axis(2:3 => 2:3)
 ```
 
-But now we can also use functions to index by the the keys of an `AbstractAxis`.
+But now we can also use functions to index by the keys of an `AbstractAxis`.
 ```jldoctest
 julia> using StaticRanges
 
@@ -102,13 +102,6 @@ StaticRanges.and
 StaticRanges.or
 ```
 
-
-## Reindexing
-
-```@docs
-StaticRanges.reindex
-StaticRanges.unsafe_reindex
-```
 ## Types
 
 ```@docs
@@ -119,11 +112,20 @@ StaticRanges.CartesianAxes
 StaticRanges.LinearAxes
 ```
 
-## Interface
+## AbstractAxis Interface
+
+The majority of the `AbstractAxis` interface is already present in Julia, but we provide several methods to gather type information.
 
 ```@docs
 StaticRanges.values_type
 StaticRanges.keys_type
+```
+
+## Reindexing
+
+```@docs
+StaticRanges.reindex
+StaticRanges.unsafe_reindex
 ```
 
 ## Swapping Axes
@@ -166,6 +168,8 @@ StaticRanges.cat_keys
 
 ## Resizing Axes
 
+These methods help with operations that need to resize axes, either dynamically or by creating a new instance of an axis. In addition to helping with operations related to array resizing, these may be useful for managing the axis of a vector throughout a `push!`, `pushfirst!`, `pop`, and `popfirst!` operation.
+
 ```@docs
 StaticRanges.resize_first
 StaticRanges.resize_first!
@@ -186,11 +190,12 @@ StaticRanges.next_type
 StaticRanges.prev_type
 ```
 
-## Combine Indices
+## Combine Axes
+
+These methods are responsible for assisting in broadcasting operations.
 
 ```@docs
-StaticRanges.combine_indices
-StaticRanges.combine_index
+StaticRanges.combine_axis
 StaticRanges.combine_values
 StaticRanges.combine_keys
 ```

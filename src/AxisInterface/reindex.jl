@@ -2,9 +2,9 @@
 """
     reindex(a::AbstractAxis, inds::AbstractVector{Integer}) -> AbstractAxis
 
-Returns and index of the same type as `a` where the keys the new keys are
-constructed by indexing into the keys of `a` with `inds` and the values have the
-same starting value but a length matching `inds`.
+Returns an `AbstractAxis` of the same type as `a` where the keys of the axis are
+constructed by indexing into the keys of `a` with `inds` (`keys(a)[inds]`) and the
+values have the same first element as `first(values(a))` but a length matching `inds`.
 
 ## Examples
 ```jldoctest

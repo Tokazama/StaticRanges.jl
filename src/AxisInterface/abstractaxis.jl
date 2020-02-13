@@ -10,6 +10,7 @@ Base.valtype(::Type{<:AbstractAxis{K,V,Ks,Vs}}) where {K,V,Ks,Vs} = V
 
 const AbstractAxisBaseOne{K,V,Ks} = AbstractAxis{K,V,Ks,OneTo{V}}
 
+# TODO values_type documentation
 """
     values_type(::AbstractAxis)
 """
@@ -20,6 +21,7 @@ values_type(::Type{<:AbstractAxis{K,V,Ks,Vs}}) where {K,V,Ks,Vs} = Vs
 
 Base.keytype(::Type{<:AbstractAxis{K}}) where {K} = K
 
+# TODO keys_type documentation
 """
     keys_type(::AbstractAxis)
 """
