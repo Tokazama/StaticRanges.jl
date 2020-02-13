@@ -40,6 +40,7 @@ include("range_tests.jl")
 include("reduce.jl")
 include("promotions.jl")
 include("axisindices_tests.jl")
+include("indexing.jl")
 
 @testset "next_type" begin
     @test next_type("a") == "b"

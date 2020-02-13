@@ -25,7 +25,7 @@ end
         if checkindexlo(lr, maximum(v))
             return unsafe_spanning_getindex(gr, v)
         else
-            # smallest value of `v` is not found in last segment so only index first segment
+            # largest value of `v` is not found in last segment so only index first segment
             return unsafe_index_first(gr, v)
         end
     else

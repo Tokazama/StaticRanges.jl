@@ -20,8 +20,6 @@ end
 promote_axis_rule(::X, ::Y) where {X,Y} = promote_axis_rule(X, Y)
 promote_axis_rule(::Type{<:Axis}) = Axis
 promote_axis_rule(::Type{<:SimpleAxis}) = SimpleAxis
-promote_axis_rule(::Type{X}, ::Type{Y}) where {X,Y<:AbstractAxis} = promote_axis_rule(Y)
-promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y} = promote_axis_rule(Y, X)
 promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:Axis,Y<:AbstractAxis} = Axis
 promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:Axis} = Axis
 promote_axis_rule(::Type{X}, ::Type{Y}) where {X<:Axis,Y<:Axis} = Axis

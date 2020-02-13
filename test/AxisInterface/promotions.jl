@@ -15,11 +15,17 @@
     @test Base.promote_rule(typeof(sa1), typeof(sa2)) <: SimpleAxis{UInt,UnitRange{UInt}}
     @test Base.promote_rule(typeof(sa2), typeof(sa1)) <: SimpleAxis{UInt,UnitRange{UInt}}
 
+    @test Base.promote_rule(Vector{Int}, typeof(sa1)) <: SimpleAxis{UInt,UnitRange{UInt}}
+    @test Base.promote_rule(typeof(sa1), Vector{Int}) <: SimpleAxis{UInt,UnitRange{UInt}}
+
+    @test Base.promote_rule(typeof(sa2), OneTo{Int}) <: UnitRange{UInt}
+    @test Base.promote_rule(OneTo{Int}, typeof(sa2)) <: UnitRange{UInt}
 
     @test Base.promote_rule(typeof(sa2), typeof(1:10)) <: UnitRange{UInt}
     @test Base.promote_rule(typeof(1:10), typeof(sa2)) <: UnitRange{UInt}
 
     for (x,y,T) in ((Axis(1:2), Axis(1:2), Axis),
+#                    (Axis2(1:2, 1:2), 
                     (SimpleAxis(1:2), Axis(1:2), Axis),
                     (SimpleAxis(1:2), SimpleAxis(1:2), SimpleAxis),
                     (Axis(1:2), Axis2(1:2,1:2), Axis),

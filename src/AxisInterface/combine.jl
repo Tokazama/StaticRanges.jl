@@ -1,18 +1,3 @@
-# TODO combine_axes_shortest like https://github.com/invenia/NamedDims.jl/blob/master/src/name_core.jl#L243
-#=
-"""
-    combine_indices(x, y)
-
-Returns the combined axes of `x` and `y` for broadcasting operations.
-"""
-combine_indices(x::AbstractArray, y::AbstractArray) = combine_indices(axes(x), axes(y))
-function combine_indices(x::Tuple, y::Tuple)
-    return (combine_axis(first(x), first(y)), combine_indices(tail(x), tail(y))...)
-end
-combine_indices(x::Tuple{Any}, y::Tuple{}) = (first(x),)
-combine_indices(x::Tuple{}, y::Tuple{Any}) = (first(y),)
-combine_indices(x::Tuple{}, y::Tuple{}) = ()
-=#
 
 """
     combine_axis(x, y)

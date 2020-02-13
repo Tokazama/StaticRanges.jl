@@ -42,6 +42,7 @@ end
 
 const SubGapRange{T} = Union{<:AbstractRange{T},<:GapRange{T}}
 
+GapRange(f::T, l::T) where {T} = GapRange{T,T,T}(f, l)
 function GapRange(f::T, l::SubGapRange{T}) where {T}
     if is_forward(l)
         if is_before(f, l)
@@ -84,7 +85,7 @@ end
 
 function GapRange(f::SubGapRange{T}, l::SubGapRange{T}) where {T}
     if is_forward(f)
-        if is_forward(f)
+        if is_forward(l)
             if is_before(f, l)
                 return GapRange{T,typeof(f),typeof(l)}(f, l)
             elseif is_before(l, f)
@@ -96,7 +97,7 @@ function GapRange(f::SubGapRange{T}, l::SubGapRange{T}) where {T}
             error("Both arguments to GapRange must have the same sorting, got forward and reverse ordered ranges.")
         end
     else  # is_reverse(f)
-        if is_forward(f)
+        if is_forward(l)
             error("Both arguments to GapRange must have the same sorting, got reverse and forward ordered ranges.")
         else
             if is_after(f, l)
@@ -111,7 +112,6 @@ function GapRange(f::SubGapRange{T}, l::SubGapRange{T}) where {T}
 end
 
 first_range(gr::GapRange) = getfield(gr, :first_range)
-
 last_range(gr::GapRange) = getfield(gr, :last_range)
 
 first_length(gr::GapRange) = length(first_range(gr))
@@ -121,12 +121,22 @@ last_length(gr::GapRange) = length(last_range(gr))
 last_length(gr::GapRange{T,F,T}) where {T,F} = 1
 
 Base.length(gr::GapRange) = length(first_range(gr)) + length(last_range(gr))
-Base.length(gr::GapRange{T,T,T}) where {T} = 2
 
 Base.first(gr::GapRange) = first(first_range(gr))
 
 Base.last(gr::GapRange) = last(last_range(gr))
+Base.length(gr::GapRange{T,T,T}) where {T} = 2
 
 # bypasses order checking
 _unsafe_gaprange(f, l) = GapRange{eltype(f),typeof(f),typeof(l)}(f, l)
 
+is_reverse(x::GapRange) = is_reverse(first_range(x))
+is_forward(x::GapRange) = is_forward(first_range(x))
+
+is_forward(x::GapRange{T,T,L}) where {T,L} = is_forward(last_range(x))
+is_forward(x::GapRange{T,F,T}) where {T,F} = is_forward(first_range(x))
+is_forward(x::GapRange{T,T,T}) where {T} = first_range(x) < last_range(x)
+
+is_reverse(x::GapRange{T,T,L}) where {T,L} = is_reverse(last_range(x))
+is_reverse(x::GapRange{T,F,T}) where {T,F} = is_reverse(first_range(x))
+is_reverse(x::GapRange{T,T,T}) where {T} = first_range(x) > last_range(x)

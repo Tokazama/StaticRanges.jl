@@ -21,7 +21,7 @@ _getindex(a::SimpleAxis, inds) = SimpleAxis(@inbounds(values(a)[inds]))
 _getindex(a::SimpleAxis, i::Integer) = @inbounds(values(a)[i])
 
 @propagate_inbounds Base.to_index(x::AbstractAxis, f::F2Eq) = _maybe_throw_boundserror(x, find_first(f, keys(x)))
-@propagate_inbounds Base.to_index(x::AbstractAxis, f::Function) = _maybe_throw_boundserror(x, find_all(f, keys(x)))
+@propagate_inbounds Base.to_index(x::AbstractAxis, f::Function) = find_all(f, keys(x))
 @propagate_inbounds Base.to_index(x::AbstractAxis, f::CartesianIndex{1}) = first(f.I)
 
 
@@ -32,12 +32,14 @@ _getindex(a::SimpleAxis, i::Integer) = @inbounds(values(a)[i])
     return i
 end
 
+#=
 @propagate_inbounds function _maybe_throw_boundserror(x, inds::AbstractVector)::AbstractVector{<:Integer}
     @boundscheck if !(eltype(inds) <: Integer)
-        throw(BoundsError(x, i))
+        throw("Attempted to index with function that does not")
     end
     return inds
 end
+=#
 
 function Base.to_indices(A, inds::Tuple{<:AbstractAxis, Vararg{Any}}, I::Tuple{Any, Vararg{Any}})
     Base.@_inline_meta
@@ -90,10 +92,6 @@ end
    ) where N
     _, indstail = Base.IteratorsMD.split(inds, Val(N))
     (to_index(A, I[1]), to_indices(A, indstail, tail(I))...)
-end
-
-@inline function Base.to_indices(A, inds::Tuple{<:AbstractAxis, Vararg{Any}}, I::Tuple{CartesianIndex, Vararg{Any}})
-    return to_indices(A, inds, (I[1].I..., tail(I)...))
 end
 
 maybetail(::Tuple{}) = ()
