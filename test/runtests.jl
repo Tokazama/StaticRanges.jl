@@ -10,6 +10,13 @@ using StaticRanges: ArrayInterface.ismutable
 using Base: OneTo, step_hp
 using Base.Order
 
+@test srange(1.0, step=Float32(2.0), length=10) isa StepSRangeLen
+@test mrange(1.0, step=Float32(2.0), length=10) isa StepMRangeLen
+@test srange(1, step=Float32(2.0), length=10) isa StepSRangeLen
+@test mrange(1, step=Float32(2.0), length=10) isa StepMRangeLen
+@test srange(1.0, step=2, length=10) isa StepSRangeLen
+@test mrange(1.0, step=2, length=10) isa StepMRangeLen
+
 @testset "checkindex" begin
     r = 1:5
     all_inbounds = 1:5

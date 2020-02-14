@@ -1,7 +1,19 @@
 # Range Types
 
-## Static Ranges
+There are static and mutable versions of most ranges present in the `Base` module of Julia. The basic terminology used herein is as follows:
 
+* Static: fully parameterized through parametric typing (similar to how `Val` is used)
+* Fixed: all parameters are immutable fields of a `struct`. This is how all ranges in `Base` are composed. 
+* Dynamic: all parameters are mutable fields of a `struct`. This is how a handful of ranges in this package are composed.
+
+The vast majority of the time a fixed range is the appropriate choice.
+There are some situations (perhaps few) where alternatives may be extremely convenient.
+For example, a static range may be helpful when the exact same parameters are frequently being accessed and don't need to change (e.g., a component of a filter in a processing pipeline).
+Mutable ranges may be helpful when referring to a range that is accessed rarely but may change (e.g., descriptive parameters of a plot's axis).
+However, this package is intentionally built without many assumptions of how it should be used.
+For example, safe methods for mutating ranges without violating the same assumptions of their original construction are provided but access to their fields are not obfuscated.
+
+## Static Ranges
 ```@docs
 StaticRanges.OneToSRange
 StaticRanges.UnitSRange
@@ -34,32 +46,3 @@ StaticRanges.AbstractStepRange
 ```@docs
 StaticRanges.GapRange
 ```
-
-## Manipulating Ranges
-
-There are options for in place mutations and corresponding non mutationg operations. These allow safe mutation of ranges by avoiding states that are typically prohibited at time of construction. For example, `OneToMRange` cannot have a negative value for it's `stop` field. These methods are also called whenever `setproperty!` is used.
-
-```@docs
-StaticRanges.can_set_first
-StaticRanges.set_first!
-StaticRanges.set_first
-```
-
-```@docs
-StaticRanges.can_set_step
-StaticRanges.set_step!
-StaticRanges.set_step
-```
-
-```@docs
-StaticRanges.can_set_last
-StaticRanges.set_last!
-StaticRanges.set_last
-```
-
-```@docs
-StaticRanges.can_set_length
-StaticRanges.set_length!
-StaticRanges.set_length
-```
-

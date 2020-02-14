@@ -3,7 +3,6 @@
 ## Comparing Static, Mutable, and Immutable Types
 
 The difference between each type of range is conceptualized as "static", "fixed", or "dynamic".
-
 ```@docs
 StaticRanges.is_dynamic
 StaticRanges.is_static

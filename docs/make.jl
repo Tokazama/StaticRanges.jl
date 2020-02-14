@@ -5,12 +5,16 @@ makedocs(;
     format=Documenter.HTML(),
     pages=[
         "Introduction" => "index.md",
-        "Range Types" => "range_types.md",
+        "Manual" => [
+            "Quick Start" => "quick_start.md",
+            "Range Types" => "range_types.md",
+            "Manipulating Ranges" => "manipulating_ranges.md",
+           ]
         "AbstractAxis" => "abstractaxis.md",
-        "Order Functions" => "order_functions.md",
-        "Traits" => "traits.md",
         "Internals" => [
             "Twice Precision" => "twice_precision.md",
+            "Order Functions" => "order_functions.md",
+            "Traits" => "traits.md",
         ]
     ],
     repo="https://github.com/Tokazma/StaticRanges.jl/blob/{commit}{path}#L{line}",

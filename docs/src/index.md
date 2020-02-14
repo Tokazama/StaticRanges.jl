@@ -5,5 +5,7 @@ StaticRanges was originally a small set of functions inspired by [StaticArrays](
 It's objectives are:
 
 1. Easy/intuitive composition of mutable and static ranges.
-2. Optimized methods involving ranges: "find" methods are currently the focus and optimizations currently exist for `findall`, `findfirst`, `findlast`, `filter`, and `count` using the `<`, `<=`, `>`, `>=`, `==`, and `!=` operators.
+2. Optimized methods involving ranges:
+    - "find" methods are currently the focus and optimizations currently exist for `findall`, `findfirst`, `findlast`, `filter`, and `count` using the `<`, `<=`, `>`, `>=`, `==`, and `!=` operators.
+    - Indexing related to `AbstractAxis` related methods.
 
