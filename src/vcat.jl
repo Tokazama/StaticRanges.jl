@@ -2,7 +2,6 @@
 maybe_flip(::O, ::O, x) where {O<:Ordering} = x
 maybe_flip(::Ordering, ::Ordering, x) = reverse(x)
 
-
 function first_segment(x, xo, y, yo)
    return _first_segment(
         max_of_group_min(x, xo, y, yo),
@@ -98,6 +97,32 @@ end
     vcat_sort(x, y)
 
 Returns a sorted concatenation of `x` and `y`.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> vcat_sort(1:10)  # it's already sorted, nothing happens
+1:10
+
+julia> vcat_sort([3, 1, 2, 5])  # sort unordered collection
+4-element Array{Int64,1}:
+ 1
+ 2
+ 3
+ 5
+
+
+julia> vcat_sort([3, 4, 5], [1, 2, 5])
+6-element Array{Int64,1}:
+ 1
+ 2
+ 3
+ 4
+ 5
+ 5
+
+```
 """
 vcat_sort(x::AbstractVector) = _vcat_sort_one(order(x), x)
 _vcat_sort_one(::UnorderedOrdering, x) = sort(x)
@@ -143,15 +168,6 @@ function __vcat_sort(cmin, cmax, x, xo, y, yo)
     )
 end
 
-#=
-function _vcat_before(x, xo, y, yo)
-    if is_forward(xo)
-        return is_forward(yo) ? vcat(x, y) : vcat(x, reverse(y))
-    else
-        return is_forward(yo) ? vcat(reverse(y), x) : vcat(y, x)
-    end
-end
-=#
 function _vcat_before(x, xo, y, yo)
     if is_forward(xo)
         if is_forward(yo)
