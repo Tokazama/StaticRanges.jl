@@ -57,6 +57,7 @@
 
         @test promote_rule(unitmrange_type, stepmrange_type) <: StepMRange
         @test promote_rule(stepmrange_type, unitmrange_type) <: StepMRange
+        @test promote_rule(stepsrange_type, unitsrange_type) <: StepSRange
 
         @test promote_rule(unitmrange_type, onetomrange_type) <: UnitMRange
         @test promote_rule(onetomrange_type, unitmrange_type) <: UnitMRange
@@ -93,6 +94,11 @@
         @test promote_rule(stepsrange_type, linsrange_type) <: LinSRange
         @test promote_rule(linsrange_type, stepsrange_type) <: LinSRange
 
+        @test promote_rule(steprangelen_type, stepsrangelen_type) <: StepRangeLen
+        # TODO came across this ambiguity error but need fix still
+        #@test promote_rule(steprangelen_type, stepsrange_type) <: StepRangeLen
+        @test promote_rule(stepsrange_type, linsrange_type) <: StepSRangeLen
+        @test promote_rule(stepmrange_type, linmrange_type) <: StepSRangeLen
         @test promote_rule(stepsrange_type, stepsrangelen_type) <: StepSRangeLen
         @test promote_rule(stepsrangelen_type, stepsrange_type) <: StepMRangeLen
         @test promote_rule(stepmrangelen_type, stepmrange_type) <: StepMRangeLen

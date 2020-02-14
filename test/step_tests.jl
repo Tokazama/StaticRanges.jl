@@ -31,6 +31,8 @@
     end
 
     @test set_step(StepSRangeLen(1,1,4), 2) == StepSRangeLen(1,2,4)
+
+    @test set_step(StepSRangeLen(1,1,4), 2) == StepSRangeLen(1,2,4)
     @test set_step(StepRangeLen(1,1,4), 2) == StepRangeLen(1,2,4)
 
 

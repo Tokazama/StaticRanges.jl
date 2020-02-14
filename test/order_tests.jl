@@ -104,6 +104,9 @@
         @test @inferred(is_ordered(z)) == true
         @test @inferred(is_ordered(a)) == false
         @test @inferred(is_ordered(typeof(a))) == false
+        @test is_ordered(Forward)
+        @test is_ordered(Reverse)
+        @test !is_ordered(Unordered)
     end
 
     @testset "is_within" begin
