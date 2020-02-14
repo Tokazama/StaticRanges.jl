@@ -159,6 +159,7 @@ StaticRanges.append_axis!
 ## Concatenating Axes
 
 ```@docs
+StaticRanges.cat_axes
 StaticRanges.hcat_axes
 StaticRanges.vcat_axes
 StaticRanges.cat_axis

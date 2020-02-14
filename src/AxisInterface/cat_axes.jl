@@ -62,20 +62,6 @@ end
 function hcat_axes(x::Tuple{Any}, y::Tuple{Any})
     return (combine_axis(first(x), first(y)), SimpleAxis(OneTo(2)))
 end
-#=
-function _hcat_axes(x::Tuple, y::Tuple)
-    (front(), cat_axis(last(x), last(y)),)
-    return (combine_axis(first(x), first(y)), _hcat_axes(tail(x), tail(y))...)
-end
-_hcat_axes(x::Tuple{Any}, y::Tuple{Any}) = (cat_axis(first(x), first(y)),)
-function _hcat_axes(x::Tuple{Any}, y::Tuple{})
-    ax = first(x)
-    return (set_length(ax, length(ax) + 1),)
-end
-function _hcat_axes(x::Tuple{}, y::Tuple{Any})
-    ax = first(y)
-    return (set_length(ax, length(ax) + 1),)
-    =#
 
 """
     cat_axis(x, y)
@@ -109,8 +95,6 @@ See also: [`cat_axis`](@ref)
 cat_values(x::AbstractAxis, y) = cat_values(values(x), y)
 cat_values(x::AbstractRange, y) = set_length(x, length(x) + length(y))
 
-#=
-
 """
     cat_axes(x, y, dims) -> Tuple
 
@@ -119,26 +103,18 @@ then they should refer to the dimensions of `x`.
 
 ## Examples
 ```jldoctest
-julia> cat_axes((Axis(1:4), Axis(1:2)), (Axis(1:4), Axis(1:2)), (:a, :b))
-(Axis(1:8 => Base.OneTo(8)), Axis(1:4 => Base.OneTo(4)))
+julia> using StaticRanges
+
+julia> cat_axes(LinearAxes((2,3)), LinearAxes((2,3)), dims=(1,2))
+(SimpleAxis(Base.OneTo(4)), SimpleAxis(Base.OneTo(6)))
 ```
 """
-cat_axes(x::AbstractArray, y::AbstractArray; dims) = hcat_axes(axes(x), axes(y))
-function cat_axes(x::Tuple, y::Tuple; dims)
-    return _cat_axes(x, to_axis(x, dims), y, to_axis(y, dims))
+cat_axes(x::AbstractArray, y::AbstractArray; dims) = cat_axes(axes(x), axes(y), dims)
+function cat_axes(
+    x::Tuple{Vararg{<:Any,N}},
+    y::Tuple{Vararg{<:Any,N}},
+    dims::Tuple{Vararg{Int}}
+   ) where {N}
+    return Tuple([ifelse(in(i, dims), cat_axis(x[i], y[i]), combine_axis(x[i], y[i])) for i in 1:N])
 end
-
-(combine_axis(first(x), first(y)), vcat_axes(tail(x), tail(y))...)
-function _cat_axes(x, x_axes, y, y_axes)
-    for (x_i, y_i) in zip(x, y)
-    end
-end
-
-__cat_axis(x, x_axes, y, y_axes)
-
-cat_axes(x::NTuple{1,Any}, y::NTuple{1,Any}) = _cat_axes(combine_axis(first(x), first(y)))
-_cat_axes(x) = (x, set_length(unname(x), 2))
-
-cat_axes()
-=#
 

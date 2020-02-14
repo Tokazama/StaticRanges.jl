@@ -8,10 +8,13 @@
     @test getindex(gr, 2:8) == 2:8
     @test getindex(1:20, gr) == 1:10
 
+    @test is_forward(gr)
     @test first(gr) == 1
     @test last(gr) == 10
 
     @test GapRange(1:5, 6:10) == GapRange(6:10, 1:5)
+    @test GapRange(5:-1:1, 10:-1:6) == GapRange(10:-1:6, 5:-1:1)
+    @test is_reverse(GapRange(10:-1:6, 5:-1:1))
 
     for (isf, gr) in (
             (true, GapRange(1, 2:9)),
@@ -37,6 +40,9 @@
     @test length(GapRange(3, 1)) == 2
     @test is_reverse(GapRange(3, 1))
 
+    @test StaticRanges.first_length(GapRange(1, 3)) == 1
+    @test StaticRanges.last_length(GapRange(1, 3)) == 1
+
     @test is_reverse(GapRange(8:-1:1, 0))
     @test !is_forward(GapRange(8:-1:1, 0))
     @test is_forward(GapRange(9, 1:8))
@@ -48,7 +54,6 @@
         end
         @test isnothing(iterate(GapRange(1:5, 6:10), 11))
     end
-
 
     @test length(GapRange(1, 2:9)) == 9
     @test length(GapRange(1:8, 9)) == 9

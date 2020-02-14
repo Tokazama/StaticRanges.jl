@@ -8,11 +8,25 @@ abstract type AbstractAxis{K,V<:Integer,Ks,Vs} <: AbstractUnitRange{V} end
 
 Base.valtype(::Type{<:AbstractAxis{K,V,Ks,Vs}}) where {K,V,Ks,Vs} = V
 
-const AbstractAxisBaseOne{K,V,Ks} = AbstractAxis{K,V,Ks,OneTo{V}}
-
-# TODO values_type documentation
 """
-    values_type(::AbstractAxis)
+    values_type(x)
+
+Retrieves the type of the values of `x`. This should be functionally equivalent
+to `typeof(values(x))`.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia>  values_type(Axis(1:2))
+Base.OneTo{Int64}
+
+julia> values_type(typeof(Axis(1:2)))
+Base.OneTo{Int64}
+
+julia> values_type(typeof(1:2))
+UnitRange{Int64}
+```
 """
 values_type(::T) where {T} = values_type(T)
 # if it's not a subtype of AbstractAxis assume it is the collection of values
@@ -21,9 +35,24 @@ values_type(::Type{<:AbstractAxis{K,V,Ks,Vs}}) where {K,V,Ks,Vs} = Vs
 
 Base.keytype(::Type{<:AbstractAxis{K}}) where {K} = K
 
-# TODO keys_type documentation
 """
-    keys_type(::AbstractAxis)
+    keys_type(x)
+
+Retrieves the type of the keys of `x`.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia>  keys_type(Axis(1:2))
+UnitRange{Int64}
+
+julia> keys_type(typeof(Axis(1:2)))
+UnitRange{Int64}
+
+julia> keys_type(UnitRange{Int})
+Base.OneTo{Int64}
+```
 """
 keys_type(::T) where {T} = keys_type(T)
 keys_type(::Type{T}) where {T} = OneTo{Int}  # default for things is usually LinearIndices{1}

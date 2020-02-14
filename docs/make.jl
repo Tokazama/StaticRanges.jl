@@ -9,7 +9,7 @@ makedocs(;
             "Quick Start" => "quick_start.md",
             "Range Types" => "range_types.md",
             "Manipulating Ranges" => "manipulating_ranges.md",
-           ]
+        ],
         "AbstractAxis" => "abstractaxis.md",
         "Internals" => [
             "Twice Precision" => "twice_precision.md",

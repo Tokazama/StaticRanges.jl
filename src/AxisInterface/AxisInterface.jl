@@ -32,6 +32,7 @@ export
     append_axis,
     append_axis!,
     # Concatenating Axes
+    cat_axes,
     hcat_axes,
     vcat_axes,
     cat_axis,
