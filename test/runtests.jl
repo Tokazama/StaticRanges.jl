@@ -17,6 +17,20 @@ using Base.Order
 @test srange(1.0, step=2, length=10) isa StepSRangeLen
 @test mrange(1.0, step=2, length=10) isa StepMRangeLen
 
+@test srange(Complex(1,1), length=10) isa StepSRangeLen
+@test mrange(Complex(1,1), length=10) isa StepMRangeLen
+
+@test srange(Complex(1,1), stop=8, length=10) isa LinSRange
+@test mrange(Complex(1,1), stop=8, length=10) isa LinMRange
+
+@test srange(Rational(1,1), stop=8, length=10) isa LinSRange
+@test mrange(Rational(1,1), stop=8, length=10) isa LinMRange
+
+# NOTE: can't use BigInt with srange
+@test mrange(BigInt(1), stop=8, length=10) isa LinMRange
+
+@test StaticRanges.ArrayInterface.ismutable(OneToMRange(10))
+
 @testset "checkindex" begin
     r = 1:5
     all_inbounds = 1:5

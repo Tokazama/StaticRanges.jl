@@ -30,6 +30,8 @@ Base.values(a::Axis2) = getfield(a, :values)
     @test UnitRange(a1) == 1:2
 
     @test Axis(a1) isa typeof(a1)
+    @test SimpleAxis(Axis(1:2)) isa SimpleAxis
+
 end
 
 @testset "resize tests" begin

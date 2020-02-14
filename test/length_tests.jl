@@ -134,4 +134,8 @@
         @test length(OneToMRange{Int16}(10)) == 10
 
     end
+
+    @test length(StepSRange(UInt8(1), UInt8(2), UInt8(10))) == 5
+    @test length(StepSRange(UInt8(1), UInt8(1), UInt8(0))) == 0
+    @test length(OneToMRange(UInt8(10))) == 10
 end

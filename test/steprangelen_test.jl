@@ -30,5 +30,18 @@
         end
     end
     @test +(StepMRangeLen(1, 2, 10, 1), StepMRangeLen(1, 2, 10, 2)) == +(StepRangeLen(1, 2, 10, 1), StepRangeLen(1, 2, 10, 2))
+
+    @test_throws ErrorException getproperty(srange(1.0, step=1.0, length=10), :foo)
+    # constructors
+    @test StepSRangeLen{Float64}(1:2) isa StepSRangeLen
+    @test StepMRangeLen{Float64}(1:2) isa StepMRangeLen
+    @test StepSRangeLen{Int,Int,Int}(StepSRangeLen(1, 2, 3)) isa StepSRangeLen
+    @test StepMRangeLen{Int,Int,Int}(StepMRangeLen(1, 2, 3)) isa StepMRangeLen
+
+    # TODO this raises ambiguity errors
+    #@test StepMRangeLen{Float64}(1.0:2:10) isa StepMRangeLen
+
+
+
 end
 
