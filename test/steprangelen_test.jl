@@ -41,12 +41,22 @@
     # TODO this raises ambiguity errors
     #@test StepMRangeLen{Float64}(1.0:2:10) isa StepMRangeLen
 
+    +(StepRangeLen(0, 1, 2) + StepRangeLen(0, 1, 2))
     @test first(srange(1.0, step=2, length=11) / 2) ==
           first(range(1.0, step=2, length=11) / 2) ==
           first(mrange(1.0, step=2, length=11) / 2)
-     @test srange(1.0, step=2, length=10) * 2 ==
-           mrange(1.0, step=2, length=10) * 2 ==
-           range(1.0, step=2, length=10) * 2
 
+    @test srange(1.0, step=2, length=10) * 2 ==
+          mrange(1.0, step=2, length=10) * 2 ==
+          range(1.0, step=2, length=10) * 2
+
+    @test +(range(0.0, step=0.5, length=10), range(1.0, step=0.5, length=10)) ==
+          +(mrange(0.0, step=0.5, length=10), mrange(1.0, step=0.5, length=10)) ==
+          +(srange(0.0, step=0.5, length=10), srange(1.0, step=0.5, length=10))
+
+    x = StepRangeLen(0, 2, 3)
+    @test +(x, x) ==
+          +(as_dynamic(x), as_dynamic(x)) ==
+          +(as_static(x), as_static(x))
 end
 

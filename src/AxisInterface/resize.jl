@@ -205,7 +205,7 @@ function resize_last(x, n::Integer)
     elseif d < 0
         return shrink_last(x, abs(d))
     else  # d == 0
-        return copy(x)
+        return x
     end
 end
 

@@ -17,6 +17,12 @@
         @test combine_axis(1:2, 1:2)             isa UnitRange{Int}
         @test combine_axis(1:2, Axis(1:2))       isa Axis{Int64,Int64,UnitRange{Int64},UnitRange{Int64}}
 
+        @test combine_keys(1:2, Symbol.(1:2)) isa Vector{Symbol}
+        @test combine_keys(Symbol.(1:2), 1:2) isa Vector{Symbol}
+
+        @test combine_keys(1:2, string.(1:2)) isa Vector{String}
+        @test combine_keys(string.(1:2), 1:2) isa Vector{String}
+
         @test_throws ErrorException("No method available for combining keys of type Int64 and String.") combine_keys(12, "x")
 
         @test combine_axis(1:2, SimpleAxis(1:2)) isa SimpleAxis{Int,UnitRange{Int}}

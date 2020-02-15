@@ -64,6 +64,12 @@ function Base.:(+)(r1::StepMRangeLen{T,S}, r2::StepMRangeLen{T,S}) where {T,S}
         throw(DimensionMismatch("argument dimensions must match")))
     return StepMRangeLen(first(r1)+first(r2), step(r1)+step(r2), len)
 end
+function Base.:(+)(r1::StepSRangeLen{T,S}, r2::StepSRangeLen{T,S}) where {T,S}
+    len = length(r1)
+    (len == length(r2) ||
+        throw(DimensionMismatch("argument dimensions must match")))
+    return StepSRangeLen(first(r1)+first(r2), step(r1)+step(r2), len)
+end
 function Base.:(+)(r1::StepMRangeLen{T,TwicePrecision{T}}, r2::StepMRangeLen{T,TwicePrecision{T}}) where {T}
     len = length(r1)
     (len == length(r2) || throw(DimensionMismatch("argument dimensions must match")))
@@ -80,7 +86,8 @@ function Base.:(+)(r1::StepMRangeLen{T,TwicePrecision{T}}, r2::StepMRangeLen{T,T
     return StepMRangeLen{T,typeof(ref),typeof(step)}(ref, step, len, imid)
 end
 
-function Base.:(+)(r1::StepSRangeLen{T,TwicePrecision{T}}, r2::StepSRangeLen{T,TwicePrecision{T}}) where {T}
+function Base.:(+)(r1::StepSRangeLen{T,TwicePrecision{T},<:Any,<:Any,<:Any,<:Any,<:Any},
+                   r2::StepSRangeLen{T,TwicePrecision{T},<:Any,<:Any,<:Any,<:Any,<:Any}) where {T}
     len = length(r1)
     (len == length(r2) ||
         throw(DimensionMismatch("argument dimensions must match")))
