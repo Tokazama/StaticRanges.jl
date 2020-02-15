@@ -7,6 +7,13 @@ end
 Axis2(ks, vs) = Axis2{eltype(ks),eltype(vs),typeof(ks),typeof(vs)}(ks, vs)
 Base.keys(a::Axis2) = getfield(a, :keys)
 Base.values(a::Axis2) = getfield(a, :values)
+function StaticRanges.StaticArrays.similar_type(
+    ::Type{A},
+    ks_type::Type=keys_type(A),
+    vs_type::Type=values_type(A)
+   ) where {A<:Axis2}
+    return Axis2{eltype(ks_type),eltype(vs_type),ks_type,vs_type}
+end
 
 @test_throws ErrorException StaticRanges.unsafe_reindex(Axis2(1:2, 1:2), 1:2)
 

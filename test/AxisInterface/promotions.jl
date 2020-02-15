@@ -3,6 +3,7 @@
     a2 = Axis(1.0:10.0)
     sa1 = SimpleAxis(1:10)
     sa2 = SimpleAxis(UnitRange(UInt(1), UInt(10)))
+    sa2 = 
     @test Base.promote_rule(typeof(a1), typeof(a2)) <: Axis{Float64,Int64,StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}},Base.OneTo{Int64}}
     @test Base.promote_rule(typeof(a2), typeof(a1)) <: Axis{Float64,Int64,StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}},Base.OneTo{Int64}}
 
@@ -18,12 +19,13 @@
     @test Base.promote_rule(Vector{Int}, typeof(sa1)) <: SimpleAxis{UInt,UnitRange{UInt}}
     @test Base.promote_rule(typeof(sa1), Vector{Int}) <: SimpleAxis{UInt,UnitRange{UInt}}
 
-    @test Base.promote_rule(typeof(sa2), OneTo{Int}) <: UnitRange{UInt}
-    @test Base.promote_rule(OneTo{Int}, typeof(sa2)) <: UnitRange{UInt}
+    @test Base.promote_rule(typeof(sa2), Base.OneTo{Int}) <: SimpleAxis{UInt,UnitRange{UInt}}
+    @test Base.promote_rule(Base.OneTo{Int}, typeof(sa2)) <: SimpleAxis{UInt,UnitRange{UInt}}
 
-    @test Base.promote_rule(typeof(sa2), typeof(1:10)) <: UnitRange{UInt}
-    @test Base.promote_rule(typeof(1:10), typeof(sa2)) <: UnitRange{UInt}
+    @test Base.promote_rule(typeof(sa2), typeof(1:10)) <: SimpleAxis{UInt64,UnitRange{UInt64}}
+    @test Base.promote_rule(typeof(1:10), typeof(sa2)) <: SimpleAxis{UInt64,UnitRange{UInt64}}
 
+    #=
     for (x,y,T) in ((Axis(1:2), Axis(1:2), Axis),
 #                    (Axis2(1:2, 1:2), 
                     (SimpleAxis(1:2), Axis(1:2), Axis),
@@ -34,5 +36,5 @@
         @test StaticRanges.promote_axis_rule(x, y) == T
         @test StaticRanges.promote_axis_rule(y, x) == T
     end
-    
+    =#
 end
