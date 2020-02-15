@@ -80,16 +80,6 @@ function _promote_rule(::Type{X}, ::Type{Y}) where {X,Y}
     return out <: Union{} ? promote_rule(Y, X) : out
 end
 
-
-Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractUnitRange,Y<:AbstractAxis} = promote_rule(Y, X)
-
-function Base.promote_rule(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractUnitRange}
-    return promote_axis_rule(X){keytype(X),
-                                promote_type(valtype(X),valtype(Y)),
-                                keys_type(X),
-                                _promote_rule(values_type(X),values_type(Y))}
-end
-
 function same_type(::Type{X}, ::Type{Y}) where {X<:AbstractAxis,Y<:AbstractAxis}
     return (X.name === Y.name)  & # TODO there should be a better way of doing this
        same_type(keys_type(X), keys_type(Y)) &
