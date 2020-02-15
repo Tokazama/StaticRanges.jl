@@ -1,0 +1,100 @@
+# Introduction
+
+The standard syntax for indexing doesn't change at all.
+```jldoctest
+julia> using StaticRanges
+
+julia> sa = SimpleAxis(1:10)
+SimpleAxis(1:10)
+
+julia> sa[2]
+2
+
+julia> sa[>(2)]
+SimpleAxis(3:10)
+
+julia> a = Axis(1:10)
+Axis(1:10 => Base.OneTo(10))
+
+julia> a[2]
+2
+
+julia> a[2:3]
+Axis(2:3 => 2:3)
+```
+
+But now we can also use functions to index by the keys of an `AbstractAxis`.
+```jldoctest
+julia> using StaticRanges
+
+julia> a = Axis(2.0:11.0, 1:10)
+Axis(2.0:1.0:11.0 => 1:10)
+
+julia> a[1]
+1
+
+julia> a[isequal(2.0)]
+1
+
+julia> a[>(2)]
+Axis(3.0:1.0:11.0 => 2:10)
+
+julia> a[>(2.0)]
+Axis(3.0:1.0:11.0 => 2:10)
+
+julia> a[and(>(2.0), <(8.0))]
+Axis(3.0:1.0:7.0 => 2:6)
+```
+
+## Performance
+
+Indexing `CartesianAxes` is comparable to that of `CartesianIndices`.
+```julia
+julia> using StaticRanges, BenchmarkTools
+
+julia> cartaxes = CartesianAxes((Axis(2.0:5.0), Axis(1:4)));
+
+julia> cartinds = CartesianIndices((1:4, 1:4));
+
+julia> @btime getindex(cartaxes, 2, 2)
+  20.848 ns (1 allocation: 32 bytes)
+CartesianIndex(2, 2)
+
+julia> @btime getindex(cartinds, 2, 2)
+  22.317 ns (1 allocation: 32 bytes)
+CartesianIndex(2, 2)
+
+julia> @btime getindex(cartaxes, ==(3.0), 2)
+  444.374 ns (7 allocations: 416 bytes)
+CartesianIndex(2, 2)
+```
+
+Indexing `LinearAxes` is comparable to that of `LinearIndices`
+```julia
+julia> using StaticRanges, BenchmarkTools
+
+julia> linaxes = LinearAxes((Axis(1.0:4.0), Axis(1:4)));
+
+julia> lininds = LinearIndices((1:4, 1:4));
+
+julia> @btime getindex(linaxes, 2, 2)
+  18.275 ns (0 allocations: 0 bytes)
+6
+
+julia> @btime getindex(lininds, 2, 2)
+  18.849 ns (0 allocations: 0 bytes)
+6
+
+julia> @btime getindex(linaxes, ==(3.0), 2)
+  381.098 ns (6 allocations: 384 bytes)
+7
+```
+
+Currently indexing with filtering syntax has an overhead cost.
+
+## Chaining filters
+
+```@docs
+StaticRanges.and
+StaticRanges.or
+```
