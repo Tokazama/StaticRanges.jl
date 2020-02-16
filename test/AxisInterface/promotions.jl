@@ -37,4 +37,6 @@
 
     @test StaticRanges.promote_values_rule(typeof(a1), typeof(a2)) <: Base.OneTo{Int64}
     @test StaticRanges.promote_keys_rule(typeof(a1), typeof(a2)) <: StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}
+    @test StaticRanges.promote_keys_rule(a1, a2) <: StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}
+
 end

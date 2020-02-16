@@ -114,6 +114,9 @@ function Base.checkindex(::Type{Bool}, a::AbstractAxis, i::AbstractUnitRange)
     return checkindexlo(a, i) & checkindexhi(a, i)
 end
 
+@inline function Base.checkindex(::Type{Bool}, indx::AbstractAxis, I::AbstractVector{Bool})
+    return length(indx) == length(I)
+end
 @inline function Base.checkindex(::Type{Bool}, indx::AbstractAxis, I::Base.LogicalIndex)
     return length(indx) == length(axes(I.mask, 1))
 end

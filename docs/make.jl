@@ -15,6 +15,7 @@ makedocs(;
             "Types" => "axis_types.md",
             "Combining Axes" => "combine_axes.md",
             "Concatenating Axes" => "concat_axes.md",
+            "Appending Axes" => "append_axes.md",
             "Reindexing Axes" => "reindex_axes.md",
             "Resizing Axes" => "resize_axes.md",
             "Axes to Arrays" => "axes_to_arrays.md",
