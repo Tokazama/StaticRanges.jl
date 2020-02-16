@@ -67,7 +67,15 @@ for (frange, oneto) in ((mrange, OneToMRange),(srange ,OneToSRange))
         @test_throws InexactError(:Int16, Int16, 3.2) oneto{Int16}(3.2)
     end
 
+    @test mod(22, OneToMRange(10)) == mod(22, Base.OneTo(10))
+
+
     r = OneToMRange(10)
     r.stop = -3
     @test last(r) == 0
+
+    @test AbstractUnitRange{Int}(OneToMRange(10)) isa OneToMRange
+    @test AbstractUnitRange{Int}(OneToSRange(10)) isa OneToSRange
+
+    @test_throws ErrorException r.throw_error_please
 end

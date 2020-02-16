@@ -58,5 +58,16 @@
     @test +(x, x) ==
           +(as_dynamic(x), as_dynamic(x)) ==
           +(as_static(x), as_static(x))
+
+    sr = srange(1, step=1.0, length=10)
+
+    @test StepSRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}(sr) isa StepSRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}
+    # TODO StepSRange{Float64}(sr)
+
+    @test StepSRangeLen(1:10) isa StepSRangeLen{Int64,Int64,Int64,1,1,10,1}
+
+    @test StepMRangeLen{Float32}(1:10) isa StepMRangeLen{Float32,Float64,Float64}
+    @test StepSRangeLen{Float32}(sr) isa StepSRangeLen{Float32,Float64,Float64,1.0,1.0,10,1}
+
 end
 

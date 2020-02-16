@@ -11,6 +11,7 @@ export
     combine_values,
     combine_keys,
     AbstractAxis,
+    AbstractSimpleAxis,
     Axis,
     CartesianAxes,
     LinearAxes,

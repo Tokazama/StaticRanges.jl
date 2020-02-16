@@ -37,10 +37,6 @@ function Base.getproperty(r::StepSRange, s::Symbol)
     end
 end
 
-function (::Type{<:StepSRange{T1,T2} where T1})(r::AbstractRange) where {T2}
-    return StepSRange{eltype(r),T2}(r)
-end
-
 """
     StepMRange
 
@@ -57,10 +53,6 @@ mutable struct StepMRange{T,S} <: AbstractStepRange{T,S}
     function StepMRange{T,S}(start::T, step::S, stop::T) where {T,S}
         return new(start, step, Base.steprange_last(start,step,stop))
     end
-end
-
-function (::Type{StepMRange{T1,T2} where T1})(r::AbstractRange) where {T2}
-    return StepMRange{eltype(r),T2}(r)
 end
 
 function Base.setproperty!(r::StepMRange, s::Symbol, val)
@@ -99,8 +91,6 @@ for (F,f) in ((:M,:m), (:S,:s))
                )
         end
 
-        function Base.:(-)(r::$(SR))
-            return $(frange)(-first(r), step=-step(r), length=length(r))
-        end
+        Base.:(-)(r::$(SR)) = $(frange)(-first(r), step=-step(r), length=length(r))
     end
 end

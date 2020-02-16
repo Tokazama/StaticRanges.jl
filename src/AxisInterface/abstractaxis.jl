@@ -6,6 +6,8 @@ An `AbstractVector` subtype optimized for indexing.
 """
 abstract type AbstractAxis{K,V<:Integer,Ks,Vs} <: AbstractUnitRange{V} end
 
+const AbstractSimpleAxis{V,Vs} = AbstractAxis{V,V,Vs,Vs}
+
 Base.valtype(::Type{<:AbstractAxis{K,V,Ks,Vs}}) where {K,V,Ks,Vs} = V
 
 """

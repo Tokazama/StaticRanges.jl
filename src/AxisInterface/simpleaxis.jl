@@ -30,8 +30,8 @@ julia> x[>(2)]
 SimpleAxis(3:10)
 ```
 """
-struct SimpleAxis{V,Vs<:AbstractUnitRange{V}} <: AbstractAxis{V,V,Vs,Vs}
-    _kv::Vs
+struct SimpleAxis{V,Vs<:AbstractUnitRange{V}} <: AbstractSimpleAxis{V,Vs}
+    values::Vs
 
     function SimpleAxis{V,Vs}(vs::Vs, check_unique::Bool=true) where {V,Vs}
         if check_unique
@@ -42,8 +42,8 @@ struct SimpleAxis{V,Vs<:AbstractUnitRange{V}} <: AbstractAxis{V,V,Vs,Vs}
     end
 end
 
-Base.values(si::SimpleAxis) = getfield(si, :_kv)
-Base.keys(si::SimpleAxis) = getfield(si, :_kv)
+Base.values(si::SimpleAxis) = getfield(si, :values)
+Base.keys(si::SimpleAxis) = getfield(si, :values)
 
 SimpleAxis(vs, check_unique::Bool=true) = SimpleAxis{eltype(vs),typeof(vs)}(vs, check_unique)
 

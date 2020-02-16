@@ -28,5 +28,6 @@
             end
         end
     end
+    @test -(StepSRange(1, 1, 1)) == StepSRange(-1, -1, -1)
 end
 
