@@ -74,21 +74,6 @@ __append_keys!(::ContinuousTrait, x, y) = set_length!(x, length(x) + length(y))
 __append_keys!(::DiscreteTrait, x, y) = make_unique!(x, keys(y))
 
 """
-    append_axes(x, y)
-
-Returns the axes for `append(x, y)`.
-
-```jldoctest
-julia> using StaticRanges
-
-julia> append_axes(1:10, 1:10)
-(Base.OneTo(20),)
-
-```
-"""
-append_axes(x::AbstractVector, y::AbstractVector) = (append_axis(axes(x, 1), axes(y, 1)),)
-
-"""
     append_values(x, y)
 
 Returns the appropriate values of and index within the operation `append_axis(x, y)`
@@ -96,11 +81,4 @@ Returns the appropriate values of and index within the operation `append_axis(x,
 See also: [`append_axis`](@ref)
 """
 append_values(x, y) = cat_values(x, y)
-
-"""
-    append_axes!(x, y)
-
-Returns the axes for `append!(x, y)`.
-"""
-append_axes!(x::AbstractVector, y::AbstractVector) = (append_axis!(axes(x, 1), axes(y, 1)),)
 
