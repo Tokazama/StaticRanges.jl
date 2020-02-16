@@ -90,7 +90,29 @@ julia> @btime getindex(linaxes, ==(3.0), 2)
 7
 ```
 
-Currently indexing with filtering syntax has an overhead cost.
+You may notice there's significant overhead for using the filtering syntax.
+However, the filteirng syntax takes advantage of a special type in base, `Fix2`.
+This means that we can take advantage of filtering methods that have been optimized for specific types of keys. 
+Here we do the same thing as above but we create a function that knows it's going to perform filtering.
+
+```julia
+julia> getindex_filter(a, i1, i2) = a[==(i1), ==(i2)]
+getindex_filter (generic function with 1 method)
+
+julia> @btime getindex_filter(linaxes, 3.0, 2)
+  57.216 ns (0 allocations: 0 bytes)
+7
+
+julia> linaxes2 = LinearAxes((Axis(Base.OneTo(4)), Axis(Base.OneTo(4))));
+
+julia> @btime getindex_filter(linaxes2, 3, 2)
+  22.070 ns (0 allocations: 0 bytes)
+7
+```
+Indexing `linaxes` is much faster now that the it can be optimized inside of a function call.
+However, it's still a little over twice as slow as normal indexing.
+That's largely because of the cost of searching `1.0:4.0` (which is a `StepRangeLen` type in this case).
+The second benchmark demonstrates how close we really are to standard indexing given similar range types.
 
 ## Chaining filters
 
