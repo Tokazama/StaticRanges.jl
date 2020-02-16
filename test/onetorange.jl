@@ -67,7 +67,9 @@ for (frange, oneto) in ((mrange, OneToMRange),(srange ,OneToSRange))
         @test_throws InexactError(:Int16, Int16, 3.2) oneto{Int16}(3.2)
     end
 
-    @test mod(22, OneToMRange(10)) == mod(22, Base.OneTo(10))
+    if VERSION > v"1.2"
+        @test mod(22, OneToMRange(10)) == mod(22, Base.OneTo(10))
+    end
 
 
     r = OneToMRange(10)
