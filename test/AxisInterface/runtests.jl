@@ -39,6 +39,10 @@ end
     @test Axis(a1) isa typeof(a1)
     @test SimpleAxis(Axis(1:2)) isa SimpleAxis
 
+    @test SimpleAxis{Int,UnitRange{Int}}(SimpleAxis(Base.OneTo(10))) isa SimpleAxis{Int,UnitRange{Int}}
+
+    @test StaticRanges.similar_type(SimpleAxis(1:10)) <: SimpleAxis{Int64,UnitRange{Int64}}
+
 end
 
 @testset "resize tests" begin

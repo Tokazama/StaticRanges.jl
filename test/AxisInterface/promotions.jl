@@ -35,4 +35,6 @@
     @test Base.promote_rule(typeof(a2), typeof(oneto)) <: Axis{Float64,Int64,StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}},Base.OneTo{Int}}
     @test Base.promote_rule(typeof(oneto), typeof(a2)) <: Axis{Float64,Int64,StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}},Base.OneTo{Int}}
 
+    @test StaticRanges.promote_values_rule(typeof(a1), typeof(a2)) <: Base.OneTo{Int64}
+    @test StaticRanges.promote_keys_rule(typeof(a1), typeof(a2)) <: StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}
 end

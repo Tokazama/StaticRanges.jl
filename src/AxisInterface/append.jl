@@ -18,14 +18,6 @@ SimpleAxis(UnitMRange(1:20))
 append_axis(x::Axis, y::Axis) = Axis(append_keys(x, y), append_values(x, y))
 append_axis(x::SimpleAxis, y::SimpleAxis) = SimpleAxis(append_values(x, y))
 append_axis(x, y) = same_type(x, y) ? append_values(x, y) : append_axis(promote(x, y)...)
-#=
-function append_axis(x::AbstractVector, y::AbstractVector)
-    return same_type(x, y) ? append_values(x, y) : append_axis(promote(x, y)...)
-end
-append_axis(x::AbstractAxis, y::AbstractVector) = append_axis(promote(x, y)...)
-append_axis(x::AbstractVector, y::AbstractAxis) = append_axis(promote(x, y)...)
-append_axis(x::AbstractAxis, y::AbstractAxis) = append_axis(promote(x, y)...)
-=#
 
 """
     append_keys(x, y)
@@ -35,6 +27,15 @@ Returns the appropriate keys of and index within the operation `append_axis(x, y
 See also: [`append_axis`](@ref)
 """
 append_keys(x, y) = cat_keys(x, y)
+
+"""
+    append_values(x, y)
+
+Returns the appropriate values of and index within the operation `append_axis(x, y)`
+
+See also: [`append_axis`](@ref)
+"""
+append_values(x, y) = cat_values(x, y)
 
 """
     append_axis!(x, y)
@@ -72,13 +73,4 @@ end
 _append_keys!(x, y) = __append_keys!(Continuity(x), x, y)
 __append_keys!(::ContinuousTrait, x, y) = set_length!(x, length(x) + length(y))
 __append_keys!(::DiscreteTrait, x, y) = make_unique!(x, keys(y))
-
-"""
-    append_values(x, y)
-
-Returns the appropriate values of and index within the operation `append_axis(x, y)`
-
-See also: [`append_axis`](@ref)
-"""
-append_values(x, y) = cat_values(x, y)
 
