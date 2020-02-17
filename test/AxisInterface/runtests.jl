@@ -29,11 +29,6 @@ end
     @test allunique(a1)
     @test in(2, a1)
     @test !in(3, a1)
-    @test checkbounds(Bool, a1, CartesianIndex(1))
-    @test !checkbounds(Bool, a1, CartesianIndex(5))
-    # TODO test checkbounds by key indexing
-    Base.checkindex(Bool, a1, [true, true])
-
     @test eachindex(a1) == 1:2
     @test UnitRange(a1) == 1:2
 
