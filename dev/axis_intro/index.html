@@ -17,9 +17,7 @@ julia&gt; a[2]
 2
 
 julia&gt; a[2:3]
-Axis(2:3 =&gt; 2:3)</code></pre><p>But now we can also use functions to index by the keys of an <code>AbstractAxis</code>.</p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
-
-julia&gt; a = Axis(2.0:11.0, 1:10)
+Axis(2:3 =&gt; 2:3)</code></pre><p>But now we can also use functions to index by the keys of an <code>AbstractAxis</code>.</p><pre><code class="language-julia-repl">julia&gt; a = Axis(2.0:11.0, 1:10)
 Axis(2.0:1.0:11.0 =&gt; 1:10)
 
 julia&gt; a[1]
@@ -35,7 +33,19 @@ julia&gt; a[&gt;(2.0)]
 Axis(3.0:1.0:11.0 =&gt; 2:10)
 
 julia&gt; a[and(&gt;(2.0), &lt;(8.0))]
-Axis(3.0:1.0:7.0 =&gt; 2:6)</code></pre><h2 id="Performance-1"><a class="docs-heading-anchor" href="#Performance-1">Performance</a><a class="docs-heading-anchor-permalink" href="#Performance-1" title="Permalink"></a></h2><p>Indexing <code>CartesianAxes</code> is comparable to that of <code>CartesianIndices</code>.</p><pre><code class="language-julia">julia&gt; using StaticRanges, BenchmarkTools
+Axis(3.0:1.0:7.0 =&gt; 2:6)
+
+julia&gt; sa[in(3:5)]
+SimpleAxis(3:5)</code></pre><p>This also allows certain syntax special treatment because they are obviously not referring to traditional integer based indexing.</p><pre><code class="language-julia-repl">julia&gt; x = Axis((:one, :two, :three))
+Axis((:one, :two, :three) =&gt; Base.OneTo(3))
+
+julia&gt; x[:one]
+1
+
+julia&gt; x[[:one, :two]]
+2-element Array{Int64,1}:
+ 1
+ 2</code></pre><p>Note in the last example that a vector was returned instead of an <code>AbstractAxis</code>. An <code>AbstractAxis</code> is a subtype of <code>AbstractUnitRange</code> and therefore cannot be reformed after any operation that does not guarantee the return of another unit range. This is similar to the behavior of <code>UnitRange</code> in base.</p><h2 id="Performance-1"><a class="docs-heading-anchor" href="#Performance-1">Performance</a><a class="docs-heading-anchor-permalink" href="#Performance-1" title="Permalink"></a></h2><p>Indexing <code>CartesianAxes</code> is comparable to that of <code>CartesianIndices</code>.</p><pre><code class="language-julia">julia&gt; using StaticRanges, BenchmarkTools
 
 julia&gt; cartaxes = CartesianAxes((Axis(2.0:5.0), Axis(1:4)));
 
@@ -87,7 +97,7 @@ julia&gt; and(&lt;(5), false)(1)
 false
 
 julia&gt; and(and(&lt;(5), &gt;(1)), &gt;(2))(3)
-true</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/915d891f6762ef30af8cd420bcc342c0e8bc6dde/src/chainedfix.jl#LL13-L32">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.or" href="#StaticRanges.or"><code>StaticRanges.or</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">or(x, y)</code></pre><p>Synonymous with bitwise <code>|</code> operator but may be used to chain multiple <code>Fix1</code> or <code>Fix2</code> operations.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+true</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/924d5a55b2347f2dca9d9fb143e8ba3471408460/src/chainedfix.jl#LL13-L32">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.or" href="#StaticRanges.or"><code>StaticRanges.or</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">or(x, y)</code></pre><p>Synonymous with bitwise <code>|</code> operator but may be used to chain multiple <code>Fix1</code> or <code>Fix2</code> operations.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
 
 julia&gt; or(true, &lt;(5))(1)
 true
@@ -96,4 +106,4 @@ julia&gt; or(&lt;(5), false)(1)
 true
 
 julia&gt; or(or(&lt;(5), &gt;(1)), &gt;(2))(3)
-true</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/915d891f6762ef30af8cd420bcc342c0e8bc6dde/src/chainedfix.jl#LL38-L57">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../manipulating_ranges/">« Manipulating Ranges</a><a class="docs-footer-nextpage" href="../axis_types/">Types »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Sunday 16 February 2020 04:03">Sunday 16 February 2020</span>. Using Julia version 1.3.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+true</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/924d5a55b2347f2dca9d9fb143e8ba3471408460/src/chainedfix.jl#LL38-L57">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../manipulating_ranges/">« Manipulating Ranges</a><a class="docs-footer-nextpage" href="../axis_types/">Types »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 17 February 2020 05:01">Monday 17 February 2020</span>. Using Julia version 1.3.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
