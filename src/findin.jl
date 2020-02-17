@@ -36,7 +36,13 @@ function _findin(x::AbstractUnitRange, xo, y::AbstractUnitRange, yo)
     return _findin(xnew, xo, ynew, yo)
 end
 
+#=
 function _findin(x::AbstractArray, xo, y::AbstractArray, yo)
+    return is_ordered(xo) && is_ordered(yo) ? Base._sortedfindin(y, x) : Base._findin(y, x)
+end
+=#
+
+function _findin(x, xo, y, yo)
     return is_ordered(xo) && is_ordered(yo) ? Base._sortedfindin(y, x) : Base._findin(y, x)
 end
 

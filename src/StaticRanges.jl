@@ -9,6 +9,7 @@ using Base: @propagate_inbounds, @pure
 
 using Base.Broadcast: DefaultArrayStyle
 
+using Dates
 using StaticArrays, ArrayInterface
 using ArrayInterface: can_setindex
 using StaticArrays: Dynamic

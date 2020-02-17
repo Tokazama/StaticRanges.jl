@@ -53,6 +53,8 @@ export
     shrink_last,
     shrink_last!
 
+const KeyIndexType = Union{Symbol,AbstractString,AbstractChar,Dates.AbstractTime}
+
 include("abstractaxis.jl")
 include("axisindices.jl")
 
@@ -68,6 +70,7 @@ include("drop_axes.jl")
 include("matmul_axes.jl")
 include("permute_axes.jl")
 include("reduce_axes.jl")
+include("to_index.jl")
 include("getindex.jl")
 include("promotion.jl")
 

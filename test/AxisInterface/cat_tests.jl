@@ -8,5 +8,3 @@
     @test length.(hcat_axes(CartesianAxes((10,)), CartesianAxes((10,)))) == (10, 2)
 end
 
-julia> length.(hcat_axes(c, d)) == length.(hcat_axes(a, b))
-true

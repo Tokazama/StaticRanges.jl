@@ -35,9 +35,9 @@ unsafe_findfirst(val, a::LinearIndices, ::ReverseOrdering) = unsafe_findfirst(va
 unsafe_findfirst(val, a::LinearIndices, ::ForwardOrdering) = unsafe_findfirst(val, axes(a, 1), Forward)
 
 # FIXME: this needs an explicit method and not just a fallback
-unsafe_findfirst(val, a::AbstractArray, ::ReverseOrdering) = searchsortedfirst(a, val, Reverse)
-unsafe_findfirst(val, a::AbstractArray, ::ForwardOrdering) = searchsortedfirst(a, val, Forward)
-unsafe_findfirst(val, a::AbstractArray, ::UnorderedOrdering) = findfirst(==(val), a)
+unsafe_findfirst(val, a, ::ReverseOrdering) = searchsortedfirst(a, val, Reverse)
+unsafe_findfirst(val, a, ::ForwardOrdering) = searchsortedfirst(a, val, Forward)
+unsafe_findfirst(val, a, ::UnorderedOrdering) = findfirst(==(val), a)
 
 
 @propagate_inbounds find_first(f, x) = find_first(f, x, order(x))

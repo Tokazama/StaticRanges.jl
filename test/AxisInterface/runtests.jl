@@ -59,6 +59,7 @@ include("promotions.jl")
 include("axisindices_tests.jl")
 include("indexing.jl")
 include("combine_tests.jl")
+include("cat_tests.jl")
 
 @testset "next_type" begin
     @test next_type("a") == "b"

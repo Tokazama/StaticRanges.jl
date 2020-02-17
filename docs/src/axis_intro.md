@@ -1,7 +1,7 @@
 # Introduction
 
 The standard syntax for indexing doesn't change at all.
-```jldoctest
+```jldoctest intro_axis_examples
 julia> using StaticRanges
 
 julia> sa = SimpleAxis(1:10)
@@ -24,9 +24,7 @@ Axis(2:3 => 2:3)
 ```
 
 But now we can also use functions to index by the keys of an `AbstractAxis`.
-```jldoctest
-julia> using StaticRanges
-
+```jldoctest intro_axis_examples
 julia> a = Axis(2.0:11.0, 1:10)
 Axis(2.0:1.0:11.0 => 1:10)
 
@@ -44,7 +42,27 @@ Axis(3.0:1.0:11.0 => 2:10)
 
 julia> a[and(>(2.0), <(8.0))]
 Axis(3.0:1.0:7.0 => 2:6)
+
+julia> sa[in(3:5)]
+SimpleAxis(3:5)
 ```
+
+This also allows certain syntax special treatment because they are obviously not referring to traditional integer based indexing.
+```jldoctest intro_axis_examples
+julia> x = Axis((:one, :two, :three))
+Axis((:one, :two, :three) => Base.OneTo(3))
+
+julia> x[:one]
+1
+
+julia> x[[:one, :two]]
+2-element Array{Int64,1}:
+ 1
+ 2
+```
+Note in the last example that a vector was returned instead of an `AbstractAxis`.
+An `AbstractAxis` is a subtype of `AbstractUnitRange` and therefore cannot be reformed after any operation that does not guarantee the return of another unit range.
+This is similar to the behavior of `UnitRange` in base.
 
 ## Performance
 

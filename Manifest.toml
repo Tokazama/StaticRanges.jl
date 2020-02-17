@@ -6,12 +6,20 @@ git-tree-sha1 = "4f1109cf20b2a31b5196f346bba07b2c61587442"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
 version = "2.4.1"
 
+[[Dates]]
+deps = ["Printf"]
+uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
+
 [[Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 [[LinearAlgebra]]
 deps = ["Libdl"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
+[[Printf]]
+deps = ["Unicode"]
+uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [[Random]]
 deps = ["Serialization"]
@@ -46,3 +54,6 @@ uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 [[UUIDs]]
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+
+[[Unicode]]
+uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"

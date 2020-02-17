@@ -11,7 +11,7 @@ There are some situations (perhaps few) where alternatives may be extremely conv
 For example, a static range may be helpful when the exact same parameters are frequently being accessed and don't need to change (e.g., a component of a filter in a processing pipeline).
 Mutable ranges may be helpful when referring to a range that is accessed rarely but may change (e.g., descriptive parameters of a plot's axis).
 However, this package is intentionally built without many assumptions of how it should be used.
-For example, safe methods for mutating ranges without violating the same assumptions of their original construction are provided but access to their fields are not obfuscated.
+For example, safe methods for mutating ranges without violating the same assumptions of their original construction are provided but access to their fields are not obfuscated beyond overloading the `setproperty!` method
 
 ## Static Ranges
 ```@docs
