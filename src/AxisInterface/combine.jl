@@ -1,4 +1,34 @@
 
+function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::AbstractAxis)
+    ks = keys(r)
+    vs = x .- values(r)
+    return similar_type(r, typeof(ks), typeof(vs))(ks, vs)
+end
+function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::AbstractAxis, x::Number)
+    ks = keys(r)
+    vs = values(r) .- x
+    return similar_type(r, typeof(ks), typeof(vs))(ks, vs)
+end
+function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Real, r::AbstractAxis)
+    ks = keys(r)
+    vs = x .+ values(r)
+    return similar_type(r, typeof(ks), typeof(vs))(ks, vs)
+end
+function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractAxis, x::Real)
+    ks = keys(r)
+    vs = values(r) .+ x
+    return similar_type(r, typeof(ks), typeof(vs))(ks, vs)
+end
+function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Real, r::AbstractAxis)
+    ks = keys(r)
+    vs = x .* values(r)
+    return similar_type(r, typeof(ks), typeof(vs))(ks, vs)
+end
+function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::AbstractAxis, x::Real)
+    ks = keys(r)
+    vs = values(r) .* x
+    return similar_type(r, typeof(ks), typeof(vs))(ks, vs)
+end
 keys_or_nothing(x::AbstractAxis) = keys(x)
 keys_or_nothing(x) = nothing
 

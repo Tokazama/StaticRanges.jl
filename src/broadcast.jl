@@ -11,22 +11,14 @@ Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinSRange) = LinSRange(
 Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinMRange) = LinMRange(-r.start, -r.stop, length(r))
 
 function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Real, r::UnitSRange)
-    if is_static(x)
-        return srange(x + first(r), length=length(r))
-    else
-        return mrange(x + first(r), length=length(r))
-    end
+    return srange(x + first(r), length=length(r))
 end
 function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Real, r::UnitMRange)
     return mrange(x + first(r), length=length(r))
 end
 
 function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::UnitSRange, x::Real)
-    if is_static(x)
-        return srange(first(r) + x, length=length(r))
-    else
-        return mrange(first(r) + x, length=length(r))
-    end
+    return srange(first(r) + x, length=length(r))
 end
 function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::UnitMRange, x::Real)
     return mrange(x + first(r), length=length(r))

@@ -2,7 +2,7 @@
 # unsafe_findvalue doesn't confirm that the integer is in bounds or r[idx] == val
 unsafe_findvalue(val, r::Union{OneToRange,OneTo}) = round(Integer, val)
 
-unsafe_findvalue(val, r::UnitRangeUnion) = round(Integer, (val - first(r)) + 1)
+unsafe_findvalue(val, r::AbstractUnitRange) = round(Integer, (val - first(r)) + 1)
 
 function unsafe_findvalue(val, r::Union{AbstractStepRangeLen,StepRangeLen})
     _unsafe_findvalue(((val - r.ref) / step_hp(r)) + r.offset)
