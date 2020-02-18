@@ -29,11 +29,17 @@ Returns the permuted axes of `x` as axes of size 1 × length(x)
 ```jldoctest
 julia> using StaticRanges
 
-julia> permute_axes(rand(4))
-(Base.OneTo(1), Base.OneTo(4))
+julia> length.(permute_axes(rand(4))) == (1, 4)
+true
 
 julia> permute_axes((Axis(1:4),))
 (SimpleAxis(Base.OneTo(1)), Axis(1:4 => Base.OneTo(4)))
+
+julia> permute_axes((Axis(mrange(1, 4)),))
+(SimpleAxis(OneToMRange(1)), Axis(UnitMRange(1:4) => OneToMRange(4)))
+
+julia> permute_axes((Axis(srange(1, 4)),))
+(SimpleAxis(OneToSRange(1)), Axis(UnitSRange(1:4) => OneToSRange(4)))
 ```
 """
 permute_axes(x::AbstractVector) = permute_axes(axes(x))

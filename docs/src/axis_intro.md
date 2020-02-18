@@ -2,7 +2,7 @@
 
 The standard syntax for indexing doesn't change at all.
 ```jldoctest intro_axis_examples
-julia> using StaticRanges
+julia> using StaticRanges, Dates
 
 julia> sa = SimpleAxis(1:10)
 SimpleAxis(1:10)

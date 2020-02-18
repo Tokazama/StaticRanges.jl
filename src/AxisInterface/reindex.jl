@@ -24,9 +24,14 @@ SimpleAxis(1:5)
 ```
 """
 @propagate_inbounds reindex(a::AbstractAxis, inds) = unsafe_reindex(a, to_index(a, inds))
-#@propagate_inbounds function reindex(A::AxisIndices, inds...)
-#    return unsafe_reindex(A, to_indices(A, axes(A), Tuple(inds))
-#end
+@propagate_inbounds function reindex(axs::Tuple, inds::Tuple{Integer,Vararg{Any}})
+    return reindex(tail(axs), tail(inds))
+end
+@propagate_inbounds function reindex(axs::Tuple, inds::Tuple{AbstractVector{<:Integer},Vararg{Any}})
+    return (unsafe_reindex(first(axs), first(inds)), reindex(tail(axs), tail(inds))...)
+end
+reindex(axs::Tuple{}, inds::Tuple{}) = ()
+
 
 """
     unsafe_reindex(a::AbstractAxis, inds::AbstractVector) -> AbstractAxis

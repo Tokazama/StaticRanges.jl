@@ -43,6 +43,10 @@ function Base.checkindex(::Type{Bool}, a::AbstractAxis, i::AbstractUnitRange)
     return checkindexlo(a, i) & checkindexhi(a, i) 
 end
 
+function Base.checkindex(::Type{Bool}, a::AbstractAxis, i::Base.Slice)
+    return checkindex(Bool, values(a), i)
+end
+
 function Base.checkindex(::Type{Bool}, a::AbstractAxis, i::StepRange)
     return checkindexlo(a, i) & checkindexhi(a, i)
 end
