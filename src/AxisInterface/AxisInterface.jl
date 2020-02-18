@@ -21,7 +21,6 @@ export
     permute_axes,
     reduce_axes,
     reduce_axis,
-    reduce_axis!,
     # Matrix Multiplication and Axes
     matmul_axes,
     inverse_axes,

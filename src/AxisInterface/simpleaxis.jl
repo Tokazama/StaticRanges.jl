@@ -118,3 +118,7 @@ StaticRanges.as_fixed(x::SimpleAxis) = SimpleAxis(as_fixed(values(x)))
 
 StaticRanges.as_static(x::SimpleAxis) = SimpleAxis(as_static(values(x)))
 
+function Base.empty!(a::SimpleAxis)
+    empty!(values(a))
+    return a
+end

@@ -118,3 +118,9 @@ function StaticArrays.similar_type(
    ) where {A<:Axis}
     return Axis{eltype(ks_type),eltype(vs_type),ks_type,vs_type}
 end
+
+function Base.empty!(a::Axis)
+    empty!(keys(a))
+    empty!(values(a))
+    return a
+end

@@ -1,4 +1,6 @@
 
+using Base: to_index
+
 struct Axis2{K,V,Ks,Vs} <: AbstractAxis{K,V,Ks,Vs}
     keys::Ks
     values::Vs
@@ -45,7 +47,6 @@ end
     x = 1:10
     @test resize_last!(x, 10) == x
     @test resize_last(x, 10) == x
-
 end
 
 include("range_tests.jl")
@@ -74,3 +75,6 @@ end
     @test prev_type(nextfloat(1.0)) == prevfloat(nextfloat(1.0))
     @test prev_type("") == ""
 end
+
+@test length(empty!(Axis(UnitMRange(1, 10)))) == 0
+@test length(empty!(SimpleAxis(UnitMRange(1, 10)))) == 0
