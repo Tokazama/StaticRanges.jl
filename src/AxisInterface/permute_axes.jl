@@ -16,8 +16,9 @@ julia> permute_axes((Axis(1:2), Axis(1:4), Axis(1:6)), (1, 3, 2))
 (Axis(1:2 => Base.OneTo(2)), Axis(1:6 => Base.OneTo(6)), Axis(1:4 => Base.OneTo(4)))
 ```
 """
-permute_axes(x::AbstractArray{T,N}, p::NTuple{N}) where {T,N} = permute_axes(axes(x), p)
-permute_axes(x::NTuple{N,Any}, p::NTuple{N,Int}) where {N} = map(i -> getfield(x, i), p)
+permute_axes(x::AbstractArray{T,N}, p) where {T,N} = permute_axes(axes(x), p)
+permute_axes(x::NTuple{N,Any}, p::AbstractVector{<:Integer}) where {N} = Tuple(map(i -> getindex(x, i), p))
+permute_axes(x::NTuple{N,Any}, p::NTuple{N,<:Integer}) where {N} = map(i -> getfield(x, i), p)
 
 """
     permute_axes(x::AbstractVector)
@@ -32,11 +33,19 @@ julia> permute_axes(rand(4))
 (Base.OneTo(1), Base.OneTo(4))
 
 julia> permute_axes((Axis(1:4),))
-(Axis(1:1 => Base.OneTo(1)), Axis(1:4 => Base.OneTo(4)))
+(SimpleAxis(Base.OneTo(1)), Axis(1:4 => Base.OneTo(4)))
 ```
 """
 permute_axes(x::AbstractVector) = permute_axes(axes(x))
-permute_axes(x::NTuple{1,Any}) = (reduce_axis(first(x)), first(x))
+function permute_axes(x::Tuple{Ax}) where {Ax<:AbstractUnitRange}
+    if is_static(Ax)
+        return (SimpleAxis(OneToSRange(1)), first(x))
+    elseif is_fixed(Ax)
+        return (SimpleAxis(Base.OneTo(1)), first(x))
+    else  # is_dynamic(Ax)
+        return (SimpleAxis(OneToMRange(1)), first(x))
+    end
+end
 
 """
     permute_axes(m::AbstractMatrix) -> NTuple{2}
