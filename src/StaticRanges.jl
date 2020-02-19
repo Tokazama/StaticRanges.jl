@@ -32,9 +32,7 @@ export
     UnitMRange,
     UnitSRange,
     # interface
-    values_type,
-    keys_type,
-    # Order functions
+   # Order functions
     is_forward,
     is_reverse,
     order,
@@ -234,6 +232,6 @@ include("push.jl")
 include("show.jl")
 include("vcat.jl")
 
-include("./AxisInterface/AxisInterface.jl")
+#include("./AxisInterface/AxisInterface.jl")
 
 end

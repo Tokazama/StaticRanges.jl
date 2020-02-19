@@ -10,17 +10,7 @@ makedocs(;
             "Range Types" => "range_types.md",
             "Manipulating Ranges" => "manipulating_ranges.md",
         ],
-        "Axis Interface" => [
-            "Introduction" => "axis_intro.md",
-            "Types" => "axis_types.md",
-            "Combining Axes" => "combine_axes.md",
-            "Concatenating Axes" => "concat_axes.md",
-            "Appending Axes" => "append_axes.md",
-            "Reindexing Axes" => "reindex_axes.md",
-            "Resizing Axes" => "resize_axes.md",
-            "Axes to Arrays" => "axes_to_arrays.md",
-        ],
-        "Internals" => [
+       "Internals" => [
             "Twice Precision" => "twice_precision.md",
             "Order Functions" => "order_functions.md",
             "Traits" => "traits.md",
