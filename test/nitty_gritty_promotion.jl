@@ -1,5 +1,3 @@
-
-
 @testset "nitty_gritty_promote_rules" begin
     onetosrange_type = typeof(OneToSRange(10))
     stepsrange_type = typeof(StepSRange(1, 1, 2))
@@ -94,14 +92,22 @@
         @test promote_rule(stepsrange_type, linsrange_type) <: LinSRange
         @test promote_rule(linsrange_type, stepsrange_type) <: LinSRange
 
+        @test promote_rule(onetorange_type, unitrange_type) <: UnitRange{Int}
+        @test promote_rule(unitrange_type, onetorange_type) <: UnitRange{Int}
+
         @test promote_rule(steprangelen_type, stepsrangelen_type) <: StepRangeLen
         # TODO came across this ambiguity error but need fix still
         #@test promote_rule(steprangelen_type, stepsrange_type) <: StepRangeLen
+        @test promote_rule(stepsrangelen_type, linsrange_type) <: StepSRangeLen
+        @test promote_rule(stepmrangelen_type, linmrange_type) <: StepMRangeLen
+
         @test promote_rule(stepsrange_type, linsrange_type) <: StepSRangeLen
         @test promote_rule(stepmrange_type, linmrange_type) <: StepSRangeLen
-        @test promote_rule(stepsrange_type, stepsrangelen_type) <: StepSRangeLen
+
         @test promote_rule(stepsrangelen_type, stepsrange_type) <: StepMRangeLen
         @test promote_rule(stepmrangelen_type, stepmrange_type) <: StepMRangeLen
+
+        @test promote_rule(stepsrange_type, stepsrangelen_type) <: StepSRangeLen
         @test promote_rule(stepsrange_type, stepmrangelen_type) <: StepMRangeLen
     end
 

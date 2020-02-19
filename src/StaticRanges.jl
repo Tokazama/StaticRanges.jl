@@ -82,6 +82,8 @@ export
     is_within,
     merge_sort,
     middle_segment,
+    push,
+    pushfirst,
     set_first!,
     set_first,
     set_step!,

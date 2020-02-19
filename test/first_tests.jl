@@ -27,5 +27,6 @@
         end
     end
     @test first(GapRange(2:5, 7:10)) == 2
+    @test set_first(Int[], 1) == [1]
 end
 
