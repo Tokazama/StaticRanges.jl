@@ -40,5 +40,11 @@
             end
         end
     end
+
+    @testset "iterate" begin
+        for (s,f,d) in zip(LinSRange(1, 3, 3),LinRange(1, 3, 3),LinMRange(1, 3, 3))
+            @test s == f == d
+        end
+    end
 end
 
