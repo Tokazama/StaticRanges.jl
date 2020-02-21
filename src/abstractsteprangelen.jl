@@ -1,4 +1,18 @@
 """
+    gethi(x::Union{TPVal{T}, TwicePrecision{T}}) -> T
+Returns the `hi` component of a twice precision number. Works for both
+statically set `TPVal` and `TwicePrecision`.
+"""
+gethi(x::TwicePrecision) = getfield(x, :hi)
+
+"""
+    getlo(x::Union{TPVal{T}, TwicePrecision{T}}) -> T
+Returns the `lo` component of a twice precision number. Works for both
+statically set `TPVal` and `TwicePrecision`.
+"""
+getlo(x::TwicePrecision) = getfield(x, :lo)
+
+"""
     AbstractStepRangeLen
 
 Supertype for `StepSRangeLen` and `StepMRangeLen`. It's subtypes should behave
@@ -27,7 +41,7 @@ struct StepSRangeLen{T,Tr,Ts,R,S,L,F} <: AbstractStepRangeLen{T,R,S} end
 function StepSRangeLen{T,R,S}(ref::R, step::S, len::Integer, offset::Integer = 1) where {T,R,S}
     len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
     1 <= offset <= max(1,len) || throw(ArgumentError("StepSRangeLen: offset must be in [1,$len], got $offset"))
-    return StepSRangeLen{T,R,S,tp2val(ref),tp2val(step),len,offset}()
+    return StepSRangeLen{T,R,S,ref,step,len,offset}()
 end
 
 function StepSRangeLen{T,R1,S1}(ref::R2, step::S2, len::Integer, offset::Integer) where {T,R1,S1,R2,S2}
@@ -38,25 +52,19 @@ function (::Type{<:StepSRangeLen{Float64}})(r::AbstractRange)
     return _convertSSRL(StepSRangeLen{Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
 end
 
-function Base.getproperty(r::StepSRangeLen, s::Symbol)
+function Base.getproperty(r::StepSRangeLen{T,Tr,Ts,R,S,L,F}, s::Symbol) where {T,Tr,Ts,R,S,L,F}
     if s === :ref
-        return _ref(r)
+        return R
     elseif s === :step
-        return step_hp(r)
+        return S
     elseif s === :len
-        return length(r)
+        return L
     elseif s === :offset
-        return _offset(r)
+        return F
     else
         error("type $(typeof(r)) has no property $s")
     end
 end
-
-# convert TPVal to TwicePrecision
-_ref(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr<:TwicePrecision,Ts,R,S,L,F} = convert(Tr, R)
-
-_offset(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = F
-_ref(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = R
 
 """
     StepMRangeLen

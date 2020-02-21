@@ -59,7 +59,6 @@ include("pop_tests.jl")
 include("continuity_tests.jl")
 include("order_tests.jl")
 include("unitrange_tests.jl")
-include("twiceprecision.jl")
 include("promotion_tests.jl")
 include("nitty_gritty_promotion.jl")
 
@@ -81,7 +80,6 @@ include("intersect_tests.jl")
 include("reverse.jl")
 
 include("steprangelen_test.jl")
-#include("./AxisInterface/runtests.jl")
 include("linrange_test.jl")
 
 

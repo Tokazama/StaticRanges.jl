@@ -91,11 +91,11 @@ function Base.:(+)(r1::StepSRangeLen{T,TwicePrecision{T},<:Any,<:Any,<:Any,<:Any
     len = length(r1)
     (len == length(r2) ||
         throw(DimensionMismatch("argument dimensions must match")))
-    if _offset(r1) == _offset(r2)
-        imid = _offset(r1)
+    if r1.offset == r2.offset
+        imid = r1.offset
         ref = r1.ref + r2.ref
     else
-        imid = round(Int, (_offset(r1)+_offset(r2))/2)
+        imid = round(Int, (r1.offset + r2.offset)/2)
         ref1mid = _getindex_hiprec(r1, imid)
         ref2mid = _getindex_hiprec(r2, imid)
         ref = ref1mid + ref2mid

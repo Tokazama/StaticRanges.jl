@@ -111,7 +111,6 @@ include("findall.jl")
 include("findlast.jl")
 include("findfirst.jl")
 
-include("twiceprecision.jl")
 include("onetorange.jl")
 include("unitrange.jl")
 include("abstractsteprange.jl")
