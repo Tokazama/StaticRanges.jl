@@ -13,6 +13,14 @@
     y = collect(r)
     @test pop!(r) == pop!(y)
     @test isempty(r) == true
+
+    x = StepMRangeLen(1,1,1)
+    pop!(x)
+    @test isempty(x)
+
+    x = LinMRange(1,1,1)
+    pop!(x)
+    @test isempty(x)
 end
 
 @testset "popfirst" begin
@@ -29,4 +37,14 @@ end
     y = collect(r)
     @test popfirst!(r) == popfirst!(y)
     @test isempty(r) == true
+
+    x = StepMRangeLen(1,1,1)
+    popfirst!(x)
+    @test isempty(x)
+
+    x = LinMRange(1,1,1)
+    popfirst!(x)
+    @test isempty(x)
 end
+
+

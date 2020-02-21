@@ -69,5 +69,13 @@
     @test StepMRangeLen{Float32}(1:10) isa StepMRangeLen{Float32,Float64,Float64}
     @test StepSRangeLen{Float32}(sr) isa StepSRangeLen{Float32,Float64,Float64,1.0,1.0,10,1}
 
+    r = StepRangeLen(1, 1, 1)
+    @test eltype(StepMRangeLen{Float64}(r)) <: Float64
+
+    r = StepMRangeLen(1,1,1)
+    @test eltype(StepMRangeLen{Int}(r)) <: Int
+
+    @test eltype(StepMRangeLen{UInt,Int,Int}(r)) <: UInt64
+
 end
 

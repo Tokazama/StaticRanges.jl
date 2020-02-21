@@ -44,14 +44,6 @@ function StepSRangeLen{T,R,S}(ref::R, step::S, len::Integer, offset::Integer = 1
     return StepSRangeLen{T,R,S,ref,step,len,offset}()
 end
 
-function StepSRangeLen{T,R1,S1}(ref::R2, step::S2, len::Integer, offset::Integer) where {T,R1,S1,R2,S2}
-    return StepSRangeLen{T,R1,S1}(R1(ref), S1(step), len, offset)
-end
-
-function (::Type{<:StepSRangeLen{Float64}})(r::AbstractRange)
-    return _convertSSRL(StepSRangeLen{Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
-end
-
 function Base.getproperty(r::StepSRangeLen{T,Tr,Ts,R,S,L,F}, s::Symbol) where {T,Tr,Ts,R,S,L,F}
     if s === :ref
         return R
@@ -89,13 +81,6 @@ mutable struct StepMRangeLen{T,R,S} <: AbstractStepRangeLen{T,R,S}
     end
 end
 
-function (::Type{StepMRangeLen{Float64}})(r::AbstractRange)
-    return _convertSMRL(StepMRangeLen{Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
-end
-function StepMRangeLen{T,R1,S1}(ref::R2, step::S2, len::Integer, offset::Integer) where {T,R1,S1,R2,S2}
-    return StepMRangeLen{T,R1,S1}(R1(ref), S1(step), len, offset)
-end
-
 function Base.setproperty!(r::StepMRangeLen, s::Symbol, val)
     if s === :ref
         return set_ref!(r, val)
@@ -110,6 +95,7 @@ function Base.setproperty!(r::StepMRangeLen, s::Symbol, val)
     end
 end
 
+const StepRangeLenUnion{T,R,S} = Union{StepRangeLen{T,R,S},AbstractStepRangeLen{T,R,S}}
 
 for (F,f) in ((:M,:m), (:S,:s))
     SR = Symbol(:Step, F, :RangeLen)
@@ -118,26 +104,18 @@ for (F,f) in ((:M,:m), (:S,:s))
     _CSRL = Symbol(:__convert, :S, F, :RL)
     floatfrange = Symbol(:float, f, :range)
     @eval begin
+
+        function $(SR){T,R1,S1}(ref::R2, step::S2, len::Integer, offset::Integer) where {T,R1,S1,R2,S2}
+            return $(SR){T,R1,S1}(R1(ref), S1(step), len, offset)
+        end
         $(SR){T,R,S}(r::$(SR){T,R,S}) where {T,R,S} = r
-        function $(SR){T,R,S}(r::$(SR)) where {T,R,S}
-            return $(SR){T,R,S}(
-                convert(R, r.ref),
-                convert(S, step(r)),
-                length(r),
-                r.offset
-               )
-        end
-        function $(SR){T}(r::Union{StepRangeLen,AbstractStepRangeLen}) where {T}
-            return $(SR)(
-                convert(T, r.ref),
-                convert(T, step(r)),
-                length(r),
-                r.offset
-               )
-        end
+
+        (::Type{<:$(SR){Float64}})(r::AbstractRange) = $(CSRL)($(SR){Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
+        (::Type{<:$(SR){Float64}})(r::StepRangeLenUnion) = $(CSRL)($(SR){Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
+        $(SR){T}(r::StepRangeLenUnion) where {T} = $(SR)(T(r.ref), T(r.step), r.len, r.offset)
+        $(SR){T,R,S}(r::StepRangeLenUnion) where {T,R,S} = $(SR){T,R,S}(R(r.ref), S(r.step), r.len, r.offset)
 
         $(SR){T,R,S}(r::AbstractRange) where {T,R,S} = $(SR){T,R,S}(R(first(r)), S(step(r)), length(r))
-        $(SR){T,R,S}(r::StepRangeLen) where {T,R,S} = $(SR){T,R,S}(R(r.ref), S(r.step), r.len, r.offset)
         $(SR){T}(r::AbstractRange) where {T} = $(SR)(T(first(r)), T(step(r)), length(r))
         $(SR)(r::AbstractRange) = $(SR){eltype(r)}(r)
 
@@ -158,19 +136,9 @@ for (F,f) in ((:M,:m), (:S,:s))
             return $(SR){T,R,S}(ref, step, len, offset)
         end
 
-        function $(SR){T,R,S}(r::$(SR)) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision}
-            return $(CSRL)($(SR){T,R,S}, r)
-        end
-
-        function (::Type{<:$(SR){Float64}})(r::$(SR))
-            return $(CSRL)($(SR){Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
-        end
         $(SR){T}(r::$(SR)) where {T<:IEEEFloat} = $(CSRL)($(SR){T,Float64,Float64}, r)
 
-
-        function $(SR){T}(r::AbstractRange) where {T<:IEEEFloat}
-            return $(CSRL)($(SR){T,Float64,Float64}, r)
-        end
+        $(SR){T}(r::AbstractRange) where {T<:IEEEFloat} = $(CSRL)($(SR){T,Float64,Float64}, r)
 
         function $(CSRL)(::Type{<:$(SR){T,R,S}}, r::$(SR){<:Integer}) where {T,R,S}
             return $(SR){T,R,S}(R(r.ref), S(step(r)), length(r), r.offset)

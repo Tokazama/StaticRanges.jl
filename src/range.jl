@@ -98,7 +98,7 @@ for (F,f) in ((:M,:m), (:S,:s))
                 # if we've overshot the end, subtract one:
                 len -= (start < stop < stop′) + (start > stop > stop′)
             end
-            $(stepfrangelen_hp)(T, start, step, 0, len, 1)
+            return $(stepfrangelen_hp)(T, start, step, 0, len, 1)
         end
         # AbstractFloat specializations
         function $(_fcolon_colon)(start::T, step, stop::T) where {T}

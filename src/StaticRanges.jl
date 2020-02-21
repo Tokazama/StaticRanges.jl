@@ -118,7 +118,6 @@ include("abstractlinrange.jl")
 include("abstractsteprangelen.jl")
 
 const LinRangeUnion{T} = Union{LinRange{T},AbstractLinRange{T}}
-const StepRangeLenUnion{T,R,S} = Union{StepRangeLen{T,R,S},AbstractStepRangeLen{T,R,S}}
 const StepRangeUnion{T,S} = Union{StepRange{T,S},AbstractStepRange{T,S}}
 const UnitRangeUnion{T} = Union{UnitRange{T},UnitSRange{T},UnitMRange{T}}
 const OneToUnion{T} = Union{OneTo{T},OneToRange{T}}
