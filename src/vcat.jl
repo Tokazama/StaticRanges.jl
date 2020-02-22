@@ -1,15 +1,6 @@
 
 maybe_flip(::O, ::O, x) where {O<:Ordering} = x
 maybe_flip(::Ordering, ::Ordering, x) = reverse(x)
-
-function first_segment(x, xo, y, yo)
-   return _first_segment(
-        max_of_group_min(x, xo, y, yo),
-        min_of_group_max(x, xo, y, yo),
-        x, xo, y, yo
-    )
-end
-
 function _first_segment(cmin, cmax, x, xo, y, yo)
     xidx, yidx = _first_segment_index(cmin, cmax, x, xo, y, yo)
     if xo isa ReverseOrdering
@@ -39,18 +30,6 @@ function _first_segment_index(cmin, cmax, x, xo, y, yo)
     end
 end
 
-#=
-    middle_segment(x, y)
-
-Given two collections `x` and `y`, returns the first non-overlapping segment.
-=#
-function middle_segment(x, xo, y, yo)
-    return _middle_segment(
-        max_of_group_min(x, xo, y, yo),
-        min_of_group_max(x, xo, y, yo),
-        x, xo, y, yo
-    )
-end
 function _middle_segment(cmin, cmax, x, xo, y, yo)
     xidx = _middle_segment_index(cmin, cmax, x, xo)
     yidx = _middle_segment_index(cmin, cmax, y, yo)
@@ -62,19 +41,6 @@ function _middle_segment(cmin, cmax, x, xo, y, yo)
 end
 
 _middle_segment_index(cmin, cmax, x, xo) = find_all(and(>=(cmin), <=(cmax)), x, xo)
-
-#=
-    last_segment(x, y)
-
-Given two collections `x` and `y`, returns the last non-overlapping segment.
-=#
-function last_segment(x, xo, y, yo)
-   return _last_segment(
-        max_of_group_min(x, xo, y, yo),
-        min_of_group_max(x, xo, y, yo),
-        x, xo, y, yo
-    )
-end
 
 function _last_segment(cmin, cmax, x, xo, y, yo)
     xidx, yidx = _last_segment_index(cmin, cmax, x, xo, y, yo)
@@ -195,6 +161,7 @@ function _vcat_before(x, xo, y, yo)
         end
     end
 end
+
 function _vcat_after(x, xo, y, yo)
     if is_forward(xo)
         if is_forward(yo)
