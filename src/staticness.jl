@@ -110,6 +110,9 @@ false
 
 julia> is_static(StepRange(1, 2, 20))
 false
+
+julia> is_static(())
+true
 ```
 """
 @inline function is_static(::Type{T}) where {T}
@@ -120,8 +123,8 @@ false
         return is_static(T)
     end
 end
-is_static(::Type{Tuple}) = true
-is_static(::Type{NamedTuple}) = true
+is_static(::Type{T}) where {T<:Tuple} = true
+is_static(::Type{T}) where {T<:NamedTuple} = true
 
 """
     is_fixed(x) -> Bool
@@ -277,3 +280,4 @@ as_static(x::Union{LinRange,LinMRange}) = LinSRange(first(x), last(x), length(x)
 
 as_static(x::StepSRangeLen) = x
 as_static(x::Union{StepRangeLen,StepMRangeLen}) = StepSRangeLen(first(x), step(x), length(x), x.offset)
+
