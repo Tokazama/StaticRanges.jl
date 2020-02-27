@@ -43,6 +43,7 @@ end
 
 LinSRange{T}(r::AbstractRange) where {T} = LinSRange{T}(first(r), last(r), length(r))
 
+
 """
     LinMRange
 
@@ -117,3 +118,7 @@ for (F,f) in ((:M,:m), (:S,:s))
         end
     end
 end
+
+is_static(::Type{<:LinSRange}) = true
+is_fixed(::Type{<:LinMRange}) = false
+

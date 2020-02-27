@@ -1,5 +1,71 @@
 
 """
+    parent_type(::T) = parent_type(T)
+    parent_type(::Type{T})
+
+Returns the equivalent output of `typeof(parent(x))` but derives this directly
+from the type of x (e.g., parametric typing).
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> parent_type([1 2; 3 4])
+Array{Int64,2}
+
+julia> parent_type(view([1 2; 3 4], 1, 1))
+Array{Int64,2}
+```
+"""
+parent_type(::T) where {T} = parent_type(T)
+parent_type(::Type{T}) where {T} = T
+parent_type(::Type{<:SubArray{T,N,P}}) where {T,N,P} = P
+
+"""
+    axes_type(::T) = axes_type(T)
+    axes_type(::Type{T})
+
+Returns the equivalent output of `typeof(axes(x))` but derives this directly
+from the type of x (e.g., parametric typing).
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> axes_type([1 2; 3 4])
+Tuple{Base.OneTo{Int64},Base.OneTo{Int64}}
+```
+"""
+axes_type(::T) where {T} = axes_type(T)
+axes_type(::Type{<:AbstractArray{T,N}}) where {T,N} = Tuple{ntuple(_ -> OneTo{Int}, Val(N))...}
+
+"""
+    axes_type(::T, i) = axes_type(T, i)
+    axes_type(::Type{T}, i)
+
+Returns the equivalent output of `typeof(axes(x, i))` but derives this directly
+from the type of x (e.g., parametric typing).
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> axes_type([1 2; 3 4], 1)
+Base.OneTo{Int64}
+```
+"""
+axes_type(::T, i::Integer) where {T} = axes_type(T, i)
+axes_type(::Type{T}, i::Integer) where {T} = axes_type(T).parameters[i]
+
+for f in (:is_dynamic, :is_static, :is_fixed)
+    @eval begin
+        $f(::T) where {T} = $f(T)
+        $f(::T, i::Integer) where {T} = $f(T, i)
+        $f(::Type{T}, i::Integer) where {T} = $f(axes_type(T).parameters[i])
+    end
+end
+
+"""
     is_dynamic(x) -> Bool
 
 Returns true if the size of `x` is dynamic/can change.
@@ -8,27 +74,24 @@ Returns true if the size of `x` is dynamic/can change.
 ```jldoctest
 julia> using StaticRanges
 
-julia> sr = UnitSRange(1, 10)
-UnitSRange(1:10)
-
-julia> mr = StepMRange(1, 2, 20)
-StepMRange(1:2:19)
-
-julia> fr = StepRange(1, 2, 20)
-1:2:19
-
-julia> is_dynamic(sr)
+julia> is_dynamic(UnitSRange(1, 10))
 false
 
-julia> is_dynamic(fr)
+julia> is_dynamic(StepRange(1, 2, 20))
 false
 
-julia> is_dynamic(mr)
+julia> is_dynamic(StepMRange(1, 2, 20))
 true
 ```
 """
-is_dynamic(::T) where {T} = is_dynamic(T)
-is_dynamic(::Type{T}) where {T} = is_fixed(T) | is_static(T) ? false : true
+@inline function is_dynamic(::Type{T}) where {T}
+    T2 = parent_type(T)
+    if T2 <: T
+        return !is_fixed(T)
+    else
+        return is_dynamic(T)
+    end
+end
 
 """
     is_static(x) -> Bool
@@ -39,59 +102,57 @@ Returns `true` if `x` is static.
 ```jldoctest
 julia> using StaticRanges
 
-julia> sr = UnitSRange(1, 10)
-UnitSRange(1:10)
-
-julia> mr = StepMRange(1, 2, 20)
-StepMRange(1:2:19)
-
-julia> fr = StepRange(1, 2, 20)
-1:2:19
-
-julia> is_static(sr)
+julia> is_static(UnitSRange(1, 10))
 true
 
-julia> is_static(mr)
+julia> is_static(StepMRange(1, 2, 20))
 false
 
-julia> is_static(fr)
+julia> is_static(StepRange(1, 2, 20))
 false
 ```
 """
-is_static(::T) where {T} = is_static(T)
-is_static(::Type{T}) where {T} = false
-is_static(::Type{T}) where {T<:SRange} = true
+@inline function is_static(::Type{T}) where {T}
+    T2 = parent_type(T)
+    if T2 <: T
+        return false
+    else
+        return is_static(T)
+    end
+end
+is_static(::Type{Tuple}) = true
+is_static(::Type{NamedTuple}) = true
 
 """
     is_fixed(x) -> Bool
 
-Returns `true` if the size of `x` is fixed.
+Returns `true` if the size of `x` is fixed. Note that if the size of `x` is known
+statically (at compile time) it is also interpreted as fixed.
 
 ## Examples
 ```jldoctest
 julia> using StaticRanges
 
-julia> sr = UnitSRange(1, 10)
-UnitSRange(1:10)
-
-julia> mr = StepMRange(1, 2, 20)
-StepMRange(1:2:19)
-
-julia> fr = StepRange(1, 2, 20)
-1:2:19
-
-julia> is_fixed(sr)
-false
-
-julia> is_fixed(fr)
+julia> is_fixed(UnitSRange(1, 10))
 true
 
-julia> is_fixed(mr)
+julia> is_fixed(StepRange(1, 2, 20))
+true
+
+julia> is_fixed(StepMRange(1, 2, 20))
 false
 ```
 """
-is_fixed(::T) where {T} = is_fixed(T)
-is_fixed(::Type{T}) where {T} = !T.mutable & !is_static(T) ? true : false
+@inline function is_fixed(::Type{T}) where {T}
+    T2 = parent_type(T)
+    if T2 <: T
+        return false
+    else
+        return is_fixed(T)
+    end
+end
+# most range types are fixed so just make it the default
+is_fixed(::Type{T}) where {T<:AbstractRange} = true
 
 """
     as_dynamic(x)

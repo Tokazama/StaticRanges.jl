@@ -32,7 +32,7 @@ export
     UnitMRange,
     UnitSRange,
     # interface
-   # Order functions
+    # Order functions
     is_forward,
     is_reverse,
     order,
@@ -73,6 +73,8 @@ export
     first_segment,
     last_segment,
     # Traits
+    parent_type,
+    axes_type,
     is_dynamic,
     is_fixed,
     is_forward,

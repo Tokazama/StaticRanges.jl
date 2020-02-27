@@ -10,11 +10,12 @@ makedocs(;
             "Range Types" => "range_types.md",
             "Manipulating Ranges" => "manipulating_ranges.md",
         ],
-       "Internals" => [
+        "Chained Filters" => "chained_filters.md",
+        "Internals" => [
             "Twice Precision" => "twice_precision.md",
             "Order Functions" => "order_functions.md",
             "Traits" => "traits.md",
-        ]
+        ],
     ],
     repo="https://github.com/Tokazma/StaticRanges.jl/blob/{commit}{path}#L{line}",
     sitename="StaticRanges.jl",

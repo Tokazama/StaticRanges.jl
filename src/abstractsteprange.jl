@@ -94,3 +94,6 @@ for (F,f) in ((:M,:m), (:S,:s))
         Base.:(-)(r::$(SR)) = $(frange)(-first(r), step=-step(r), length=length(r))
     end
 end
+
+is_static(::Type{<:StepSRange}) = true
+is_fixed(::Type{<:StepMRange}) = false

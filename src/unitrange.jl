@@ -64,3 +64,6 @@ for (F,f) in ((:M,:m), (:S,:s))
         $(UR){T}(r::$(UR)) where {T<:Real} = $(UR){T}(first(r), last(r))
     end
 end
+
+is_static(::Type{<:UnitSRange}) = true
+is_fixed(::Type{<:UnitMRange}) = false

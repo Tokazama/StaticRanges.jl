@@ -77,3 +77,7 @@ function Base.setproperty!(r::OneToMRange, s::Symbol, val)
         error("type $(typeof(r)) has no property $s")
     end
 end
+
+is_static(::Type{<:OneToSRange}) = true
+is_fixed(::Type{<:OneToMRange}) = false
+
