@@ -37,7 +37,9 @@ Tuple{Base.OneTo{Int64},Base.OneTo{Int64}}
 ```
 """
 axes_type(::T) where {T} = axes_type(T)
-axes_type(::Type{<:AbstractArray{T,N}}) where {T,N} = Tuple{ntuple(_ -> OneTo{Int}, Val(N))...}
+function axes_type(::Type{<:AbstractArray{T,N}}) where {T,N}
+    return Tuple{ntuple(_ -> OneTo{Int}, Val(N))...}
+end
 
 """
     axes_type(::T, i) = axes_type(T, i)
@@ -89,7 +91,7 @@ true
     if T2 <: T
         return !is_fixed(T)
     else
-        return is_dynamic(T)
+        return is_dynamic(T2)
     end
 end
 
@@ -113,6 +115,9 @@ false
 
 julia> is_static(())
 true
+
+julia> is_static((a=1, b=2))
+true
 ```
 """
 @inline function is_static(::Type{T}) where {T}
@@ -120,7 +125,7 @@ true
     if T2 <: T
         return false
     else
-        return is_static(T)
+        return is_static(T2)
     end
 end
 is_static(::Type{T}) where {T<:Tuple} = true
@@ -151,7 +156,7 @@ false
     if T2 <: T
         return false
     else
-        return is_fixed(T)
+        return is_fixed(T2)
     end
 end
 # most range types are fixed so just make it the default

@@ -142,5 +142,8 @@
                       )
             @test StaticRanges.same_type(typeof(x), typeof(y))
         end
+        @test StaticRanges.same_type(onetosrange_type, onetosrange_type)
+        @test !StaticRanges.same_type(onetosrange_type, onetomrange_type)
+        @test StaticRanges.same_type(1:2, 1:2)
     end
 end
