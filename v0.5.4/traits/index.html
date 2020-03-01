@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Traits · StaticRanges.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">StaticRanges.jl</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Introduction</a></li><li><span class="tocitem">Ranges</span><ul><li><a class="tocitem" href="../quick_start/">Quick Start</a></li><li><a class="tocitem" href="../range_types/">Range Types</a></li><li><a class="tocitem" href="../manipulating_ranges/">Manipulating Ranges</a></li></ul></li><li><a class="tocitem" href="../chained_filters/">Chained Filters</a></li><li><span class="tocitem">Internals</span><ul><li><a class="tocitem" href="../twice_precision/">Twice Precision</a></li><li><a class="tocitem" href="../order_functions/">Order Functions</a></li><li class="is-active"><a class="tocitem" href>Traits</a><ul class="internal"><li><a class="tocitem" href="#Comparing-Static,-Mutable,-and-Immutable-Types-1"><span>Comparing Static, Mutable, and Immutable Types</span></a></li><li><a class="tocitem" href="#Order-traits-1"><span>Order traits</span></a></li><li><a class="tocitem" href="#Other-Traits-1"><span>Other Traits</span></a></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Internals</a></li><li class="is-active"><a href>Traits</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Traits</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/Tokazma/StaticRanges.jl/blob/master/docs/src/traits.md#L" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Traits-1"><a class="docs-heading-anchor" href="#Traits-1">Traits</a><a class="docs-heading-anchor-permalink" href="#Traits-1" title="Permalink"></a></h1><h2 id="Comparing-Static,-Mutable,-and-Immutable-Types-1"><a class="docs-heading-anchor" href="#Comparing-Static,-Mutable,-and-Immutable-Types-1">Comparing Static, Mutable, and Immutable Types</a><a class="docs-heading-anchor-permalink" href="#Comparing-Static,-Mutable,-and-Immutable-Types-1" title="Permalink"></a></h2><p>The difference between each type of range is conceptualized as &quot;static&quot;, &quot;fixed&quot;, or &quot;dynamic&quot;.</p><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.is_dynamic" href="#StaticRanges.is_dynamic"><code>StaticRanges.is_dynamic</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">is_dynamic(x) -&gt; Bool</code></pre><p>Returns true if the size of <code>x</code> is dynamic/can change.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; is_dynamic(UnitSRange(1, 10))
+false
+
+julia&gt; is_dynamic(StepRange(1, 2, 20))
+false
+
+julia&gt; is_dynamic(StepMRange(1, 2, 20))
+true</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/staticness.jl#LL70-L88">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.is_static" href="#StaticRanges.is_static"><code>StaticRanges.is_static</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">is_static(x) -&gt; Bool</code></pre><p>Returns <code>true</code> if <code>x</code> is static.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; is_static(UnitSRange(1, 10))
+true
+
+julia&gt; is_static(StepMRange(1, 2, 20))
+false
+
+julia&gt; is_static(StepRange(1, 2, 20))
+false
+
+julia&gt; is_static(())
+true
+
+julia&gt; is_static((a=1, b=2))
+true</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/staticness.jl#LL98-L122">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.is_fixed" href="#StaticRanges.is_fixed"><code>StaticRanges.is_fixed</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">is_fixed(x) -&gt; Bool</code></pre><p>Returns <code>true</code> if the size of <code>x</code> is fixed. Note that if the size of <code>x</code> is known statically (at compile time) it is also interpreted as fixed.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; is_fixed(UnitSRange(1, 10))
+true
+
+julia&gt; is_fixed(StepRange(1, 2, 20))
+true
+
+julia&gt; is_fixed(StepMRange(1, 2, 20))
+false</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/staticness.jl#LL134-L153">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.as_dynamic" href="#StaticRanges.as_dynamic"><code>StaticRanges.as_dynamic</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">as_dynamic(x)</code></pre><p>If <code>x</code> is mutable then returns <code>x</code>, otherwise returns a comparable but mutable type to <code>x</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; as_dynamic(Base.OneTo(10))
+OneToMRange(10)
+
+julia&gt; as_dynamic(UnitRange(1, 10))
+UnitMRange(1:10)
+
+julia&gt; as_dynamic(StepRange(1, 2, 20))
+StepMRange(1:2:19)
+
+julia&gt; as_dynamic(range(1.0, step=2.0, stop=20.0))
+StepMRangeLen(1.0:2.0:19.0)
+
+julia&gt; as_dynamic(LinRange(1, 20, 10))
+LinMRange(1.0, stop=20.0, length=10)</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/staticness.jl#LL165-L190">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.as_static" href="#StaticRanges.as_static"><code>StaticRanges.as_static</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">as_static(x)</code></pre><p>If <code>x</code> is static then returns <code>x</code>, otherwise returns a comparable but static size type to <code>x</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; as_static(Base.OneTo(10))
+OneToSRange(10)
+
+julia&gt; as_static(UnitRange(1, 10))
+UnitSRange(1:10)
+
+julia&gt; as_static(StepRange(1, 2, 20))
+StepSRange(1:2:19)
+
+julia&gt; as_static(range(1.0, step=2.0, stop=20.0))
+StepSRangeLen(1.0:2.0:19.0)
+
+julia&gt; as_static(LinRange(1, 20, 10))
+LinSRange(1.0, stop=20.0, length=10)</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/staticness.jl#LL249-L274">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.as_fixed" href="#StaticRanges.as_fixed"><code>StaticRanges.as_fixed</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">as_fixed(x)</code></pre><p>If <code>x</code> is immutable then returns <code>x</code>, otherwise returns a comparable but fixed size type to <code>x</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; as_fixed(OneToMRange(10))
+Base.OneTo(10)
+
+julia&gt; as_fixed(UnitMRange(1, 10))
+1:10
+
+julia&gt; as_fixed(StepMRange(1, 2, 20))
+1:2:19
+
+julia&gt; as_fixed(mrange(1.0, step=2.0, stop=20.0))
+1.0:2.0:19.0
+
+julia&gt; as_fixed(LinMRange(1, 20, 10))
+10-element LinRange{Float64}:
+ 1.0,3.11111,5.22222,7.33333,9.44444,11.5556,13.6667,15.7778,17.8889,20.0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/staticness.jl#LL207-L233">source</a></section></article><h2 id="Order-traits-1"><a class="docs-heading-anchor" href="#Order-traits-1">Order traits</a><a class="docs-heading-anchor-permalink" href="#Order-traits-1" title="Permalink"></a></h2><p>The following traits are used to conveniently characterize the order of ranges.</p><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.is_forward" href="#StaticRanges.is_forward"><code>StaticRanges.is_forward</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">is_forward(x) -&gt; Bool</code></pre><p>Returns <code>true</code> if <code>x</code> is sorted forward.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; fr = 1:2:10
+1:2:9
+
+julia&gt; rr = 10:-2:1
+10:-2:2
+
+julia&gt; is_forward(fr)
+true
+
+julia&gt; is_forward(rr)
+false</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/order.jl#LL10-L31">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.is_reverse" href="#StaticRanges.is_reverse"><code>StaticRanges.is_reverse</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">is_reverse(x) -&gt; Bool</code></pre><p>Returns <code>true</code> if <code>x</code> is sorted in reverse.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; fr = 1:2:10
+1:2:9
+
+julia&gt; rr = 10:-2:1
+10:-2:2
+
+julia&gt; is_reverse(fr)
+false
+
+julia&gt; is_reverse(rr)
+true</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/order.jl#LL38-L59">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.order" href="#StaticRanges.order"><code>StaticRanges.order</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">order(x) -&gt; Ordering</code></pre><p>Returns the ordering of <code>x</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/order.jl#LL66-L70">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.is_ordered" href="#StaticRanges.is_ordered"><code>StaticRanges.is_ordered</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">is_ordered(x) -&gt; Bool</code></pre><p>Returns <code>true</code> if <code>x</code> is ordered. <code>is_ordered</code> should return the same value that <code>issorted</code> would on <code>x</code> except it doesn&#39;t specify how it&#39;s sorted (e.g., forward, reverse, etc).</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/order.jl#LL85-L91">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.is_before" href="#StaticRanges.is_before"><code>StaticRanges.is_before</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">is_before(x::T, y::T, collection::AbstractVector{T}) -&gt; Bool</code></pre><p>Returns <code>true</code> if <code>x</code> is before <code>y</code> in <code>collection</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/order.jl#LL253-L257">source</a></section><section><div><pre><code class="language-none">is_before(x::AbstractVector{T}, y::AbstractVector{T}) -&gt; is_before(order(x), order(y), x, y)
+is_before(::Ordering, ::Ordering, x, y) -&gt; Bool</code></pre><p>Returns <code>true</code> if all elements in <code>x</code> are before all elements in <code>y</code>. Functionally equivalent to <code>all(x .&lt; y)</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; r1 = 1:5
+1:5
+
+julia&gt; r2 = 6:10
+6:10
+
+julia&gt; is_before(r2, r1)
+false
+
+julia&gt; is_before(r1, r2)
+true</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/order.jl#LL262-L285">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.is_after" href="#StaticRanges.is_after"><code>StaticRanges.is_after</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">is_after(x::T, y::T, collection::AbstractVector{T}) -&gt; Bool</code></pre><p>Returns <code>true</code> if <code>x</code> is after <code>y</code> in <code>collection</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/order.jl#LL289-L293">source</a></section><section><div><pre><code class="language-none">is_after(x::AbstractVector{T}, y::AbstractVector{T}) -&gt; is_after(order(x), order(y), x, y)
+is_after(::Ordering, ::Ordering, x, y) -&gt; Bool</code></pre><p>Returns <code>true</code> if all elements in <code>x</code> are after all elements in <code>y</code>. Functionally equivalent to <code>all(x .&gt; y)</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; r1 = 1:5
+1:5
+
+julia&gt; r2 = 6:10
+6:10
+
+julia&gt; is_after(r2, r1)
+true
+
+julia&gt; is_after(r1, r2)
+false</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/order.jl#LL298-L321">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.is_contiguous" href="#StaticRanges.is_contiguous"><code>StaticRanges.is_contiguous</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">is_contiguous(x, y) = is_contiguous(order(x), order(y), x, y)
+is_contiguous(::Ordering, ::Ordering, x, y) -&gt; Bool</code></pre><p>Returns <code>true</code> if one of the ends of <code>x</code> may be extended by a single overlapping end of <code>y</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; is_contiguous(1:3, 3:4)
+true
+
+julia&gt; is_contiguous(3:-1:1, 3:4)
+true
+
+julia&gt; is_contiguous(3:-1:1, 4:-1:3)
+true
+
+julia&gt; is_contiguous(1:3, 4:-1:3)
+true
+
+julia&gt; is_contiguous(1:3, 2:4)
+false</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/order.jl#LL325-L351">source</a></section></article><h2 id="Other-Traits-1"><a class="docs-heading-anchor" href="#Other-Traits-1">Other Traits</a><a class="docs-heading-anchor-permalink" href="#Other-Traits-1" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.parent_type" href="#StaticRanges.parent_type"><code>StaticRanges.parent_type</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">parent_type(::T) = parent_type(T)
+parent_type(::Type{T})</code></pre><p>Returns the equivalent output of <code>typeof(parent(x))</code> but derives this directly from the type of x (e.g., parametric typing).</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; parent_type([1 2; 3 4])
+Array{Int64,2}
+
+julia&gt; parent_type(view([1 2; 3 4], 1, 1))
+Array{Int64,2}</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/staticness.jl#LL2-L19">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StaticRanges.axes_type" href="#StaticRanges.axes_type"><code>StaticRanges.axes_type</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">axes_type(::T) = axes_type(T)
+axes_type(::Type{T})</code></pre><p>Returns the equivalent output of <code>typeof(axes(x))</code> but derives this directly from the type of x (e.g., parametric typing).</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; axes_type([1 2; 3 4])
+Tuple{Base.OneTo{Int64},Base.OneTo{Int64}}</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/staticness.jl#LL24-L38">source</a></section><section><div><pre><code class="language-none">axes_type(::T, i) = axes_type(T, i)
+axes_type(::Type{T}, i)</code></pre><p>Returns the equivalent output of <code>typeof(axes(x, i))</code> but derives this directly from the type of x (e.g., parametric typing).</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using StaticRanges
+
+julia&gt; axes_type([1 2; 3 4], 1)
+Base.OneTo{Int64}</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazma/StaticRanges.jl/blob/301a7a3952745fc4cb16f8a2cb289f5749311e5c/src/staticness.jl#LL44-L58">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../order_functions/">« Order Functions</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Sunday 1 March 2020 13:09">Sunday 1 March 2020</span>. Using Julia version 1.3.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
