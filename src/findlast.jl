@@ -1,3 +1,4 @@
+
 """
     find_last(predicate::Function, A)
 
@@ -141,3 +142,4 @@ find_last(f::Fix2{typeof(>=)}, r::AbstractRange, ::UnorderedOrdering) = nothing
 function find_last(f::Fix2{typeof(>=)}, r::AbstractArray, ro::UnorderedOrdering)
     return unsafe_findlast(f, r, ro)
 end
+

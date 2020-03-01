@@ -1,3 +1,4 @@
+
 "UnorderedOrdering - Indicates that a collection's is not forward or reverse ordered."
 struct UnorderedOrdering <: Ordering end
 const Unordered = UnorderedOrdering()
@@ -329,18 +330,23 @@ Returns `true` if one of the ends of `x` may be extended by a single overlapping
 end of `y`.
 
 # Example
-```
+```jldoctest
 julia> using StaticRanges
 
-julia> is_contiguous(1:3, 3:4) == true
+julia> is_contiguous(1:3, 3:4)
+true
 
-julia> is_contiguous(3:-1:1, 3:4) == true
+julia> is_contiguous(3:-1:1, 3:4)
+true
 
-julia> is_contiguous(3:-1:1, 4:-1:3) == true
+julia> is_contiguous(3:-1:1, 4:-1:3)
+true
 
-julia> is_contiguous(1:3, 4:-1:3) == true
+julia> is_contiguous(1:3, 4:-1:3)
+true
 
-julia> is_contiguous(1:3, 2:4) == false
+julia> is_contiguous(1:3, 2:4)
+false
 ```
 """
 is_contiguous(x, y) = is_contiguous(x, order(x), y, order(y))
@@ -350,3 +356,4 @@ end
 function is_contiguous(x, ::ReverseOrdering, y, yo)
     return last(x) == ordmax(y, yo) || first(x) == ordmin(y, yo)
 end
+

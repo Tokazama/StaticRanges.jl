@@ -1,3 +1,4 @@
+
 Base.reverse(r::StepSRange) = srange(last(r), step=-step(r), stop=first(r))
 Base.reverse(r::StepMRange) = mrange(last(r), step=-step(r), stop=first(r))
 Base.reverse(r::AbstractLinRange) = similar_type(r)(last(r), first(r), length(r))
@@ -208,3 +209,4 @@ Base.empty(r::UnitSRange{T}) where {T} = UnitSRange(first(r), first(r) - one(T))
 Base.empty(r::UnitMRange{T}) where {T} = UnitMRange(first(r), first(r) - one(T))
 Base.empty(r::OneToSRange{T}) where {T} = OneToSRange(zero(T))
 Base.empty(r::OneToMRange{T}) where {T} = OneToMRange(zero(T))
+

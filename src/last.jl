@@ -103,3 +103,4 @@ set_last(r::OneToUnion{T}, val::T) where {T} = similar_type(r)(val)
 function set_last(r::StepRangeLenUnion{T}, val::T) where {T}
     return similar_type(r)(r.ref, r.step, unsafe_findvalue(val, r), r.offset)
 end
+

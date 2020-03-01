@@ -17,7 +17,7 @@ function StaticArrays.pushfirst(v::AbstractVector{T}, item::T)  where {T}
     out = similar(v, set_length(axes(v, 1), len))
     out[1] = item
     for i in 2:len
-        out[i] = v[i-1]
+        out[i] = v[i - 1]
     end
     return out
 end

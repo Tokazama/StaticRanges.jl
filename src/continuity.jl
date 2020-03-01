@@ -1,3 +1,4 @@
+
 """
     Continuity
 """
@@ -12,3 +13,4 @@ const Discrete = DiscreteTrait()
 Continuity(::T) where {T} = Continuity(T)
 Continuity(::Type{T}) where {T} = Discrete
 Continuity(::Type{T}) where {T<:AbstractRange} = Continuous
+

@@ -203,6 +203,7 @@ as_dynamic(x::Union{LinRange,LinSRange}) = LinMRange(first(x), last(x), length(x
 as_dynamic(x::StepMRangeLen) = x
 as_dynamic(x::Union{StepRangeLen,StepSRangeLen}) = StepMRangeLen(first(x), step(x), length(x), x.offset)
 
+
 """
     as_fixed(x)
 

@@ -59,7 +59,9 @@ export
     is_contiguous,
     # methods
     and,
+    ⩓,
     or,
+    ⩔,
     as_static,
     as_dynamic,
     as_fixed,
@@ -233,7 +235,5 @@ include("pop.jl")
 include("push.jl")
 include("show.jl")
 include("vcat.jl")
-
-#include("./AxisInterface/AxisInterface.jl")
 
 end

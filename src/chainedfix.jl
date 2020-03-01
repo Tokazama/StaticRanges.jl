@@ -14,7 +14,7 @@ end
     and(x, y)
 
 Synonymous with bitwise `&` operator but may be used to chain multiple `Fix1` or
-`Fix2` operations.
+`Fix2` operations. The `⩓` (`\\And<TAB>`) operator may be used in its place (e.g., `x ⩓ y`).
 
 ## Examples
 ```jldoctest
@@ -28,6 +28,10 @@ false
 
 julia> and(and(<(5), >(1)), >(2))(3)
 true
+
+julia> and(<(5) ⩓ >(1), >(2))(3)  # ⩓ == \\And
+true
+
 ```
 """
 and(x, y) = x & y
@@ -35,11 +39,14 @@ and(x::Function, y) = ChainedFix(and, x, y)
 and(x, y::Function) = ChainedFix(and, x, y)
 and(x::Function, y::Function) = ChainedFix(and, x, y)
 
+# \And
+⩓(x, y) = and(x, y)
+
 """
     or(x, y)
 
 Synonymous with bitwise `|` operator but may be used to chain multiple `Fix1` or
-`Fix2` operations.
+`Fix2` operations. The `⩔` (`\\Or<TAB>`) operator may be used in its place (e.g., `x ⩔ y`).
 
 ## Examples
 ```jldoctest
@@ -51,7 +58,7 @@ true
 julia> or(<(5), false)(1)
 true
 
-julia> or(or(<(5), >(1)), >(2))(3)
+julia> or(<(5) ⩔ >(1), >(2))(3)  # ⩔ == \\Or
 true
 ```
 """
@@ -59,6 +66,9 @@ or(x, y) = x | y
 or(x::Function, y) = ChainedFix(or, x, y)
 or(x, y::Function) = ChainedFix(or, x, y)
 or(x::Function, y::Function) = ChainedFix(or, x, y)
+
+#\Or
+⩔(x, y) = or(x, y)
 
 const BitAnd{F1,F2} = ChainedFix{typeof(and),F1,F2}
 
