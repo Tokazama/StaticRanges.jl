@@ -1,14 +1,14 @@
 """
-    gethi(x::Union{TPVal{T}, TwicePrecision{T}}) -> T
-Returns the `hi` component of a twice precision number. Works for both
-statically set `TPVal` and `TwicePrecision`.
+    gethi(x:: TwicePrecision{T}) -> T
+
+Returns the `hi` component of a twice precision number.
 """
 gethi(x::TwicePrecision) = getfield(x, :hi)
 
 """
-    getlo(x::Union{TPVal{T}, TwicePrecision{T}}) -> T
-Returns the `lo` component of a twice precision number. Works for both
-statically set `TPVal` and `TwicePrecision`.
+    getlo(x::TwicePrecision{T}) -> T
+
+Returns the `lo` component of a twice precision number.
 """
 getlo(x::TwicePrecision) = getfield(x, :lo)
 

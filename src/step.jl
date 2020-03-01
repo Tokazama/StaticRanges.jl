@@ -10,12 +10,20 @@ Base.step_hp(r::StepMRangeLen) = getfield(r, :step)
 Base.step(r::StepMRangeLen{T}) where {T} = T(step_hp(r))
 Base.step(r::AbstractLinRange) = (last(r)-first(r)) / lendiv(r)
 
-"stephi(x::AbstractStepRangeLen) - Returns the `hi` component of a twice precision step"
+"""
+    stephi(x::AbstractStepRangeLen)
+
+Returns the `hi` component of a twice precision step.
+"""
 stephi(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts<:TwicePrecision,R,S} = gethi(S)
 stephi(r::StepMRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.hi
 stephi(r::StepRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.hi
 
-"steplo(x::AbstractStepRangeLen) - Returns the `lo` component of a twice precision step"
+"""
+    steplo(x::AbstractStepRangeLen)
+
+Returns the `lo` component of a twice precision step.
+"""
 steplo(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts<:TwicePrecision,R,S} = getlo(S)
 steplo(r::StepMRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.lo
 steplo(r::StepRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.lo

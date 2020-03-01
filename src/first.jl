@@ -16,12 +16,20 @@ Base.first(r::LinMRange) = getfield(r, :start)
 
 Base.first(r::AbstractStepRangeLen) = unsafe_getindex(r, 1)
 
-"refhi(x::AbstractStepRangeLen) - Returns the `hi` component of a twice precision ref"
+"""
+    refhi(x::AbstractStepRangeLen)
+
+Returns the `hi` component of a twice precision ref.
+"""
 refhi(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr<:TwicePrecision,Ts,R,S,L,F} = gethi(R)
 refhi(r::StepMRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.hi
 refhi(r::StepRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.hi
 
-"reflo(x::AbstractStepRangeLen) - Returns the `lo` component of a twice precision ref"
+"""
+    reflo(x::AbstractStepRangeLen)
+
+Returns the `lo` component of a twice precision ref.
+"""
 reflo(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr<:TwicePrecision,Ts,R,S,L,F} = getlo(R)
 reflo(r::StepMRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.lo
 reflo(r::StepRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.lo
