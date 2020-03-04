@@ -130,6 +130,7 @@ true
 end
 is_static(::Type{T}) where {T<:Tuple} = true
 is_static(::Type{T}) where {T<:NamedTuple} = true
+is_static(::Type{T}) where {T<:StaticArray} = true
 
 """
     is_fixed(x) -> Bool
@@ -203,6 +204,14 @@ as_dynamic(x::Union{LinRange,LinSRange}) = LinMRange(first(x), last(x), length(x
 as_dynamic(x::StepMRangeLen) = x
 as_dynamic(x::Union{StepRangeLen,StepSRangeLen}) = StepMRangeLen(first(x), step(x), length(x), x.offset)
 
+function as_dynamic(A::AbstractArray)
+    if is_dynamic(A)
+        return A
+    else
+        return Array(A)
+    end
+end
+
 
 """
     as_fixed(x)
@@ -254,7 +263,7 @@ type to `x`.
 
 ## Examples
 ```jldoctest
-julia> using StaticRanges
+julia> using StaticRanges, StaticArrays
 
 julia> as_static(Base.OneTo(10))
 OneToSRange(10)
@@ -270,6 +279,13 @@ StepSRangeLen(1.0:2.0:19.0)
 
 julia> as_static(LinRange(1, 20, 10))
 LinSRange(1.0, stop=20.0, length=10)
+
+julia> as_static(reshape(1:12, (3, 4)))
+3×4 SArray{Tuple{3,4},Int64,2,12} with indices SOneTo(3)×SOneTo(4):
+ 1  4  7  10
+ 2  5  8  11
+ 3  6  9  12
+
 ```
 """
 as_static(x::OneToSRange) = x
@@ -286,4 +302,12 @@ as_static(x::Union{LinRange,LinMRange}) = LinSRange(first(x), last(x), length(x)
 
 as_static(x::StepSRangeLen) = x
 as_static(x::Union{StepRangeLen,StepMRangeLen}) = StepSRangeLen(first(x), step(x), length(x), x.offset)
+
+function as_static(A::AbstractArray)
+    if is_static(A)
+        return A
+    else
+        return SArray{Tuple{size(A)...}}(A)
+    end
+end
 
