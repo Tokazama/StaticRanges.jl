@@ -33,7 +33,7 @@ is_forward(x) = isempty(x) ? false : issorted(x)
 is_forward(::ForwardOrdering) = true
 is_forward(::Ordering) = false
 is_forward(::AbstractUnitRange) = true
-is_forward(x::AbstractRange) = step(x) > 0
+is_forward(x::AbstractRange{T}) where {T} = step(x) > zero(T)
 
 """
     is_reverse(x) -> Bool
@@ -61,7 +61,7 @@ is_reverse(x) = isempty(x) ? false : issorted(x, order=Reverse)
 is_reverse(::ReverseOrdering) = true
 is_reverse(::Ordering) = false
 is_reverse(::AbstractUnitRange) = false
-is_reverse(x::AbstractRange) = step(x) < 0
+is_reverse(x::AbstractRange{T}) where {T} = step(x) < zero(T)
 
 """
     order(x) -> Ordering
@@ -91,7 +91,13 @@ forward, reverse, etc).
 """
 is_ordered(::Type{T}) where {T} = false
 is_ordered(::Type{T}) where {T<:AbstractRange} = true
-is_ordered(x::X) where {X} = is_ordered(X) ? true : is_forward(x) || is_reverse(x)
+function is_ordered(x::X) where {X}
+    if is_ordered(X)
+        return true
+    else
+        return is_forward(x) || is_reverse(x)
+    end
+end
 is_ordered(::ForwardOrdering) = true
 is_ordered(::ReverseOrdering) = true
 is_ordered(::UnorderedOrdering) = false
@@ -147,7 +153,7 @@ find_min(x, ::UnorderedOrdering) = findmin(x)
 Returns `true` if all of `x` is found within `y`.
 """
 is_within(x, y) = is_within(x, order(x), y, order(y))
-is_within(x, xo, y, yo) = (ordmin(x, xo) >= ordmin(y, yo)) && (ordmax(x, xo) <= ordmax(y, yo))
+is_within(x, xo, y, yo) = (ordmin(x, xo) >= ordmin(y, yo)) & (ordmax(x, xo) <= ordmax(y, yo))
 
 """
     gtmax(x, y) -> Bool
@@ -222,13 +228,29 @@ _group_min(x, xo, y, yo) = min(ordmin(x, xo), ordmin(y, yo))
     cmpmax(x, y)
 """
 cmpmax(x, y) = cmpmax(x, order(x), y, order(y))
-cmpmax(x, xo, y, yo) = ltmax(x, xo, y, yo) ? -1 : (gtmax(x, xo, y, yo) ? 1 : 0)
+function cmpmax(x, xo, y, yo)
+    if ltmax(x, xo, y, yo)
+        return -1
+    elseif gtmax(x, xo, y, yo)
+        return 1
+    else
+        return 0
+    end
+end
 
 """
     cmpmin(x, y)
 """
 cmpmin(x, y) = cmpmin(x, order(x), y, order(y))
-cmpmin(x, xo, y, yo) = ltmin(x, xo, y, yo) ? -1 : (gtmin(x, xo, y, yo) ? 1 : 0)
+function cmpmin(x, xo, y, yo)
+    if ltmin(x, xo, y, yo)
+        return -1
+    elseif gtmin(x, xo, y, yo)
+        return 1
+    else
+        return 0
+    end
+end
 
 """
     min_of_group_max(x, y)
