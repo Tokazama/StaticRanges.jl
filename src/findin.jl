@@ -31,7 +31,32 @@ function _find_last_in(x, xo::Ordering, y, yo::Ordering)
     end
     return 0
 end
-function _findin(x::AbstractUnitRange, xo, y::AbstractUnitRange, yo)
+
+function _findin(x::AbstractUnitRange{<:Integer}, xo, y::AbstractUnitRange{<:Integer}, yo)
+    return promote_type(typeof(x), typeof(y))(
+        _find_first_in(x, xo, y, yo),
+        _find_last_in(x, xo, y, yo)
+    )
+end
+
+function _findin(x::OneToUnion{<:Integer}, xo, y::OneToUnion{<:Integer}, yo)
+    return promote_type(typeof(x), typeof(y))(_find_last_in(x, xo, y, yo))
+end
+
+# TODO could place boundscheck for if operator here
+@propagate_inbounds function _findin(x::AbstractUnitRange{T}, xo, y::AbstractUnitRange{T}, yo) where {T}
+
+    if iszero(rem(first(x) - first(y), 1))
+        return promote_type(typeof(x), typeof(y))(
+            _find_first_in(x, xo, y, yo),
+            _find_last_in(x, xo, y, yo)
+        )
+    else
+        return empty(x)
+    end
+end
+
+@propagate_inbounds function _findin(x::AbstractUnitRange, xo, y::AbstractUnitRange, yo)
     xnew, ynew = promote(x, y)
     return _findin(xnew, xo, ynew, yo)
 end
@@ -42,47 +67,36 @@ function _findin(x::AbstractArray, xo, y::AbstractArray, yo)
 end
 =#
 
+# TODO test to ensure every
 function _findin(x, xo, y, yo)
-    return is_ordered(xo) && is_ordered(yo) ? Base._sortedfindin(y, x) : Base._findin(y, x)
+    if is_forward(xo) && is_forward(yo)
+        return Base._sortedfindin(y, x)
+        #=
+        if is_reverse(xo)
+            if is_reverse(yo)
+                return Base._sortedfindin(reverse(y), reverse(x))
+            else
+                return reverse(Base._sortedfindin(y, reverse(x)))
+            end
+        else
+            if is_reverse(yo)
+                return reverse(Base._sortedfindin(reverse(y), x))
+            else
+                return Base._sortedfindin(y, x)
+            end
+        end
+        =#
+    else
+        return map(i -> findfirst(==(i), y), x)
+        #return Base._findin(y, x)
+    end
 end
 
+#= TODO: delete if all is working
 _findin(x::OneToMRange, xo, y::OneToMRange, yo) = OneToMRange(_find_last_in(x, xo, y, yo))
 _findin(x::OneTo,       xo, y::OneTo,       yo) = OneTo(_find_last_in(x, xo, y, yo))
 _findin(x::OneToSRange, xo, y::OneToSRange, yo) = OneToSRange(_find_last_in(x, xo, y, yo))
-
-function _findin(x::UnitRange{<:Integer}, xo, y::UnitRange{<:Integer}, yo)
-    return UnitRange(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
-end
-function _findin(x::UnitMRange{<:Integer}, xo, y::UnitMRange{<:Integer}, yo)
-    return UnitMRange(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
-end
-function _findin(x::UnitSRange{<:Integer}, xo, y::UnitSRange{<:Integer}, yo)
-    return UnitSRange(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
-end
-
-function _findin(x::UnitRange, xo, y::UnitRange, yo)
-    if iszero(rem(first(x) - first(y), 1))
-        return UnitRange(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
-    else
-        return empty(x)
-    end
-end
-
-function _findin(x::UnitMRange, xo, y::UnitMRange, yo)
-    if iszero(rem(first(x) - first(y), 1))
-        return UnitMRange(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
-    else
-        return empty(x)
-    end
-end
-
-function _findin(x::UnitSRange, xo, y::UnitSRange, yo)
-    if iszero(rem(first(x) - first(y), 1))
-        return UnitSRange(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
-    else
-        return empty(x)
-    end
-end
+=#
 
 _to_step(x, ::O, ::O) where {O<:Ordering} = x
 _to_step(x, ::Ordering, ::Ordering) = -x

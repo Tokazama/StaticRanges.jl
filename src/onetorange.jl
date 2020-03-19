@@ -23,19 +23,29 @@ Base.mod(i::Integer, r::OneToRange) = Base.mod1(i, last(r))
 A static range that parallels `OneTo` in behavior.
 """
 struct OneToSRange{T<:Integer,E} <: OneToRange{T}
-    OneToSRange{T}(stop::T) where {T} = new{T,max(zero(T), stop)}()
-    OneToSRange{T}(stop::Number) where {T} = new{T,max(zero(T),T(stop))}()
+    OneToSRange{T,L}() where {T,L} = new{T,max(zero(T), L)}()
+    #OneToSRange{T}(stop::Number) where {T} = new{T,max(zero(T),T(stop))}()
 end
+
+OneToSRange{T,<:Any}(stop) where {T<:Integer} = OneToSRange{T,T(stop)}()
+OneToSRange{T,L}(stop) where {T<:Integer,L} = OneToSRange{T,T(stop)}()
+#(::Type{OneToSRange{T,<:Any}})(stop) where {T<:Integer} = OneToSRange{T,T(stop)}()
+
+#=
+function OneToSRange{T,<:Any}(stop::T2) where {T<:Integer,T2}
+    return OneToSRange{T}(max(zero(T),T(stop)))
+end
+=#
 
 function OneToSRange{T}(r::AbstractRange) where {T<:Integer}
     first(r) == 1 || (Base.@_noinline_meta; throw(ArgumentError("first element must be 1, got $(first(r))")))
     step(r)  == 1 || (Base.@_noinline_meta; throw(ArgumentError("step must be 1, got $(step(r))")))
     return OneToSRange(last(r))
 end
-OneToSRange{T,<:Any}(r::OneToSRange{T}) where {T<:Integer} = r
-OneToSRange{T}(r::OneToRange) where {T<:Integer} = OneToSRange{T}(last(r))
 OneToSRange(stop::T) where {T<:Integer} = OneToSRange{T}(stop)
 OneToSRange(r::AbstractRange{T}) where {T<:Integer} = OneToSRange{T}(r)
+
+#OneToSRange{T,<:Any}(r::OneToSRange{T}) where {T<:Integer} = r
 (::Type{<:OneToSRange{T,<:Any}})(r::AbstractRange) where {T<:Integer} = OneToSRange{T}(r)
 
 function Base.getproperty(r::OneToSRange, s::Symbol)
@@ -81,4 +91,9 @@ end
 
 is_static(::Type{<:OneToSRange}) = true
 is_fixed(::Type{<:OneToMRange}) = false
+
+const OneToUnion{T} = Union{OneTo{T},OneToRange{T}}
+
+#OneToSRange{T}(r::OneToUnion) where {T<:Integer} = OneToSRange{T}(last(r))
+OneToSRange{T,<:Any}(r::OneToUnion) where {T<:Integer} = OneToSRange{T}(last(r))
 

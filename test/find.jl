@@ -167,3 +167,4 @@ end
     x = Second(1):Second(1):Second(10)
     @test find_all(and(>=(Second(1)), <=(Second(3))), x) == 1:3
 end
+

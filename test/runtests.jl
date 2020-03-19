@@ -77,6 +77,7 @@ include("onetorange.jl")
 include("unitrange_tests.jl")
 include("steprange_tests.jl")
 include("intersect_tests.jl")
+include("findall_in.jl")
 include("reverse.jl")
 
 include("steprangelen_test.jl")
