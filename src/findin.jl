@@ -92,12 +92,6 @@ function _findin(x, xo, y, yo)
     end
 end
 
-#= TODO: delete if all is working
-_findin(x::OneToMRange, xo, y::OneToMRange, yo) = OneToMRange(_find_last_in(x, xo, y, yo))
-_findin(x::OneTo,       xo, y::OneTo,       yo) = OneTo(_find_last_in(x, xo, y, yo))
-_findin(x::OneToSRange, xo, y::OneToSRange, yo) = OneToSRange(_find_last_in(x, xo, y, yo))
-=#
-
 _to_step(x, ::O, ::O) where {O<:Ordering} = x
 _to_step(x, ::Ordering, ::Ordering) = -x
 
