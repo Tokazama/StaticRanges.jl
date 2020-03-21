@@ -10,6 +10,10 @@ using StaticRanges: ArrayInterface.ismutable
 using Base: OneTo, step_hp
 using Base.Order
 
+catch_nothing(x) = x
+catch_nothing(x::Nothing) = 0
+
+
 #=
 When using ranges find_all will produce either an AbstractUnitRange or GapRange.
 Therefore, in order test type stability at this level we just ensure it only ever

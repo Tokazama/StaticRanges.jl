@@ -37,12 +37,12 @@
                     for f in (<, >, <=, >=, ==)
                         @testset "Comparison: $f" begin
                             @testset "findfirst($f($i1), $b)" begin
-                                @test @inferred(typed_findfirst(f(i1), m)) == @inferred(typed_findfirst(f(i1), b))
-                                @test @inferred(typed_findfirst(f(i1), s)) == @inferred(typed_findfirst(f(i1), b))
+                                @test @inferred(typed_findfirst(f(i1), m)) == @inferred(catch_nothing(find_first(f(i1), b)))
+                                @test @inferred(typed_findfirst(f(i1), s)) == @inferred(catch_nothing(find_first(f(i1), b)))
                             end
                             @testset "findfirst($f($i2), $b)" begin
-                                @test @inferred(typed_findfirst(f(i2), m)) == @inferred(typed_findfirst(f(i2), b))
-                                @test @inferred(typed_findfirst(f(i2), s)) == @inferred(typed_findfirst(f(i2), b))
+                                @test @inferred(typed_findfirst(f(i2), m)) == @inferred(catch_nothing(find_first(f(i2), b)))
+                                @test @inferred(typed_findfirst(f(i2), s)) == @inferred(catch_nothing(find_first(f(i2), b)))
                             end
                        end
                     end
@@ -57,10 +57,10 @@
             @testset "Number: $i" begin
                 for f in (<, >, <=, >=, ==)
                     @testset "findfirst($f($i), $m" begin
-                        @test @inferred(typed_findfirst(f(i), m)) == @inferred(typed_findfirst(f(i), b))
+                        @test @inferred(typed_findfirst(f(i), m)) == @inferred(catch_nothing(find_first(f(i), b)))
                     end
                     @testset "findfirst($f($i), $s" begin
-                        @test @inferred(typed_findfirst(f(i), s)) == @inferred(typed_findfirst(f(i), b))
+                        @test @inferred(typed_findfirst(f(i), s)) == @inferred(catch_nothing(find_first(f(i), b)))
                     end
                 end
             end
