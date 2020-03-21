@@ -140,3 +140,20 @@ is_forward(x::GapRange{T,T,T}) where {T} = first_range(x) < last_range(x)
 is_reverse(x::GapRange{T,T,L}) where {T,L} = is_reverse(last_range(x))
 is_reverse(x::GapRange{T,F,T}) where {T,F} = is_reverse(first_range(x))
 is_reverse(x::GapRange{T,T,T}) where {T} = first_range(x) > last_range(x)
+
+#Base.:(==)(x::GapRange, y::GapRange) = _isequal(x, y)
+Base.:(==)(x::AbstractArray, y::GapRange) = _isequal(x, y)
+Base.:(==)(x::GapRange, y::AbstractArray) = _isequal(x, y)
+Base.:(==)(x::GapRange, y::GapRange) = _isequal(x, y)
+
+function _isequal(x, y)
+    out = true
+    for (x_i,y_i) in zip(x,y)
+        if x_i != y_i
+            out = false
+            break
+        end
+    end
+    return out
+end
+

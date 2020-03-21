@@ -52,7 +52,6 @@
         for (gr_i, r_i) in zip(GapRange(1:5, 6:10), 1:10)
             @test gr_i == r_i
         end
-        @test isnothing(iterate(GapRange(1:5, 6:10), 11))
     end
 
     @test length(GapRange(1, 2:9)) == 9
@@ -71,6 +70,5 @@
         @test_throws ErrorException GapRange(5:-1:1, 6:10)
         @test_throws ErrorException GapRange{Int,UnitRange{Int},UnitRange{Float64}}(1:3,UnitRange(4.0, 6.0))
     end
-
 end
 

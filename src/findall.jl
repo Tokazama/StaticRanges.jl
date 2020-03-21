@@ -40,64 +40,49 @@ _find_all(::Type{T}, ::Nothing, ::Nothing) where {T} = _empty_ur(T)
 
 _empty_ur(::Type{T}) where {T} = one(T):zero(T)
 
-@propagate_inbounds function find_all(f::BitAnd, r, ro)
-    return _bit_and(r, ro, find_all(f.f1, r, ro), find_all(f.f2, r, ro))
-end
-@propagate_inbounds function find_all(f::BitOr, r, ro)
-    return _bit_or(r, ro, find_all(f.f1, r, ro), find_all(f.f2, r, ro))
+@propagate_inbounds function find_all(f::Fix2{typeof(!=)}, r, ro)
+    return find_not_in(f, r, ro)
 end
 
-function _bit_and(r, ro, inds1, inds2)
-    if isempty(inds1)
-        return isempty(inds2) ? inds2 : inds1
-    else
-        return isempty(inds2) ? inds2 : intersect(inds1, inds2)
-    end
-end
-
-function _bit_or(r, ro, inds1, inds2)
-    if isempty(inds1)
-        return isempty(inds2) ? inds1 : inds2
-    else
-        return isempty(inds2) ? inds1 : _merge_bit_find(inds1, inds2)
-    end
-end
-
-# TODO: this should be implemented once GapRange is more stable
-function _merge_bit_find(inds1::AbstractRange{T}, inds2::AbstractRange{T}) where {T}
-    if is_after(inds1, inds2)
-        return GapRange{T,typeof(inds2),typeof(inds1)}(inds2, inds1)
-    elseif is_before(inds1, inds2)
-        return GapRange{T,typeof(inds1),typeof(inds2)}(inds1, inds2)
-    else
-        # TODO this makes this type unstable, should it return a GapRange
-        return UnitRange(
-            _group_min(inds1, Forward, inds2, Forward),
-            _group_max(inds1, Forward, inds2, Forward)
-           )
-    end
-end
-
-#= we assume that neither of these are empty at this point
-function _merge_bit_find(inds1::AbstractRange{T}, inds2::AbstractRange{T}) where {T}
-    if is_after(inds1, inds2)
-        return vcat(inds2, inds1)
-    elseif is_before(inds1, inds2)
-        return vcat(inds1, inds2)
-    else
-        return _group_min(inds1, Forward, inds2, Forward):_group_max(inds1, Forward, inds2, Forward)
-    end
-end
-=#
-
-@propagate_inbounds function find_all(f::Fix2{typeof(!=)}, r, ro::ForwardOrdering)
-    return find_all(or(<(f.x), >(f.x)), r, ro)
-end
-@propagate_inbounds function find_all(f::Fix2{typeof(!=)}, r, ro::ReverseOrdering)
+@propagate_inbounds function find_not_in(f, r, ro::ForwardOrdering)
     return find_all(or(>(f.x), <(f.x)), r, ro)
 end
 
-find_all(f::Fix2{typeof(!=)}, r, ::UnorderedOrdering) = _find_all_unordered(f, r)
-_find_all_unordered(f, x::AbstractRange) = _empty_ur(keytype(r))
-_find_all_unordered(f, x) = _fallback_find_all(f, x)
+@propagate_inbounds function find_not_in(f, r, ro::ReverseOrdering)
+    return find_all(or(>(f.x), <(f.x)), r, ro)
+end
+
+@propagate_inbounds function find_not_in(f, r, ::UnorderedOrdering)
+    if r isa AbstractRange
+        return GapRange(UnitRange(1, 0), UnitRange(1, 0))
+    else
+        return _fallback_find_all(f, x)
+    end
+end
+
+###
+### BitAnd
+###
+function find_all(bitop::BitAnd{<:F2Lt,<:F2Lt}, x, xo)
+    return bitop.f1(bitop.f2.x) ? find_all(bitop.f2, x) : find_all(bitop.f1, x)
+end
+function find_all(bitop::BitAnd{<:F2Gt,<:F2Gt}, x, xo)
+    return bitop.f1(bitop.f2.x) ? find_all(bitop.f2, x, xo) : find_all(bitop.f1, x, xo)
+end
+function find_all(bitop::BitAnd, x, xo)
+    return intersect(find_all(bitop.f1, x, xo), find_all(bitop.f2, x, xo))
+end
+
+###
+### BitOr
+###
+function find_all(bitop::BitOr{<:F2Lt,<:F2Lt}, x, xo)
+    return !bitop.f1(bitop.f2.x) ? find_all(bitop.f2, x, xo) : find_all(bitop.f1, x, xo)
+end
+function find_all(bitop::BitOr{<:F2Gt,<:F2Gt}, x, xo)
+    return !bitop.f1(bitop.f2.x) ? find_all(bitop.f2, x, xo) : find_all(bitop.f1, x, xo)
+end
+function find_all(bitop::BitOr, x, xo)
+    return combine(find_all(bitop.f1, x, xo), find_all(bitop.f2, x, xo))
+end
 

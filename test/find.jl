@@ -1,23 +1,4 @@
 
-for frange in (mrange, srange)
-    @testset "findfirst-$(frange)" begin
-        @test findfirst(isequal(7), frange(1, step=2, stop=10)) == 4
-        @test findfirst(==(7), frange(1, step=2, stop=10)) == 4
-        @test findfirst(==(10), frange(1, step=2, stop=10)) == nothing
-        @test findfirst(==(11), frange(1, step=2, stop=10)) == nothing
-    end
-end
-
-step_range = StepMRange(1,1,4)
-lin_range = LinMRange(1,4,4)
-oneto_range = OneToMRange(10)
-
-@testset "findfirst" begin
-    @test findfirst(isequal(3), step_range) == 3
-    @test findfirst(isequal(3), lin_range) == 3
-    @test findfirst(isequal(3), oneto_range) == 3
-end
-
 @testset "find" begin
     for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
                     (UnitMRange(2, 6), UnitSRange(2, 6), UnitRange(2, 6)),
@@ -140,31 +121,5 @@ end
             end
         end
     end
-end
-
-
-for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
-                (UnitMRange(2, 6), UnitSRange(2, 6), UnitRange(2, 6)),
-                (StepMRange(1, 2, 11), StepSRange(1, 2, 11), StepRange(1, 2, 11)),
-                (StepMRange(11, -2, 1), StepSRange(11, -2, 1), StepRange(11, -2, 1)),
-                (LinMRange(1, 10, 5), LinSRange(1, 10, 5), LinRange(1, 10, 5)),
-                (StepMRangeLen(1, 3, 5), StepSRangeLen(1, 3, 5), StepRangeLen(1, 3, 5))
-               )
-    for i in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
-        @testset "filter(!=($i), $b)" begin
-            @test filter(!=(i), m) == filter(!=(i), b)
-            @test filter(!=(i), s) == filter(!=(i), b)
-        end
-
-        @testset "find_all(!=($i), $b)" begin
-            @test findall(!=(i), m) == findall(!=(i), b)
-            @test findall(!=(i), s) == findall(!=(i), b)
-        end
-    end
-end
-
-@testset "filter non numerics" begin
-    x = Second(1):Second(1):Second(10)
-    @test find_all(and(>=(Second(1)), <=(Second(3))), x) == 1:3
 end
 

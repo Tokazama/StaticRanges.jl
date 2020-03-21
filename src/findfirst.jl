@@ -30,6 +30,8 @@ find_first
 
 unsafe_findfirst(val, r::AbstractRange, ::ForwardOrdering) = unsafe_findvalue(val, r)
 unsafe_findfirst(val, r::AbstractRange, ::ReverseOrdering) = unsafe_findvalue(val, r)
+unsafe_findfirst(val, r::AbstractRange, ::UnorderedOrdering) = empty(r)
+
 
 unsafe_findfirst(val, a::LinearIndices, ::ReverseOrdering) = unsafe_findfirst(val, axes(a, 1), Reverse)
 unsafe_findfirst(val, a::LinearIndices, ::ForwardOrdering) = unsafe_findfirst(val, axes(a, 1), Forward)
@@ -57,7 +59,7 @@ function _find_first(f, a, o)
 end
 
 # ==, isequal
-function _find_first_eq(x, r, ro::Ordering)
+@propagate_inbounds function _find_first_eq(x, r, ro::Ordering)
     if isempty(r)
         return nothing
     else
@@ -68,7 +70,7 @@ function _find_first_eq(x, r, ro::Ordering)
         return idx
     end
 end
-function _find_first_eq(x, r, ro::UnorderedOrdering)
+@propagate_inbounds function _find_first_eq(x, r, ro::UnorderedOrdering)
     return r isa AbstractRange ? nothing : unsafe_findfirst(x, r, ro)
 end
 
@@ -79,7 +81,7 @@ function _find_first_lt(x, r, ::ForwardOrdering)
     end
     return nothing
 end
-function _find_first_lt(x, r, ro::ReverseOrdering)
+@propagate_inbounds function _find_first_lt(x, r, ro::ReverseOrdering)
     idx = unsafe_findfirst(x, r, ro)
     @boundscheck if firstindex(r) > idx
         return 1
@@ -94,13 +96,13 @@ function _find_first_lt(x, r, ::UnorderedOrdering)
 end
 
 # <=
-function _find_first_lteq(x, r, ::ForwardOrdering)
+@propagate_inbounds function _find_first_lteq(x, r, ::ForwardOrdering)
     @boundscheck if first(r) <= x
         return firstindex(r)
     end
     return nothing
 end
-function _find_first_lteq(x, r, ro::ReverseOrdering)
+@propagate_inbounds function _find_first_lteq(x, r, ro::ReverseOrdering)
     idx = unsafe_findfirst(x, r, ro)
     @boundscheck if lastindex(r) < idx
         return nothing
@@ -119,7 +121,7 @@ end
     return __find_first_gt(x, r, unsafe_findfirst(x, r, ro))
 end
 __find_first_gt(x, r, ::Nothing) = nothing
-function __find_first_gt(x, r, idx)
+@propagate_inbounds function __find_first_gt(x, r, idx)
     @boundscheck if lastindex(r) < idx
         return nothing
     end
@@ -128,7 +130,7 @@ function __find_first_gt(x, r, idx)
     end
     return @inbounds(r[idx]) > x ? idx : (idx != lastindex(r) ? idx + 1 : nothing)
 end
-function _find_first_gt(x, r, ::ReverseOrdering)
+@propagate_inbounds function _find_first_gt(x, r, ::ReverseOrdering)
     @boundscheck if first(r) > x
         return firstindex(r)
     end
@@ -143,7 +145,7 @@ end
     return __find_first_gteq(x, r, unsafe_findfirst(x, r, ro))
 end
 __find_first_gteq(x, r, ::Nothing) = nothing
-function __find_first_gteq(x, r, idx)
+@propagate_inbounds function __find_first_gteq(x, r, idx)
     @boundscheck if lastindex(r) < idx
         return nothing
     end
@@ -152,7 +154,7 @@ function __find_first_gteq(x, r, idx)
     end
     return @inbounds(r[idx]) >= x ? idx : idx + 1
 end
-function _find_first_gteq(x, r, ::ReverseOrdering)
+@propagate_inbounds function _find_first_gteq(x, r, ::ReverseOrdering)
     @boundscheck if first(r) >= x
         return firstindex(r)
     end

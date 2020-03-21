@@ -29,7 +29,8 @@ for RT in (:StepMRangeLen,:StepSRangeLen)
         function Base.getindex(
             r::$(RT){T,TwicePrecision{T},TwicePrecision{T}},
             s::OrdinalRange{<:Integer}
-           ) where {T}
+        ) where {T}
+
             @boundscheck checkbounds(r, s)
             soffset = 1 + round(Int, (r.offset - first(s))/step(s))
             soffset = clamp(soffset, 1, length(s))
@@ -146,15 +147,24 @@ end
 ###
 ### OneToRange
 ###
-function Base.getindex(v::OneToRange{T}, i::Integer) where T
-    Base.@_inline_meta
+@inline function Base.getindex(v::OneToRange{T}, i::Integer) where T
     @boundscheck ((i > 0) & (i <= last(v))) || throw(BoundsError(v, i))
     return T(i)
 end
 
-function Base.getindex(r::OneToRange{T}, s::Union{OneToRange,OneTo}) where T
-    Base.@_inline_meta
-    @boundscheck checkbounds(r, s)
-    return similar_type(r)(T(last(s)))
-end
+for R in (:OneToMRange, :OneToSRange)
+    @eval begin
 
+        @inline function Base.getindex(r::StaticRanges.$R{T}, s::OneToUnion) where T
+            @boundscheck checkbounds(r, s)
+            return similar_type(r)(T(last(s)))
+        end
+
+        @inline function Base.getindex(r::StaticRanges.$R, s::AbstractUnitRange{Integer})
+            @boundscheck checkbounds(r, s)
+            f = first(r)
+            st = oftype(f, f + first(s)-1)
+            return UnitMRange(f, st)
+        end
+    end
+end

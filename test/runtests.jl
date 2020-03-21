@@ -10,6 +10,15 @@ using StaticRanges: ArrayInterface.ismutable
 using Base: OneTo, step_hp
 using Base.Order
 
+#=
+When using ranges find_all will produce either an AbstractUnitRange or GapRange.
+Therefore, in order test type stability at this level we just ensure it only ever
+comes down to one of these two types and convert them to Vector.
+=#
+to_vec(x::AbstractUnitRange{Int}) = collect(x)
+to_vec(x::GapRange) = collect(x)
+to_vec(x) = x
+
 @test srange(1.0, step=Float32(2.0), length=10) isa StepSRangeLen
 @test mrange(1.0, step=Float32(2.0), length=10) isa StepMRangeLen
 @test srange(1, step=Float32(2.0), length=10) isa StepSRangeLen
@@ -51,8 +60,15 @@ using Base.Order
     end
 end
 
-include("find.jl")
 include("gaprange_tests.jl")
+include("findfirst_tests.jl")
+include("findlast_tests.jl")
+include("findall_tests.jl")
+include("findall_in.jl")
+include("filter_tests.jl")
+include("count_tests.jl")
+
+
 include("vcat_tests.jl")
 include("merge_tests.jl")
 include("pop_tests.jl")
@@ -77,7 +93,6 @@ include("onetorange.jl")
 include("unitrange_tests.jl")
 include("steprange_tests.jl")
 include("intersect_tests.jl")
-include("findall_in.jl")
 include("reverse.jl")
 
 include("steprangelen_test.jl")

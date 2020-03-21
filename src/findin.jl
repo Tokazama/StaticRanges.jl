@@ -1,58 +1,63 @@
 
 # find x in y
-function _find_first_in(x, xo::O, y, yo::O) where {O<:Ordering}
+@propagate_inbounds function _find_first_in(x, xo::O, y, yo::O) where {O<:Ordering}
     for x_i in x
         out = find_first(==(x_i), y, yo)
-        isnothing(out) || return out
+        out isa Nothing || return out
     end
     return 1
 end
 
-function _find_first_in(x, xo::Ordering, y, yo::Ordering)
+@propagate_inbounds function _find_first_in(x, xo::Ordering, y, yo::Ordering)
     for x_i in x
         out = find_last(==(x_i), y, yo)
-        isnothing(out) || return out
+        out isa Nothing || return out
     end
     return 1
 end
 
-function _find_last_in(x, xo::O, y, yo::O) where {O<:Ordering}
+@propagate_inbounds function _find_last_in(x, xo::O, y, yo::O) where {O<:Ordering}
     for x_i in reverse(x)
         out = find_first(==(x_i), y, yo)
-        isnothing(out) || return out
+        out isa Nothing || return out
     end
     return 0
 end
 
-function _find_last_in(x, xo::Ordering, y, yo::Ordering)
+@propagate_inbounds function _find_last_in(x, xo::Ordering, y, yo::Ordering)
     for x_i in reverse(x)
         out = find_last(==(x_i), y, yo)
-        isnothing(out) || return out
+        out isa Nothing || return out
     end
     return 0
 end
 
-function _findin(x::AbstractUnitRange{<:Integer}, xo, y::AbstractUnitRange{<:Integer}, yo)
+@propagate_inbounds function _findin(x::AbstractUnitRange{<:Integer}, xo, y::AbstractUnitRange{<:Integer}, yo)
     return promote_type(typeof(x), typeof(y))(
         _find_first_in(x, xo, y, yo),
         _find_last_in(x, xo, y, yo)
     )
 end
 
-function _findin(x::OneToUnion{<:Integer}, xo, y::OneToUnion{<:Integer}, yo)
-    return promote_type(typeof(x), typeof(y))(_find_last_in(x, xo, y, yo))
+@propagate_inbounds function _findin(x::OneToUnion{<:Integer}, xo, y::OneToUnion{<:Integer}, yo)
+    R = promote_type(typeof(x), typeof(y))
+    stop = _find_last_in(x, xo, y, yo)
+    if is_static(R)
+        return UnitSRange(1, stop)
+    elseif is_fixed(R)
+        return UnitRange(1, stop)
+    else
+        return UnitMRange(1, stop)
+    end
 end
 
 # TODO could place boundscheck for if operator here
 @propagate_inbounds function _findin(x::AbstractUnitRange{T}, xo, y::AbstractUnitRange{T}, yo) where {T}
-
+    R = similar_type(promote_type(typeof(x), typeof(y)), Int)
     if iszero(rem(first(x) - first(y), 1))
-        return promote_type(typeof(x), typeof(y))(
-            _find_first_in(x, xo, y, yo),
-            _find_last_in(x, xo, y, yo)
-        )
+        return R(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
     else
-        return empty(x)
+        return R(1, 0)
     end
 end
 
@@ -61,34 +66,22 @@ end
     return _findin(xnew, xo, ynew, yo)
 end
 
-#=
-function _findin(x::AbstractArray, xo, y::AbstractArray, yo)
-    return is_ordered(xo) && is_ordered(yo) ? Base._sortedfindin(y, x) : Base._findin(y, x)
-end
-=#
-
 # TODO test to ensure every
-function _findin(x, xo, y, yo)
+@propagate_inbounds function _findin(x, xo, y, yo)
     if is_forward(xo) && is_forward(yo)
         return Base._sortedfindin(y, x)
-        #=
-        if is_reverse(xo)
-            if is_reverse(yo)
-                return Base._sortedfindin(reverse(y), reverse(x))
-            else
-                return reverse(Base._sortedfindin(y, reverse(x)))
-            end
-        else
-            if is_reverse(yo)
-                return reverse(Base._sortedfindin(reverse(y), x))
-            else
-                return Base._sortedfindin(y, x)
+    else
+        ind  = Vector{eltype(keys(y))}()
+        xset = Set(x)
+        @inbounds for x_i in x
+            for (idx, y_i) in pairs(y)
+                if x_i == y_i
+                    push!(ind, idx)
+                    break
+                end
             end
         end
-        =#
-    else
-        return map(i -> findfirst(==(i), y), x)
-        #return Base._findin(y, x)
+        return ind
     end
 end
 
@@ -96,7 +89,7 @@ _to_step(x, ::O, ::O) where {O<:Ordering} = x
 _to_step(x, ::Ordering, ::Ordering) = -x
 
 # TODO Does it matter what paramters are in the return empty range
-function _findin(x::AbstractRange, xo, y::AbstractRange, yo)
+@propagate_inbounds function _findin(x::AbstractRange, xo, y::AbstractRange, yo)
     sx = step(x)
     sy = step(y)
     sxy = div(sx, sy)
