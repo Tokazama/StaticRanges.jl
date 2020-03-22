@@ -199,10 +199,10 @@ as_dynamic(x::StepMRange) = x
 as_dynamic(x::Union{StepRange,StepSRange}) = StepMRange(first(x), step(x), last(x))
 
 as_dynamic(x::LinMRange) = x
-as_dynamic(x::Union{LinRange,LinSRange}) = LinMRange(first(x), last(x), length(x))
+as_dynamic(x::Union{LinRange,LinSRange}) = LinMRange(x.start, x.stop, x.len)
 
 as_dynamic(x::StepMRangeLen) = x
-as_dynamic(x::Union{StepRangeLen,StepSRangeLen}) = StepMRangeLen(first(x), step(x), length(x), x.offset)
+as_dynamic(x::Union{StepRangeLen,StepSRangeLen}) = StepMRangeLen(x.ref, x.step, x.len, x.offset)
 
 function as_dynamic(A::AbstractArray)
     if is_dynamic(A)
@@ -250,10 +250,10 @@ as_fixed(x::StepRange) = x
 as_fixed(x::AbstractStepRange) = StepRange(first(x), step(x), last(x))
 
 as_fixed(x::LinRange) = x
-as_fixed(x::AbstractLinRange) = LinRange(first(x), last(x), length(x))
+as_fixed(x::AbstractLinRange) = LinRange(x.start, x.stop, x.len)
 
 as_fixed(x::StepRangeLen) = x
-as_fixed(x::AbstractStepRangeLen) = StepRangeLen(first(x), step(x), length(x), x.offset)
+as_fixed(x::AbstractStepRangeLen) = StepRangeLen(x.ref, x.step, x.len, x.offset)
 
 """
     as_static(x)
@@ -298,10 +298,10 @@ as_static(x::StepSRange) = x
 as_static(x::Union{StepRange,StepMRange}) = StepSRange(first(x), step(x), last(x))
 
 as_static(x::LinSRange) = x
-as_static(x::Union{LinRange,LinMRange}) = LinSRange(first(x), last(x), length(x))
+as_static(x::Union{LinRange,LinMRange}) = LinSRange(x.start, x.stop, x.len)
 
 as_static(x::StepSRangeLen) = x
-as_static(x::Union{StepRangeLen,StepMRangeLen}) = StepSRangeLen(first(x), step(x), length(x), x.offset)
+as_static(x::Union{StepRangeLen,StepMRangeLen}) = StepSRangeLen(x.ref, x.step, x.len, x.offset)
 
 function as_static(A::AbstractArray)
     if is_static(A)

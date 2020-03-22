@@ -7,21 +7,33 @@
                     (LinRange(1, 4, 4), LinMRange(1, 4, 4), LinSRange(1, 4, 4)),
                    )
         @testset "as_dynamic($(typeof(i).name))" begin
-            @test is_dynamic(as_dynamic(i)) == true
-            @test is_dynamic(as_dynamic(m)) == true
-            @test is_dynamic(as_dynamic(s)) == true
+            i2 = as_dynamic(i)
+            m2 = as_dynamic(m)
+            s2 = as_dynamic(s)
+            @test is_dynamic(i2)
+            @test is_dynamic(m2)
+            @test is_dynamic(s2)
+            @test i2 == m2 == s2
         end
 
         @testset "as_fixed($(typeof(i).name))" begin
-            @test is_fixed(as_fixed(i)) == true
-            @test is_fixed(as_fixed(m)) == true
-            @test is_fixed(as_fixed(s)) == true
+            i2 = as_fixed(i)
+            m2 = as_fixed(m)
+            s2 = as_fixed(s)
+            @test is_fixed(i2)
+            @test is_fixed(m2)
+            @test is_fixed(s2)
+            @test i2 == m2 == s2
         end
 
         @testset "as_static($(typeof(i).name))" begin
-            @test is_static(as_static(i)) == true
-            @test is_static(as_static(m)) == true
-            @test is_static(as_static(s)) == true
+            i2 = as_static(i)
+            m2 = as_static(m)
+            s2 = as_static(s)
+            @test is_static(i2)
+            @test is_static(m2)
+            @test is_static(s2)
+            @test i2 == m2 == s2
         end
     end
 end
