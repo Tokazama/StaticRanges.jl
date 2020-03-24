@@ -16,10 +16,9 @@ similar_range(::Type{<:MRange}, ::Type{<:MRange}) = mrange
 ###
 ### similar_type
 ###
-for RANGE_TYPE in (:OneTo,:OneToMRange,:OneToSRange,
-                   :UnitRange,:UnitMRange,:UnitSRange,
-                   :LinRange,:LinMRange,:LinSRange
-                  )
+for RANGE_TYPE in (:OneTo,    :OneToMRange,:OneToSRange,
+                   :UnitRange,:UnitMRange, :UnitSRange,
+                   :LinRange, :LinMRange,  :LinSRange)
     @eval begin
         function StaticArrays.similar_type(
             ::$(RANGE_TYPE){T},

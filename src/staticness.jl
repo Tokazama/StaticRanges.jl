@@ -189,14 +189,11 @@ julia> as_dynamic(LinRange(1, 20, 10))
 LinMRange(1.0, stop=20.0, length=10)
 ```
 """
-as_dynamic(x::OneToMRange) = x
-as_dynamic(x::Union{OneTo,OneToSRange}) = OneToMRange(last(x))
+as_dynamic(x::OneToUnion) = OneToMRange(last(x))
 
-as_dynamic(x::UnitMRange) = x
-as_dynamic(x::Union{UnitRange,UnitSRange}) = UnitMRange(first(x), last(x))
+as_dynamic(x::AbstractUnitRange) = UnitMRange(first(x), last(x))
 
-as_dynamic(x::StepMRange) = x
-as_dynamic(x::Union{StepRange,StepSRange}) = StepMRange(first(x), step(x), last(x))
+as_dynamic(x::OrdinalRange) = StepMRange(first(x), step(x), last(x))
 
 as_dynamic(x::LinMRange) = x
 as_dynamic(x::Union{LinRange,LinSRange}) = LinMRange(x.start, x.stop, x.len)
@@ -247,7 +244,7 @@ as_fixed(x::UnitRange) = x
 as_fixed(x::AbstractUnitRange) = UnitRange(first(x), last(x))
 
 as_fixed(x::StepRange) = x
-as_fixed(x::AbstractStepRange) = StepRange(first(x), step(x), last(x))
+as_fixed(x::OrdinalRange) = StepRange(first(x), step(x), last(x))
 
 as_fixed(x::LinRange) = x
 as_fixed(x::AbstractLinRange) = LinRange(x.start, x.stop, x.len)
@@ -292,10 +289,10 @@ as_static(x::OneToSRange) = x
 as_static(x::Union{OneTo,OneToMRange}) = OneToSRange(last(x))
 
 as_static(x::UnitSRange) = x
-as_static(x::Union{UnitRange,UnitMRange}) = UnitSRange(first(x), last(x))
+as_static(x::AbstractUnitRange) = UnitSRange(first(x), last(x))
 
 as_static(x::StepSRange) = x
-as_static(x::Union{StepRange,StepMRange}) = StepSRange(first(x), step(x), last(x))
+as_static(x::OrdinalRange) = StepSRange(first(x), step(x), last(x))
 
 as_static(x::LinSRange) = x
 as_static(x::Union{LinRange,LinMRange}) = LinSRange(x.start, x.stop, x.len)

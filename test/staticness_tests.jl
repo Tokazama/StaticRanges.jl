@@ -1,3 +1,4 @@
+
 @testset "Staticness" begin
     # as_[mutable/immutable/static]
     for (i,m,s) in ((OneTo(4), OneToMRange(4), OneToSRange(4)),
@@ -37,3 +38,4 @@
         end
     end
 end
+
