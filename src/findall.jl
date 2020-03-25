@@ -2,7 +2,18 @@
 @propagate_inbounds find_all(f, x) = find_all(f, x, order(x))
 find_all(f, x, xo) = _fallback_find_all(f, x)
 
-find_all(f::Fix2{typeof(in)}, y, yo) = _findin(f.x, order(f.x), y, yo)
+@propagate_inbounds function find_all(f::Fix2{typeof(in)}, y, yo)
+    return _findin(f.x, order(f.x), y, yo)
+end
+for (L,LF) in ((:closed,>=),(:open,>))
+    for (R,RF)  in ((:closed,<=),(:open,<))
+        @eval begin
+            @propagate_inbounds function find_all(f::Fix2{typeof(in),Interval{$(QuoteNode(L)),$(QuoteNode(R)),T}}, y, yo) where {T}
+                return find_all(and($LF(f.x.left), $RF(f.x.right)), y, yo)
+            end
+        end
+    end
+end
 
 _fallback_find_all(f, a) = collect(first(p) for p in pairs(a) if f(last(p)))
 

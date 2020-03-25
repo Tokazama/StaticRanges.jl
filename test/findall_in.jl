@@ -35,5 +35,15 @@
             @test @inferred(find_all(in(x), y)) == z
         end
     end
+
+    @testset "find_all(in(::IntervalSets), r)" begin
+        for (i,t) in ((Interval{:closed,:closed}(1, 10), 1:10),
+                      (Interval{:open,:closed}(1, 10), 2:10),
+                      (Interval{:closed,:open}(1, 10), 1:9),
+                      (Interval{:open,:open}(1, 10), 2:9))
+            @test find_all(in(i), 1:10) == t
+        end
+    end
 end
+
 

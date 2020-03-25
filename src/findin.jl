@@ -51,14 +51,12 @@ end
     end
 end
 
-# TODO could place boundscheck for if operator here
 @propagate_inbounds function _findin(x::AbstractUnitRange{T}, xo, y::AbstractUnitRange{T}, yo) where {T}
     R = similar_type(promote_type(typeof(x), typeof(y)), Int)
-    if iszero(rem(first(x) - first(y), 1))
-        return R(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
-    else
+    @boundscheck if !iszero(rem(first(x) - first(y), 1))
         return R(1, 0)
     end
+    return R(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
 end
 
 @propagate_inbounds function _findin(x::AbstractUnitRange, xo, y::AbstractUnitRange, yo)
@@ -66,7 +64,7 @@ end
     return _findin(xnew, xo, ynew, yo)
 end
 
-# TODO test to ensure every
+# TODO this needs to be optimized for ranges
 @propagate_inbounds function _findin(x, xo, y, yo)
     if is_forward(xo) && is_forward(yo)
         return Base._sortedfindin(y, x)
