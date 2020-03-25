@@ -55,7 +55,7 @@ for RANGE_TYPE in (:StepRange,:StepMRange,:StepSRange)
             ::$(RANGE_TYPE){T,S},
             element_type=T,
             step_type=S
-           ) where {T,R,S}
+           ) where {T,S}
             return $(RANGE_TYPE){element_type,step_type}
         end
     end
@@ -121,10 +121,7 @@ end
 
 # Necessary to avoid ambiguities
 Base.promote_rule(a::Type{StepRangeLen{T,R,S}}, b::Type{<:StepMRangeLen}) where {T,R,S} = promote_rule(lower_rangetype(a), b)
-
-function Base.promote_rule(a::Type{StepRangeLen{T,R,S}}, b::Type{StepMRangeLen{T,R,S}}) where {T,R,S}
-    return StepMRangeLen{T,R,S}
-end
+Base.promote_rule(a::Type{StepRangeLen{T,R,S}}, b::Type{StepMRangeLen{T,R,S}}) where {T,R,S} = StepMRangeLen{T,R,S}
 
 ###
 ### AbstractStepRangeLen
@@ -132,23 +129,25 @@ end
 function Base.promote_rule(
     ::Type{StepMRangeLen{T1,R1,S1}},
     ::Type{StepMRangeLen{T2,R2,S2}}
-   ) where {T1,T2,R1,R2,S1,S2}
+) where {T1,T2,R1,R2,S1,S2}
+
     return el_same(
         promote_type(T1,T2),
         StepMRangeLen{T1,promote_type(R1,R2),promote_type(S1,S2)},
         StepMRangeLen{T2,promote_type(R1,R2),promote_type(S1,S2)}
-       )
+    )
 end
 
 function Base.promote_rule(
-    ::Type{<:StepSRangeLen{T1,Tr1,Ts1}},
-    ::Type{<:StepSRangeLen{T2,Tr2,Ts2}},
-   ) where {T1,T2,Tr1,Tr2,Ts1,Ts2,R1,R2,S1,S2,L1,L2,F1,F2}
+    ::Type{<:StepSRangeLen{T1,R1,S1}},
+    ::Type{<:StepSRangeLen{T2,R2,S2}},
+) where {T1,T2,R1,R2,S1,S2}
+
     return el_same(
         promote_type(T1,T2),
-        StepSRangeLen{T1,promote_type(Tr1,Tr2),promote_type(Ts1,Ts2)},
-        StepSRangeLen{T2,promote_type(Tr1,Tr2),promote_type(Ts1,Ts2)}
-       )
+        StepSRangeLen{T1,promote_type(R1,R2),promote_type(S1,S2)},
+        StepSRangeLen{T2,promote_type(R1,R2),promote_type(S1,S2)}
+    )
 end
 
 # has to be included to avoid ambiguities
@@ -156,57 +155,51 @@ Base.promote_rule(a::Type{StepRangeLen{T,R,S}}, b::Type{A}) where {A<:StepSRange
 
 Base.promote_rule(a::Type{StepMRangeLen{T1,R,S}}, ::Type{LinMRange{T2}}) where {T1,R,S,T2} = promote_rule(a, StepMRangeLen{T2,T2,T2})
 
-Base.promote_rule(a::Type{<:StepSRangeLen{T1,R,S}}, ::Type{<:LinSRange{T2}}) where {T1,R,S,T2} = promote_rule(StepSRangeLen{T2,T2,T2}, a)
+function Base.promote_rule(
+    a::Type{<:StepSRangeLen{T1,R,S}},
+     ::Type{<:LinSRange{T2}}
+) where {T1,T2,R,S}
 
-###
-### AbstractLinRange
-###
-Base.promote_rule(a::Type{LinMRange{T1}}, b::Type{LinMRange{T2}}) where {T1,T2} = LinMRange{promote_type(T1,T2)}
-Base.promote_rule(a::Type{<:LinSRange{T1}}, b::Type{<:LinSRange{T2}}) where {T1,T2} = LinSRange{promote_type(T1,T2)}
+    return promote_rule(StepSRangeLen{T2,T2,T2}, a)
+end
+
+Base.promote_rule(::Type{LinMRange{T1}}, ::Type{LinMRange{T2}}) where {T1,T2} = LinMRange{promote_type(T1,T2)}
+Base.promote_rule(::Type{<:LinSRange{T1}}, ::Type{<:LinSRange{T2}}) where {T1,T2} = LinSRange{promote_type(T1,T2)}
 
 ###
 ### AbstractStepRange
 ###
-function Base.promote_rule(
-    ::Type{StepMRange{T1a,T1b}},
-    ::Type{StepMRange{T2a,T2b}}
-   ) where {T1a,T1b,T2a,T2b}
+function Base.promote_rule(::Type{StepMRange{T1,S1}}, ::Type{StepMRange{T2,S2}}) where {T1,T2,S1,S2}
     return Base.el_same(
-        promote_type(T1a,T2a),
+        promote_type(T1,T2),
         # el_same only operates on array element type, so just promote
         # second type parameter
-        StepMRange{T1a, promote_type(T1b,T2b)},
-        StepMRange{T2a, promote_type(T1b,T2b)}
-       )
+        StepMRange{T1, promote_type(S1,S2)},
+        StepMRange{T2, promote_type(S1,S2)}
+    )
 end
 
-function Base.promote_rule(
-    ::Type{<:StepSRange{T1a,T1b}},
-    ::Type{<:StepSRange{T2a,T2b}}
-   ) where {T1a,T1b,T2a,T2b}
+function Base.promote_rule(::Type{<:StepSRange{T1,S1}}, ::Type{<:StepSRange{T2,S2}}) where {T1,T2,S1,S2}
     return Base.el_same(
-        promote_type(T1a,T2a),
+        promote_type(T1,T2),
         # el_same only operates on array element type, so just promote
         # second type parameter
-        StepSRange{T1a, promote_type(T1b,T2b)},
-        StepSRange{T2a, promote_type(T1b,T2b)}
-       )
+        StepSRange{T1, promote_type(S1,S2)},
+        StepSRange{T2, promote_type(S1,S2)}
+    )
 end
 
-Base.promote_rule(a::Type{LinMRange{T1}}, ::Type{StepMRange{T2,Ts2}}) where {T1,T2,Ts2} = promote_rule(a, LinMRange{T2})
-
+Base.promote_rule(a::Type{LinMRange{T1}}, ::Type{StepMRange{T2,S2}}) where {T1,T2,S2} = promote_rule(a, LinMRange{T2})
 Base.promote_rule(a::Type{StepMRangeLen{T1,R,S1}}, ::Type{StepMRange{T2,S2}}) where {T1,T2,R,S1,S2} = promote_rule(a, StepMRangeLen{T2,T2,T2})
 Base.promote_rule(a::Type{<:StepSRangeLen{T1,R,S1}}, ::Type{<:StepSRange{T2,S2}}) where {T1,T2,R,S1,S2} = promote_rule(a, StepMRangeLen{T2,T2,T2})
-Base.promote_rule(a::Type{<:LinSRange{T1}}, ::Type{<:StepSRange{T2,Ts2}}) where {T1,T2,Ts2} = promote_rule(a, LinSRange{T2})
+Base.promote_rule(a::Type{<:LinSRange{T1}}, ::Type{<:StepSRange{T2,S2}}) where {T1,T2,S2} = promote_rule(a, LinSRange{T2})
 
 ###
 ### UnitRange
 ###
 
 Base.promote_rule(a::Type{UnitMRange{T1}}, b::Type{UnitMRange{T2}}) where {T1,T2} = el_same(promote_type(T1,T2), a, b)
-function Base.promote_rule(a::Type{<:UnitSRange{T1}}, b::Type{<:UnitSRange{T2}}) where {T1,T2}
-    return UnitSRange{promote_type(T1,T2)}
-end
+Base.promote_rule(a::Type{<:UnitSRange{T1}}, b::Type{<:UnitSRange{T2}}) where {T1,T2} = UnitSRange{promote_type(T1,T2)}
 
 Base.promote_rule(::Type{LinMRange{T2}}, ::Type{UnitMRange{T1}}) where {T1,T2} = LinMRange{promote_type(T1,T2)}
 Base.promote_rule(::Type{UnitMRange{T1}}, ::Type{LinMRange{T2}}) where {T1,T2} = LinMRange{promote_type(T1,T2)}
@@ -256,4 +249,3 @@ same_type(::Type{X}, ::Type{Y}) where {X<:LinSRange,Y<:LinSRange} = true
 same_type(::Type{X}, ::Type{Y}) where {X<:StepSRangeLen,Y<:StepSRangeLen} = true
 same_type(::Type{X}, ::Type{X}) where {X} = true
 same_type(::Type{X}, ::Type{Y}) where {X,Y} = false
-
