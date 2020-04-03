@@ -71,8 +71,7 @@ for (F,f) in ((:M,:m), (:S,:s))
     SR = Symbol(:Step, F, :Range)
     frange = Symbol(f, :range)
     @eval begin
-        function Base.getindex(r::$(SR), s::AbstractRange{<:Integer})
-            Base.@_inline_meta
+        @inline function Base.getindex(r::$(SR), s::AbstractRange{<:Integer})
             @boundscheck checkbounds(r, s)
             st = oftype(first(r), first(r) + (first(s)-1)*step(r))
             return $(frange)(st, step=step(r)*step(s), length=length(s))
@@ -97,3 +96,4 @@ end
 
 is_static(::Type{<:StepSRange}) = true
 is_fixed(::Type{<:StepMRange}) = false
+

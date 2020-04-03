@@ -1,24 +1,39 @@
 
+# helps when dividing by units changes types
+add_one(x::T) where {T} = x + oneunit(T)
+
 # unsafe_findvalue doesn't confirm that the integer is in bounds or r[idx] == val
-unsafe_findvalue(val, r::Union{OneToRange,OneTo}) = round(Integer, val)
-
-unsafe_findvalue(val, r::AbstractUnitRange) = round(Integer, (val - first(r)) + 1)
-
-function unsafe_findvalue(val, r::Union{AbstractStepRangeLen,StepRangeLen})
-    _unsafe_findvalue(((val - r.ref) / step_hp(r)) + r.offset)
+@inline function unsafe_findvalue(val, r::Union{OneToRange,OneTo})
+    return _unsafe_findvalue(val)
 end
+
+@inline function unsafe_findvalue(val, r::AbstractUnitRange)
+    return _unsafe_findvalue(val - first(r)) + 1
+end
+
+@inline function unsafe_findvalue(val, r::Union{AbstractStepRangeLen,StepRangeLen})
+    return _unsafe_findvalue(((val - r.ref) / step_hp(r)) + r.offset)
+end
+
+@inline function unsafe_findvalue(val, r::AbstractRange{T}) where {T}
+    return add_one(_unsafe_findvalue((val - r.start) / r.step))
+end
+
+@inline function unsafe_findvalue(val, r::OrdinalRange{T,S}) where {T,S}
+    return add_one(_unsafe_findvalue((val - first(r)) / step(r)))
+end
+
+@inline function unsafe_findvalue(val, ::LinearIndices{1,Tuple{OneTo{Int64}}})
+    return _unsafe_findvalue(val)
+end
+
+@inline function unsafe_findvalue(val, r::Union{AbstractLinRange,LinRange})
+    return add_one(_unsafe_findvalue((val - r.start) / (r.stop - r.start) * r.lendiv))
+end
+
 _unsafe_findvalue(idx) = round(Integer, idx)
+_unsafe_findvalue(idx::Integer) = idx
 _unsafe_findvalue(idx::TwicePrecision{T}) where {T} = round(Integer, T(idx))
-
-unsafe_findvalue(val, r::AbstractRange) = round(Integer, (val - r.start) / r.step) + 1
-
-function unsafe_findvalue(val, r::Union{AbstractLinRange,LinRange})
-    return round(Integer, (((val - r.start) / (r.stop - r.start)) * r.lendiv) + 1)
-end
-
-unsafe_findvalue(val, ::LinearIndices{1,Tuple{OneTo{Int64}}}) = Int(val)
-
-Base.in(x::Integer, r::OneToRange{<:Integer}) = (1 <= x) & (x <= last(r))
 
 Base.findall(f::Function, r::UnionRange) = find_all(f, r)
 

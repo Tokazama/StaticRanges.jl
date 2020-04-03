@@ -67,13 +67,22 @@ export
     as_fixed,
     mrange,
     srange,
+    # find
     find_first,
+    find_firsteq,
+    find_firstgt,
+    find_firstlt,
+    find_firstgteq,
+    find_firstlteq,
     find_last,
+    find_lasteq,
+    find_lastgt,
+    find_lastlt,
+    find_lastgteq,
+    find_lastlteq,
     find_all,
     find_max,
     find_min,
-    first_segment,
-    last_segment,
     # Traits
     parent_type,
     axes_type,
@@ -85,7 +94,6 @@ export
     is_static,
     is_within,
     merge_sort,
-    middle_segment,
     push,
     pushfirst,
     set_first!,
@@ -234,5 +242,17 @@ include("pop.jl")
 include("push.jl")
 include("show.jl")
 include("vcat.jl")
+
+include("find_firsteq.jl")
+include("find_firstgt.jl")
+include("find_firstlt.jl")
+include("find_firstgteq.jl")
+include("find_firstlteq.jl")
+
+include("find_lasteq.jl")
+include("find_lastgt.jl")
+include("find_lastlt.jl")
+include("find_lastgteq.jl")
+include("find_lastlteq.jl")
 
 end

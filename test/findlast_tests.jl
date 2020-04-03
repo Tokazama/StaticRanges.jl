@@ -16,18 +16,12 @@
                     (LinMRange(1, 10, 5), LinSRange(1, 10, 5), LinRange(1, 10, 5)),
                     (StepMRangeLen(1, 3, 5), StepSRangeLen(1, 3, 5), StepRangeLen(1, 3, 5)))
         @testset "Type: $(typeof(b))" begin
-            for i1 in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
-                for i2 in (m[2], m[3], m[5], m[5] + step(m))
-                    for f in (<, >, <=, >=, ==)
-                        @testset "Comparison: $f" begin
-                            @testset "findlast($f($i1), $b)" begin
-                                @test @inferred(typed_findlast(f(i1), m)) == @inferred(typed_findlast(f(i1), b))
-                                @test @inferred(typed_findlast(f(i1), s)) == @inferred(typed_findlast(f(i1), b))
-                            end
-                            @testset "findlast($f($i2), $b)" begin
-                                @test @inferred(typed_findlast(f(i2), m)) == @inferred(typed_findlast(f(i2), b))
-                                @test @inferred(typed_findlast(f(i2), s)) == @inferred(typed_findlast(f(i2), b))
-                            end
+            for i1 in (m[1] - step(m), m[1], m[2], m[3], m[4], m[5] + step(m), m[5] + 2step(m))
+                for f in (<, >, <=, >=, ==)
+                    @testset "Comparison: $f" begin
+                        @testset "findlast($f($i1), $b)" begin
+                            @test @inferred(typed_findlast(f(i1), m)) == @inferred(typed_findlast(f(i1), b))
+                            @test @inferred(typed_findlast(f(i1), s)) == @inferred(typed_findlast(f(i1), b))
                         end
                     end
                 end

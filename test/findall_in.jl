@@ -2,15 +2,15 @@
 @testset "find_all(in(x), r)" begin
     r = @inferred(find_all(in(OneTo(10)), OneToSRange(8)))
     @test r == 1:8
-    @test isa(r, UnitRange)
+    @test isa(r, StaticRanges.OneToUnion)
 
     r = @inferred(find_all(in(OneTo(10)), OneToMRange(8)))
     @test r == 1:8
-    @test isa(r, UnitMRange)
+    @test isa(r, StaticRanges.OneToUnion)
 
     r = @inferred(find_all(in(OneToSRange(8)), OneToSRange(10)))
     @test r == 1:8
-    @test isa(r, UnitSRange)
+    @test isa(r, OneToSRange)
 
     r = @inferred(find_all(in(UnitRange(1,10)), UnitSRange(1,8)))
     @test r == 1:8

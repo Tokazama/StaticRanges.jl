@@ -3,7 +3,6 @@ checkindexlo(r, i::AbstractVector) = checkindexlo(r, minimum(i))
 checkindexlo(r, i) = firstindex(r) <= i
 checkindexlo(r, i::CartesianIndex{1}) = firstindex(r) <= first(i.I)
 
-
 checkindexhi(r, i::AbstractVector) = checkindexhi(r, maximum(i))
 checkindexhi(r, i) = lastindex(r) >= i
 checkindexhi(r, i::CartesianIndex{1}) = firstindex(r) <= first(i.I)

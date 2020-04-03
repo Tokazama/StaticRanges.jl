@@ -74,8 +74,11 @@ const BitAnd{F1,F2} = ChainedFix{typeof(and),F1,F2}
 
 const BitOr{F1,F2} = ChainedFix{typeof(or),F1,F2}
 
-const F2Lt{T} = Fix2{<:Union{typeof(<),typeof(<=)},T}
-const F2Gt{T} = Fix2{<:Union{typeof(>),typeof(>=)},T}
-const F2Eq{T} = Fix2{<:Union{typeof(isequal),typeof(==)},T}
+const Fix2Lt{T} = Union{Fix2{typeof(<),T},Fix2{typeof(isless),T}}
+
+const Fix2Eq{T} = Union{Fix2{typeof(==),T},Fix2{typeof(isequal),T}}
+
+const F2LtAndLtEq{T} = Fix2{<:Union{typeof(<),typeof(<=)},T}
+const F2GtAndGtEq{T} = Fix2{<:Union{typeof(>),typeof(>=)},T}
 const F2IsLess{T} = Fix2{<:Union{typeof(isless),typeof(<)},T}
 

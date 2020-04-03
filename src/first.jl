@@ -135,4 +135,3 @@ function set_offset!(r::StepMRangeLen, val::Int)
     return r
 end
 set_offset!(r::StepMRangeLen, val) = set_offset!(r, Int(val))
-

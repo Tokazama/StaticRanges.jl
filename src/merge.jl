@@ -69,6 +69,7 @@ end
 function _weave_sort(x::AbstractRange, xo, y::AbstractRange, yo)
     sx = step(x)
     sy = step(y)
+    # FIXME does this even exist? _find_step_in 
     sxy = _find_step_in(sx, xo, sy, yo)
     if !iszero(rem(ordmin(x, xo) - ordmin(y, yo), div(sxy, step(x))))
         return sort(vcat(x, y), order=xo)
