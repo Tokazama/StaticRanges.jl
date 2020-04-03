@@ -65,4 +65,91 @@
     end
 end
 
+@testset "find_firstgt" begin
+    one_to = OneToMRange(10)
+    @testset "find_firstgt(::Int, ::OneToUnion)" begin
+        @test catch_nothing(find_firstgt(11, one_to)) == 0
+        @test catch_nothing(find_firstgt(-1, one_to)) == 1
+        @test catch_nothing(find_firstgt(2, one_to)) == 3
+        @test catch_nothing(find_firstgt(3, one_to)) == 4
+    end
+
+    @testset "find_firstgt(::Any, ::OneToUnion)" begin
+        @test catch_nothing(find_firstgt(11.0, one_to)) == 0
+        @test catch_nothing(find_firstgt(-1.0, one_to)) == 1
+        @test catch_nothing(find_firstgt(2.0, one_to)) == 3
+        @test catch_nothing(find_firstgt(3.0, one_to)) == 4
+        @test catch_nothing(find_firstgt(3.5, one_to)) == 4
+    end
+
+    unit_range = 1:10
+    @testset "find_firstgt(::Int, ::AbstractUnitRange)" begin
+        @test catch_nothing(find_firstgt(11, unit_range)) == 0
+        @test catch_nothing(find_firstgt(-1, unit_range)) == 1
+        @test catch_nothing(find_firstgt(2, unit_range)) == 3
+        @test catch_nothing(find_firstgt(3, unit_range)) == 4
+    end
+
+    @testset "find_firstgt(::Any, ::AbstractUnitRange)" begin
+        @test catch_nothing(find_firstgt(11.0, unit_range)) == 0
+        @test catch_nothing(find_firstgt(-1.0, unit_range)) == 1
+        @test catch_nothing(find_firstgt(2.0, unit_range)) == 3
+        @test catch_nothing(find_firstgt(3.0, unit_range)) == 4
+        @test catch_nothing(find_firstgt(3.5, unit_range)) == 4
+    end
+
+    x = collect(unit_range)
+    @testset "find_firstgt(::Any, ::Any)" begin
+        @test catch_nothing(find_firstgt(11.0, x)) == 0
+        @test catch_nothing(find_firstgt(-1.0, x)) == 1
+        @test catch_nothing(find_firstgt(2.0, x)) == 3
+        @test catch_nothing(find_firstgt(3.0, x)) == 4
+        @test catch_nothing(find_firstgt(3.5, x)) == 4
+    end
+end
+
+@testset "find_firstgteq" begin
+    one_to = OneToMRange(10)
+    @testset "find_firstgteq(::Int, ::OneToUnion)" begin
+        @test catch_nothing(find_firstgteq(11, one_to)) == 0
+        @test catch_nothing(find_firstgteq(-1, one_to)) == 1
+        @test catch_nothing(find_firstgteq(2, one_to)) == 2
+        @test catch_nothing(find_firstgteq(3, one_to)) == 3
+    end
+
+    @testset "find_firstgteq(::Any, ::OneToUnion)" begin
+        @test catch_nothing(find_firstgteq(11.0, one_to)) == 0
+        @test catch_nothing(find_firstgteq(-1.0, one_to)) == 1
+        @test catch_nothing(find_firstgteq(2.0, one_to)) == 2
+        @test catch_nothing(find_firstgteq(3.0, one_to)) == 3
+        @test catch_nothing(find_firstgteq(3.5, one_to)) == 4
+    end
+
+    unit_range = 1:10
+    @testset "find_firstgteq(::Int, ::AbstractUnitRange)" begin
+        @test catch_nothing(find_firstgteq(11, unit_range)) == 0
+        @test catch_nothing(find_firstgteq(-1, unit_range)) == 1
+        @test catch_nothing(find_firstgteq(2, unit_range)) == 2
+        @test catch_nothing(find_firstgteq(3, unit_range)) == 3
+    end
+
+    @testset "find_firstgteq(::Any, ::AbstractUnitRange)" begin
+        @test catch_nothing(find_firstgteq(11.0, unit_range)) == 0
+        @test catch_nothing(find_firstgteq(-1.0, unit_range)) == 1
+        @test catch_nothing(find_firstgteq(2.0, unit_range)) == 2
+        @test catch_nothing(find_firstgteq(3.0, unit_range)) == 3
+        @test catch_nothing(find_firstgteq(3.5, unit_range)) == 4
+    end
+
+    x = collect(unit_range)
+    @testset "find_firstgteq(::Any, ::Any)" begin
+        @test catch_nothing(find_firstgteq(11.0, x)) == 0
+        @test catch_nothing(find_firstgteq(-1.0, x)) == 1
+        @test catch_nothing(find_firstgteq(2.0, x)) == 2
+        @test catch_nothing(find_firstgteq(3.0, x)) == 3
+        @test catch_nothing(find_firstgteq(3.5, x)) == 4
+    end
+end
+
 # find_first(::Base.Fix2{typeof(>),Int64}, ::StepSRangeLen{Int64,Int64,Int64,1,3,5,1})
+#

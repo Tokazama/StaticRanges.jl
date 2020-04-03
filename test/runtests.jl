@@ -4,6 +4,8 @@ using StaticRanges: can_set_first, can_set_last, can_set_step, has_step, can_set
     group_min, min_of_group_max, max_of_group_min, ordmin, ordmax,
     Unordered, set_ref!, set_offset!, set_lendiv!, Size, Length
 
+using OffsetArrays
+using OffsetArrays: IdOffsetRange
 # Uniqueness methods
 using StaticRanges: ArrayInterface.ismutable
 
@@ -72,7 +74,6 @@ include("filter_tests.jl")
 include("count_tests.jl")
 include("gaprange_tests.jl")
 
-
 include("vcat_tests.jl")
 include("merge_tests.jl")
 include("pop_tests.jl")
@@ -101,6 +102,7 @@ include("reverse.jl")
 
 include("steprangelen_test.jl")
 include("linrange_test.jl")
+include("offset_range_tests.jl")
 
 
 @testset "empty" begin

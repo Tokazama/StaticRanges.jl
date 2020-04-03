@@ -10,9 +10,13 @@ using Base: @propagate_inbounds, @pure
 using Base.Broadcast: DefaultArrayStyle
 
 using Dates
-using StaticArrays, ArrayInterface, IntervalSets
-using ArrayInterface: can_setindex
+using StaticArrays
+using ArrayInterface
+using IntervalSets, OffsetArrays
+
 using StaticArrays: Dynamic
+using ArrayInterface: can_setindex
+using OffsetArrays: IdOffsetRange
 
 export
     # Types
@@ -80,6 +84,7 @@ export
     find_lastlt,
     find_lastgteq,
     find_lastlteq,
+    findin,
     find_all,
     find_max,
     find_min,
@@ -266,5 +271,7 @@ include("find_lastgt.jl")
 include("find_lastlt.jl")
 include("find_lastgteq.jl")
 include("find_lastlteq.jl")
+
+include("offset_range.jl")
 
 end

@@ -45,7 +45,7 @@ end
 
 function find_firstgteq(x, a)
     for (i, a_i) in pairs(a)
-        x >= a_i && return i
+        a_i >= x && return i
     end
     return nothing
 end

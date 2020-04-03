@@ -15,6 +15,17 @@ end
     return intersect(find_allgt(x.left, y), find_alllt(x.right, y))
 end
 
+function findin(x::AbstractArray, y)
+    out = Vector{Int}()
+    for x_i in x
+        idx = find_firsteq(x_i, y)
+        if idx != nothing
+            push!(out, idx)
+        end
+    end
+    return out
+end
+
 findin(x::AbstractRange, y) = _findin(x, y)
 
 function _find_first_in(x, y)

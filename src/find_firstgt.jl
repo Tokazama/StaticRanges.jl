@@ -19,7 +19,7 @@ end
         elseif idx >= last(r)
             return 1
         else
-            return x
+            return idx
         end
     else
         return _find_firstgt_oneto(idx, r)
@@ -84,7 +84,7 @@ end
 
 function find_firstgt(x, a)
     for (i, a_i) in pairs(a)
-        x > a_i && return i
+        a_i > x && return i
     end
     return nothing
 end
