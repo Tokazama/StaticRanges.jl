@@ -133,6 +133,18 @@ const LinRangeUnion{T} = Union{LinRange{T},AbstractLinRange{T}}
 const StepRangeUnion{T,S} = Union{StepRange{T,S},AbstractStepRange{T,S}}
 const UnitRangeUnion{T} = Union{UnitRange{T},UnitSRange{T},UnitMRange{T}}
 
+# Things I have to had to avoid ambiguities with base
+RANGE_LIST = (LinSRange, LinMRange, StepSRange, StepMRange, UnitSRange, UnitMRange, OneToSRange, OneToMRange, StepSRangeLen, StepMRangeLen)
+
+for R in RANGE_LIST
+    @eval begin
+        function Base.findfirst(f::Union{Base.Fix2{typeof(==),T}, Base.Fix2{typeof(isequal),T}}, r::$R) where T<:Integer
+            return find_first(f, r)
+        end
+    end
+end
+
+
 const SRange{T} = Union{OneToSRange{T},UnitSRange{T},StepSRange{T},LinSRange{T},StepSRangeLen{T}}
 const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},StepMRangeLen{T}}
 const UnionRange{T} = Union{SRange{T},MRange{T}}
