@@ -41,7 +41,7 @@ for (frange, oneto) in ((mrange, OneToMRange),(srange ,OneToSRange))
             str = String(take!(io))
             @test str == "$(oneto)(3)"
             @test in(1, r) == true
-
+            @test in(1.0, r) == true
         end
 
         @test oneto{Int}(oneto(10)) == oneto(10)

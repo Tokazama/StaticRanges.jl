@@ -38,6 +38,8 @@
     @test StepSRangeLen{Int,Int,Int}(StepSRangeLen(1, 2, 3)) isa StepSRangeLen
     @test StepMRangeLen{Int,Int,Int}(StepMRangeLen(1, 2, 3)) isa StepMRangeLen
 
+    getindex(mrange(1.0, step=1, length=10), 1:2:10)
+
     # TODO this raises ambiguity errors
     #@test StepMRangeLen{Float64}(1.0:2:10) isa StepMRangeLen
 
