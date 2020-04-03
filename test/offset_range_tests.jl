@@ -2,6 +2,10 @@
 @testset "Offset Ranges" begin
     x = IdOffsetRange(UnitMRange(1, 10), 0)
 
+    @test can_set_first(typeof(x))
+    @test can_set_last(typeof(x))
+    @test can_set_length(typeof(x))
+
     @test is_static(as_static(x))
     @test is_fixed(as_static(x))
     @test !is_dynamic(as_static(x))
