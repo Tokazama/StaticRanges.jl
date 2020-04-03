@@ -32,29 +32,41 @@ function _find_first_in(x, y)
     out = 1
     if is_forward(x) & is_forward(y)
         for x_i in x
-            out = find_firsteq(x_i, y)
-            out isa Nothing || return out
+            idx = find_firsteq(x_i, y)
+            if !isa(idx, Nothing)
+                out = idx
+                break
+            end
         end
     else
         for x_i in x
-            out = find_lasteq(x_i, y)
-            out isa Nothing || return out
+            idx = find_lasteq(x_i, y)
+            if !isa(idx, Nothing)
+                out = idx
+                break
+            end
         end
     end
-    return 1
+    return out
 end
 
 function _find_last_in(x, y)
     out = 0
     if is_forward(x) & is_forward(y)
         for x_i in reverse(x)
-            out = find_firsteq(x_i, y)
-            out isa Nothing || return out
+            idx = find_firsteq(x_i, y)
+            if !isa(idx, Nothing)
+                out = idx
+                break
+            end
         end
     else
         for x_i in reverse(x)
-            out = find_lasteq(x_i, y)
-            out isa Nothing || return out
+            idx = find_lasteq(x_i, y)
+            if !isa(idx, Nothing)
+                out = idx
+                break
+            end
         end
     end
     return out
@@ -128,6 +140,7 @@ end
         return fi:_to_step(Int(sxy), sx, sy):li
     end
 end
+
 #=
 How this is done without ambiguities:
 * For each subtype of ranges creat an internal function `_findin_[subtypes]`

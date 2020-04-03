@@ -24,6 +24,14 @@
     @test r == UnitSRange(1, 8)
     @test isa(r, UnitSRange)
 
+    @test find_all(in(collect(1:10)), 1:20) == find_all(in(1:10), 1:20)
+
+    @testset "steps match but no overlap" begin
+        r = @inferred(findin(1:3, 4:5))
+        @test r == 1:0
+        @test isa(r, UnitRange)
+    end
+
     for (x, y, z) in ((1:10, 1:2:10, 1:5),
                       (1:2:20, 1:8:20, 1:3),
                       (1:2:20, 1:10, 1:2:9),

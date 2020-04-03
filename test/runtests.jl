@@ -69,7 +69,7 @@ end
 include("findfirst_tests.jl")
 include("findlast_tests.jl")
 include("findall_tests.jl")
-include("findall_in.jl")
+include("findin_tests.jl")
 include("filter_tests.jl")
 include("count_tests.jl")
 include("gaprange_tests.jl")
