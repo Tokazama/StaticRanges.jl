@@ -23,10 +23,6 @@ end
     return add_one(_unsafe_findvalue((val - first(r)) / step(r)))
 end
 
-@inline function unsafe_findvalue(val, ::LinearIndices{1,Tuple{OneTo{Int64}}})
-    return _unsafe_findvalue(val)
-end
-
 @inline function unsafe_findvalue(val, r::Union{AbstractLinRange,LinRange})
     return add_one(_unsafe_findvalue((val - r.start) / (r.stop - r.start) * r.lendiv))
 end
