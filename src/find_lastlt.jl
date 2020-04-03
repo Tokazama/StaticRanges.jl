@@ -49,7 +49,7 @@ end
 
 function find_lastlt(x, a)
     for (i, a_i) in Iterators.reverse(pairs(a))
-        x < a_i && return i
+        a_i < x && return i
     end
     return nothing
 end

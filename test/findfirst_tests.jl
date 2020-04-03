@@ -98,7 +98,7 @@ end
         @test catch_nothing(find_firstgt(3.5, unit_range)) == 4
     end
 
-    x = collect(unit_range)
+    x = collect(1:10)
     @testset "find_firstgt(::Any, ::Any)" begin
         @test catch_nothing(find_firstgt(11.0, x)) == 0
         @test catch_nothing(find_firstgt(-1.0, x)) == 1
@@ -141,13 +141,39 @@ end
         @test catch_nothing(find_firstgteq(3.5, unit_range)) == 4
     end
 
-    x = collect(unit_range)
+    x = collect(1:10)
     @testset "find_firstgteq(::Any, ::Any)" begin
         @test catch_nothing(find_firstgteq(11.0, x)) == 0
         @test catch_nothing(find_firstgteq(-1.0, x)) == 1
         @test catch_nothing(find_firstgteq(2.0, x)) == 2
         @test catch_nothing(find_firstgteq(3.0, x)) == 3
         @test catch_nothing(find_firstgteq(3.5, x)) == 4
+    end
+end
+
+@testset "find_firstlt" begin
+    one_to = OneToMRange(10)
+
+    x = collect(1:10)
+    @testset "find_firstlt(::Any, ::Any)" begin
+        @test catch_nothing(find_firstlt(11.0, x)) == 1
+        @test catch_nothing(find_firstlt(-1.0, x)) == 0
+        @test catch_nothing(find_firstlt(2.0, x)) == 1
+        @test catch_nothing(find_firstlt(3.0, x)) == 1
+        @test catch_nothing(find_firstlt(3.5, x)) == 1
+    end
+end
+
+@testset "find_firstlteq" begin
+    one_to = OneToMRange(10)
+
+    x = collect(1:10)
+    @testset "find_firstlteq(::Any, ::Any)" begin
+        @test catch_nothing(find_firstlteq(11.0, x)) == 1
+        @test catch_nothing(find_firstlteq(-1.0, x)) == 0
+        @test catch_nothing(find_firstlteq(1.0, x)) == 1
+        @test catch_nothing(find_firstlteq(3.0, x)) == 1
+        @test catch_nothing(find_firstlteq(3.5, x)) == 1
     end
 end
 
