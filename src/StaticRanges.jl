@@ -10,9 +10,14 @@ using Base: @propagate_inbounds, @pure
 using Base.Broadcast: DefaultArrayStyle
 
 using Dates
-using StaticArrays, ArrayInterface, IntervalSets
-using ArrayInterface: can_setindex
+using StaticArrays
+using ArrayInterface
+using IntervalSets
+using OffsetArrays
+
 using StaticArrays: Dynamic
+using ArrayInterface: can_setindex
+using OffsetArrays: IdOffsetRange
 
 export
     # Types
@@ -67,13 +72,23 @@ export
     as_fixed,
     mrange,
     srange,
+    # find
     find_first,
+    find_firsteq,
+    find_firstgt,
+    find_firstlt,
+    find_firstgteq,
+    find_firstlteq,
     find_last,
+    find_lasteq,
+    find_lastgt,
+    find_lastlt,
+    find_lastgteq,
+    find_lastlteq,
+    findin,
     find_all,
     find_max,
     find_min,
-    first_segment,
-    last_segment,
     # Traits
     parent_type,
     axes_type,
@@ -85,7 +100,6 @@ export
     is_static,
     is_within,
     merge_sort,
-    middle_segment,
     push,
     pushfirst,
     set_first!,
@@ -124,6 +138,18 @@ include("abstractsteprangelen.jl")
 const LinRangeUnion{T} = Union{LinRange{T},AbstractLinRange{T}}
 const StepRangeUnion{T,S} = Union{StepRange{T,S},AbstractStepRange{T,S}}
 const UnitRangeUnion{T} = Union{UnitRange{T},UnitSRange{T},UnitMRange{T}}
+
+# Things I have to had to avoid ambiguities with base
+RANGE_LIST = (LinSRange, LinMRange, StepSRange, StepMRange, UnitSRange, UnitMRange, OneToSRange, OneToMRange, StepSRangeLen, StepMRangeLen)
+
+for R in RANGE_LIST
+    @eval begin
+        function Base.findfirst(f::Union{Base.Fix2{typeof(==),T}, Base.Fix2{typeof(isequal),T}}, r::$R) where T<:Integer
+            return find_first(f, r)
+        end
+    end
+end
+
 
 const SRange{T} = Union{OneToSRange{T},UnitSRange{T},StepSRange{T},LinSRange{T},StepSRangeLen{T}}
 const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},StepMRangeLen{T}}
@@ -234,5 +260,21 @@ include("pop.jl")
 include("push.jl")
 include("show.jl")
 include("vcat.jl")
+
+include("find_firsteq.jl")
+include("find_firstgt.jl")
+include("find_firstlt.jl")
+include("find_firstgteq.jl")
+include("find_firstlteq.jl")
+
+include("find_lasteq.jl")
+include("find_lastgt.jl")
+include("find_lastlt.jl")
+include("find_lastgteq.jl")
+include("find_lastlteq.jl")
+
+include("resize.jl")
+
+include("offset_range.jl")
 
 end

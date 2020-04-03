@@ -155,7 +155,7 @@ false
 @inline function is_fixed(::Type{T}) where {T}
     T2 = parent_type(T)
     if T2 <: T
-        return false
+        return !T.mutable
     else
         return is_fixed(T2)
     end

@@ -67,3 +67,4 @@ end
 
 is_static(::Type{<:UnitSRange}) = true
 is_fixed(::Type{<:UnitMRange}) = false
+

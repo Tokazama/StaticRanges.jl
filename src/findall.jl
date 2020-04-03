@@ -1,99 +1,133 @@
 
-@propagate_inbounds find_all(f, x) = find_all(f, x, order(x))
-find_all(f, x, xo) = _fallback_find_all(f, x)
-
-@propagate_inbounds function find_all(f::Fix2{typeof(in)}, y, yo)
-    return _findin(f.x, order(f.x), y, yo)
-end
-for (L,LF) in ((:closed,>=),(:open,>))
-    for (R,RF)  in ((:closed,<=),(:open,<))
-        @eval begin
-            @propagate_inbounds function find_all(f::Fix2{typeof(in),Interval{$(QuoteNode(L)),$(QuoteNode(R)),T}}, y, yo) where {T}
-                return find_all(and($LF(f.x.left), $RF(f.x.right)), y, yo)
-            end
-        end
-    end
-end
-
-_fallback_find_all(f, a) = collect(first(p) for p in pairs(a) if f(last(p)))
-
-# <, <=
-@propagate_inbounds function find_all(f::F2Lt, r, ro::ForwardOrdering)
-    return _find_all(keytype(r), firstindex(r), find_last(f, r, ro))
-end
-@propagate_inbounds function find_all(f::F2Lt, r, ro::ReverseOrdering)
-    return _find_all(keytype(r), find_first(f, r, ro), lastindex(r))
-end
-find_all(f::F2Lt, r::AbstractRange, ::UnorderedOrdering) = _empty_ur(keytype(r))
-find_all(f::F2Lt, a::AbstractArray, ::UnorderedOrdering) = _fallback_find_all(f, a)
-
-# >, >=
-@propagate_inbounds function find_all(f::F2Gt, r, ro::ForwardOrdering)
-    return _find_all(keytype(r), find_first(f, r, ro), lastindex(r))
-end
-@propagate_inbounds function find_all(f::F2Gt, r, ro::ReverseOrdering)
-    return _find_all(keytype(r), firstindex(r), find_last(f, r, ro))
-end
-find_all(f::F2Gt, r::AbstractRange, ::UnorderedOrdering) = _empty_ur(keytype(r))
-find_all(f::F2Gt, a::AbstractArray, ::UnorderedOrdering) = _fallback_find_all(f, a)
-
-# find_all(==(x), r)
-find_all(f::F2Eq, r::AbstractRange, ::UnorderedOrdering) = _empty_ur(keytype(r))
-function find_all(f::F2Eq, r, ro::Ordering)
-    return _find_all(keytype(r), find_first(f, r, ro), find_last(f, r, ro))
-end
-
 # only really applies to ordered vectors
 _find_all(::Type{T},        fi,        li) where {T} = fi:li
 _find_all(::Type{T}, ::Nothing,        li) where {T} = _empty_ur(T)
 _find_all(::Type{T},        fi, ::Nothing) where {T} = _empty_ur(T)
 _find_all(::Type{T}, ::Nothing, ::Nothing) where {T} = _empty_ur(T)
-
 _empty_ur(::Type{T}) where {T} = one(T):zero(T)
 
-@propagate_inbounds function find_all(f::Fix2{typeof(!=)}, r, ro)
-    return find_not_in(f, r, ro)
-end
+@inline find_all(f::Fix2Eq{T},          x) where {T} = find_alleq(f.x,   x)
+@inline find_all(f::Fix2Lt{T},          x) where {T} = find_alllt(f.x,   x)
+@inline find_all(f::Fix2{typeof(<=),T}, x) where {T} = find_alllteq(f.x, x)
+@inline find_all(f::Fix2{typeof(>),T},  x) where {T} = find_allgt(f.x,   x)
+@inline find_all(f::Fix2{typeof(>=),T}, x) where {T} = find_allgteq(f.x, x)
+@inline find_all(f::Fix2{typeof(in),T}, x) where {T} = findin(f.x,       x)
+@inline find_all(f::Fix2{typeof(!=),T}, x) where {T} = find_not_in(f.x,  x)
+@inline find_all(f::BitOr, x) = combine(find_all(f.f1, x), find_all(f.f2, x))
+@inline find_all(f::BitAnd, x) = intersect(find_all(f.f1, x), find_all(f.f2, x))
+find_all(f, x) = _fallback_find_all(f, x)
 
-@propagate_inbounds function find_not_in(f, r, ro::ForwardOrdering)
-    return find_all(or(>(f.x), <(f.x)), r, ro)
-end
-
-@propagate_inbounds function find_not_in(f, r, ro::ReverseOrdering)
-    return find_all(or(>(f.x), <(f.x)), r, ro)
-end
-
-@propagate_inbounds function find_not_in(f, r, ::UnorderedOrdering)
-    if r isa AbstractRange
-        return GapRange(UnitRange(1, 0), UnitRange(1, 0))
+#=
+@inline function find_all(f::BitOr{<:F2LtAndLtEq,<:F2LtAndLtEq}, x)
+    if !f.f1(f.f2.x)
+        return find_all(f.f2, x)
     else
-        return _fallback_find_all(f, x)
+        return find_all(f.f1, x)
     end
 end
+@inline function find_all(f::BitOr{<:F2GtAndGtEq,<:F2GtAndGtEq}, x)
+    if !f.f1(f.f2.x)
+        return find_all(f.f2, x)
+    else
+        return find_all(f.f1, x)
+    end
+end
+=#
 
 ###
 ### BitAnd
 ###
-function find_all(bitop::BitAnd{<:F2Lt,<:F2Lt}, x, xo)
-    return bitop.f1(bitop.f2.x) ? find_all(bitop.f2, x) : find_all(bitop.f1, x)
-end
-function find_all(bitop::BitAnd{<:F2Gt,<:F2Gt}, x, xo)
-    return bitop.f1(bitop.f2.x) ? find_all(bitop.f2, x, xo) : find_all(bitop.f1, x, xo)
-end
-function find_all(bitop::BitAnd, x, xo)
-    return intersect(find_all(bitop.f1, x, xo), find_all(bitop.f2, x, xo))
+#=
+@inline function find_all(bitop::BitAnd{<:F2LtAndLtEq,<:F2LtAndLtEq}, x)
+    if bitop.f1(bitop.f2.x)
+        return find_all(bitop.f2, x)
+    else
+        return find_all(bitop.f1, x)
+    end
 end
 
-###
-### BitOr
-###
-function find_all(bitop::BitOr{<:F2Lt,<:F2Lt}, x, xo)
-    return !bitop.f1(bitop.f2.x) ? find_all(bitop.f2, x, xo) : find_all(bitop.f1, x, xo)
+@inline function find_all(bitop::BitAnd{<:F2GtAndGtEq,<:F2GtAndGtEq}, x)
+    if bitop.f1(bitop.f2.x)
+        return find_all(bitop.f2, x)
+    else
+        return find_all(bitop.f1, x)
+    end
 end
-function find_all(bitop::BitOr{<:F2Gt,<:F2Gt}, x, xo)
-    return !bitop.f1(bitop.f2.x) ? find_all(bitop.f2, x, xo) : find_all(bitop.f1, x, xo)
+=#
+
+_fallback_find_all(f, a) = collect(first(p) for p in pairs(a) if f(last(p)))
+
+# <
+@inline function find_alllt(x, r::AbstractRange{T}) where {T}
+    if step(r) > zero(T)
+        return _find_all(keytype(r), firstindex(r), find_lastlt(x, r))
+    elseif step(r) < zero(T)
+        return _find_all(keytype(r), find_firstlt(x, r), lastindex(r))
+    else
+        return _find_all(keytype(r), nothing, nothing)
+    end
 end
-function find_all(bitop::BitOr, x, xo)
-    return combine(find_all(bitop.f1, x, xo), find_all(bitop.f2, x, xo))
+find_alllt(x, a) = collect(first(p) for p in pairs(a) if (last(p) < x))
+
+# <=
+@inline function find_alllteq(x, r::AbstractRange{T}) where {T}
+    if step(r) > zero(T)
+        return _find_all(keytype(r), firstindex(r), find_lastlteq(x, r))
+    elseif step(r) < zero(T)
+        return _find_all(keytype(r), find_firstlteq(x, r), lastindex(r))
+    else
+        return _find_all(keytype(r), nothing, nothing)
+    end
 end
+find_alllteq(x, a) = collect(first(p) for p in pairs(a) if (last(p) <= x))
+
+# TODO
+#find_all(f::F2Lt, a::AbstractArray, ::UnorderedOrdering) = _fallback_find_all(f, a)
+
+# >
+@inline function find_allgt(x, r::AbstractRange{T}) where {T}
+    if step(r) > zero(T)
+        return _find_all(keytype(r), find_firstgt(x, r), lastindex(r))
+    elseif step(r) < zero(T)
+        return _find_all(keytype(r), firstindex(r), find_lastgt(x, r))
+    else
+        return _empty_ur(keytype(r))
+    end
+end
+find_allgt(x, a) = collect(first(p) for p in pairs(a) if (last(p) > x))
+
+# >=
+@inline function find_allgteq(x, r::AbstractRange{T}) where {T}
+    if step(r) > zero(T)
+        return _find_all(keytype(r), find_firstgteq(x, r), lastindex(r))
+    elseif step(r) < zero(T)
+        return _find_all(keytype(r), firstindex(r), find_lastgteq(x, r))
+    else
+        return _empty_ur(keytype(r))
+    end
+end
+find_allgteq(x, a) = collect(first(p) for p in pairs(a) if (last(p) >= x))
+
+# TODO
+#find_all(f::F2Gt, a::AbstractArray, ::UnorderedOrdering) = _fallback_find_all(f, a)
+
+# find_all(==(x), r)
+@inline function find_alleq(x, r::AbstractRange{T}) where {T}
+    if (step(r) > zero(T)) | (step(r) < zero(T))
+        return _find_all(keytype(r), find_firsteq(x, r), find_lasteq(x, r))
+    else
+        return _empty_ur(keytype(r))
+    end
+end
+find_alleq(x, a) = collect(first(p) for p in pairs(a) if (last(p) == x))
+
+# !=
+@inline function find_not_in(x, r::AbstractRange{T}) where {T}
+    if (step(r) > zero(T)) | (step(r) < zero(T))
+        return combine(find_allgt(x, r), find_alllt(x, r))
+    else
+        return GapRange(UnitRange(1, 0), UnitRange(1, 0))
+    end
+end
+find_all_not_in(x, a) = collect(first(p) for p in pairs(a) if (last(p) != x))
 

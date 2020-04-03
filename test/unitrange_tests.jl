@@ -17,6 +17,8 @@
             @test intersect(r, r[2]) == intersect(b, b[2])
             @test intersect(r, r[2]) == intersect(b, b[2])
 
+            @test @inferred(getindex(UnitMRange(1.0, 10.0), 2)) == 2.0
+
             @test_throws ErrorException r.notfield
             if R == UnitMRange
                 setproperty!(r, :start, 2)

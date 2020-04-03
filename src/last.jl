@@ -31,7 +31,6 @@ can_set_last(::Type{T}) where {T<:StepMRangeLen} = true
 can_set_last(::Type{T}) where {T<:UnitMRange} = true
 can_set_last(::Type{T}) where {T<:OneToMRange} = true
 
-
 """
     set_last!(x, val)
 

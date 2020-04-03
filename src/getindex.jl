@@ -8,21 +8,6 @@ end
 ###
 ### AbstractStepRangeLen
 ###
-function _getindex_hiprec(r::AbstractStepRangeLen, i::Integer)  # without rounding by T
-    u = i - r.offset
-    return r.ref + u * step(r)
-end
-
-function _getindex_hiprec(
-    r::AbstractStepRangeLen{<:Any,<:TwicePrecision,<:TwicePrecision},
-    i::Integer
-   )
-    u = i - r.offset
-    shift_hi, shift_lo = u * gethi(step_hp(r)), u * getlo(step_hp(r))
-    x_hi, x_lo = add12(refhi(r), shift_hi)
-    x_hi, x_lo = add12(x_hi, x_lo + (shift_lo + reflo(r)))
-    return TwicePrecision(x_hi, x_lo)
-end
 
 for RT in (:StepMRangeLen,:StepSRangeLen)
     @eval begin
@@ -168,3 +153,4 @@ for R in (:OneToMRange, :OneToSRange)
         end
     end
 end
+

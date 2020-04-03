@@ -157,7 +157,7 @@ Change the length of `x` while maintaining it's first and last positions.
 """
 set_lendiv!(r::LinMRange, d) = set_lendiv!(r, Int(d))
 function set_lendiv!(r::LinMRange, d::Int)
-    d >= 0 || throw(ArgumentError("set_length!($r, $len): negative length"))
+    d >= 0 || throw(ArgumentError("set_length!($r, $d): negative length"))
     #=
     we don't do this because on the off chance the user is intentionally
     setting lendiv we can't know if they want the length also set to 1 or 2
@@ -172,4 +172,3 @@ function set_lendiv!(r::LinMRange, d::Int)
     setfield!(r, :lendiv, d)
     return r
 end
-

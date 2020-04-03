@@ -1,72 +1,99 @@
-
 # find x in y
-@propagate_inbounds function _find_first_in(x, xo::O, y, yo::O) where {O<:Ordering}
+
+# find all values of x in y
+@inline function findin(x::Interval{:closed,:closed,T}, y) where {T}
+    return intersect(find_allgteq(x.left, y), find_alllteq(x.right, y))
+end
+
+@inline function findin(x::Interval{:closed,:open,T}, y) where {T}
+    return intersect(find_allgteq(x.left, y), find_alllt(x.right, y))
+end
+@inline function findin(x::Interval{:open,:closed,T}, y) where {T}
+    return intersect(find_allgt(x.left, y), find_alllteq(x.right, y))
+end
+@inline function findin(x::Interval{:open,:open,T}, y) where {T}
+    return intersect(find_allgt(x.left, y), find_alllt(x.right, y))
+end
+
+function findin(x::AbstractArray, y)
+    out = Vector{Int}()
     for x_i in x
-        out = find_first(==(x_i), y, yo)
-        out isa Nothing || return out
+        idx = find_firsteq(x_i, y)
+        if idx != nothing
+            push!(out, idx)
+        end
     end
-    return 1
+    return out
 end
 
-@propagate_inbounds function _find_first_in(x, xo::Ordering, y, yo::Ordering)
-    for x_i in x
-        out = find_last(==(x_i), y, yo)
-        out isa Nothing || return out
-    end
-    return 1
-end
+findin(x::AbstractRange, y) = _findin(x, y)
 
-@propagate_inbounds function _find_last_in(x, xo::O, y, yo::O) where {O<:Ordering}
-    for x_i in reverse(x)
-        out = find_first(==(x_i), y, yo)
-        out isa Nothing || return out
-    end
-    return 0
-end
-
-@propagate_inbounds function _find_last_in(x, xo::Ordering, y, yo::Ordering)
-    for x_i in reverse(x)
-        out = find_last(==(x_i), y, yo)
-        out isa Nothing || return out
-    end
-    return 0
-end
-
-@propagate_inbounds function _findin(x::AbstractUnitRange{<:Integer}, xo, y::AbstractUnitRange{<:Integer}, yo)
-    return promote_type(typeof(x), typeof(y))(
-        _find_first_in(x, xo, y, yo),
-        _find_last_in(x, xo, y, yo)
-    )
-end
-
-@propagate_inbounds function _findin(x::OneToUnion{<:Integer}, xo, y::OneToUnion{<:Integer}, yo)
-    R = promote_type(typeof(x), typeof(y))
-    stop = _find_last_in(x, xo, y, yo)
-    if is_static(R)
-        return UnitSRange(1, stop)
-    elseif is_fixed(R)
-        return UnitRange(1, stop)
+function _find_first_in(x, y)
+    out = 1
+    if is_forward(x) & is_forward(y)
+        for x_i in x
+            idx = find_firsteq(x_i, y)
+            if !isa(idx, Nothing)
+                out = idx
+                break
+            end
+        end
     else
-        return UnitMRange(1, stop)
+        for x_i in x
+            idx = find_lasteq(x_i, y)
+            if !isa(idx, Nothing)
+                out = idx
+                break
+            end
+        end
     end
+    return out
 end
 
-@propagate_inbounds function _findin(x::AbstractUnitRange{T}, xo, y::AbstractUnitRange{T}, yo) where {T}
+function _find_last_in(x, y)
+    out = 0
+    if is_forward(x) & is_forward(y)
+        for x_i in reverse(x)
+            idx = find_firsteq(x_i, y)
+            if !isa(idx, Nothing)
+                out = idx
+                break
+            end
+        end
+    else
+        for x_i in reverse(x)
+            idx = find_lasteq(x_i, y)
+            if !isa(idx, Nothing)
+                out = idx
+                break
+            end
+        end
+    end
+    return out
+end
+
+function _findin(x::AbstractUnitRange{<:Integer}, y::AbstractUnitRange{<:Integer})
+    return promote_type(typeof(x), typeof(y))(_find_first_in(x, y), _find_last_in(x, y))
+end
+
+function _findin(x::OneToUnion{<:Integer}, y::OneToUnion{<:Integer})
+    return promote_type(typeof(x), typeof(y))(_find_last_in(x, y))
+end
+
+function _findin(x::AbstractUnitRange{T}, y::AbstractUnitRange{T}) where {T}
     R = similar_type(promote_type(typeof(x), typeof(y)), Int)
-    @boundscheck if !iszero(rem(first(x) - first(y), 1))
+    if !iszero(rem(first(x) - first(y), 1))
         return R(1, 0)
+    else
+        return R(_find_first_in(x, y), _find_last_in(x, y))
     end
-    return R(_find_first_in(x, xo, y, yo), _find_last_in(x, xo, y, yo))
 end
 
-@propagate_inbounds function _findin(x::AbstractUnitRange, xo, y::AbstractUnitRange, yo)
-    xnew, ynew = promote(x, y)
-    return _findin(xnew, xo, ynew, yo)
-end
+_findin(x::AbstractUnitRange, y::AbstractUnitRange) = _findin(promote(x, y)...)
 
 # TODO this needs to be optimized for ranges
-@propagate_inbounds function _findin(x, xo, y, yo)
-    if is_forward(xo) && is_forward(yo)
+@propagate_inbounds function _findin(x, y)
+    if is_forward(x) && is_forward(y)
         return Base._sortedfindin(y, x)
     else
         ind  = Vector{eltype(keys(y))}()
@@ -83,52 +110,34 @@ end
     end
 end
 
-_to_step(x, ::O, ::O) where {O<:Ordering} = x
-_to_step(x, ::Ordering, ::Ordering) = -x
+function _to_step(x, sx, sy)
+    if sign(sx) == sign(sy)
+        return x
+    else
+        return -x
+    end
+end
 
 # TODO Does it matter what paramters are in the return empty range
-@propagate_inbounds function _findin(x::AbstractRange, xo, y::AbstractRange, yo)
+@propagate_inbounds function _findin(x::AbstractRange, y::AbstractRange)
     sx = step(x)
     sy = step(y)
     sxy = div(sx, sy)
     if iszero(sxy)
         sxy = div(sy, sx)
-        if !iszero(rem(ordmin(x, xo) - ordmin(y, yo), div(sxy, sx)))
+        if !iszero(rem(minimum(x) - minimum(y), div(sxy, sx)))
             return 1:1:0
         else
-            fi = _find_first_in(x, xo, y, yo)
-            li = _find_last_in(x, xo, y, yo)
-            return similar_range(x, y)(fi, step=_to_step(1, xo, yo), stop=li)
+            fi = _find_first_in(x, y)
+            li = _find_last_in(x, y)
+            return fi:_to_step(1, sx, sy):li
         end
-    elseif !iszero(rem(ordmin(x, xo) - ordmin(y, yo), div(sxy, sx)))
+    elseif !iszero(rem(minimum(x) - minimum(y), div(sxy, sx)))
         return 1:1:0
     else
-        fi = _find_first_in(x, xo, y, yo)
-        li = _find_last_in(x, xo, y, yo)
-        return similar_range(x, y)(fi, step=_to_step(Int(sxy), xo, yo), stop=li)
+        fi = _find_first_in(x, y)
+        li = _find_last_in(x, y)
+        return fi:_to_step(Int(sxy), sx, sy):li
     end
 end
-
-# FIXME this has all sorts of potential problems
-#=function _findin(x::AbstractUnitRange{T}, xo, y::AbstractRange{T}, yo) where {T}
-    local ifirst
-    local ilast
-    fspan = first(x)
-    lspan = last(x)
-    fr = first(y)
-    lr = last(y)
-    sr = step(y)
-    if sr > 0
-        ifirst = fr >= fspan ? 1 : ceil(Integer,(fspan-fr)/sr)+1
-        ilast = lr <= lspan ? length(y) : length(y) - ceil(Integer,(lr-lspan)/sr)
-    elseif sr < 0
-        ifirst = fr <= lspan ? 1 : ceil(Integer,(lspan-fr)/sr)+1
-        ilast = lr >= fspan ? length(y) : length(y) - ceil(Integer,(lr-fspan)/sr)
-    else
-        ifirst = fr >= fspan ? 1 : length(y)+1
-        ilast = fr <= lspan ? length(y) : 0
-    end
-    return ifirst:ilast
-end
-=#
 

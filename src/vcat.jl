@@ -11,16 +11,16 @@ function _first_segment(cmin, cmax, x, xo, y, yo)
 end
 
 function _first_segment_index(cmin, cmax, x, xo::ForwardOrdering, y, yo)
-    return find_all(<(cmin), x, xo), maybe_flip(xo, yo, find_all(<(cmin), y, yo))
+    return find_all(<(cmin), x), maybe_flip(xo, yo, find_all(<(cmin), y))
 end
 
 function _first_segment_index(cmin, cmax, x, xo::ReverseOrdering, y, yo)
-    return find_all(>(cmax), x, xo), maybe_flip(xo, yo, find_all(>(cmax), y, yo))
+    return find_all(>(cmax), x), maybe_flip(xo, yo, find_all(>(cmax), y))
 end
 
 function _first_segment_index(cmin, cmax, x, xo, y, yo)
-    xidx = find_all(<(cmin), x, xo)
-    yidx = find_all(<(cmin), y, yo)
+    xidx = find_all(<(cmin), x)
+    yidx = find_all(<(cmin), y)
     if !isempty(xidx)
         return sortperm(x[xidx]), yidx
     elseif !isempty(yidx)
@@ -40,7 +40,7 @@ function _middle_segment(cmin, cmax, x, xo, y, yo)
     end
 end
 
-_middle_segment_index(cmin, cmax, x, xo) = find_all(and(>=(cmin), <=(cmax)), x, xo)
+_middle_segment_index(cmin, cmax, x, xo) = find_all(and(>=(cmin), <=(cmax)), x)
 
 function _last_segment(cmin, cmax, x, xo, y, yo)
     xidx, yidx = _last_segment_index(cmin, cmax, x, xo, y, yo)
@@ -52,11 +52,11 @@ function _last_segment(cmin, cmax, x, xo, y, yo)
 end
 
 function _last_segment_index(cmin, cmax, x, xo::ReverseOrdering, y, yo)
-    return find_all(<(cmin), x, xo), maybe_flip(xo, yo, find_all(<(cmin), y, yo))
+    return find_all(<(cmin), x), maybe_flip(xo, yo, find_all(<(cmin), y))
 end
 
 function _last_segment_index(cmin, cmax, x, xo::ForwardOrdering, y, yo)
-    return find_all(>(cmax), x, xo), maybe_flip(xo, yo, find_all(>(cmax), y, yo))
+    return find_all(>(cmax), x), maybe_flip(xo, yo, find_all(>(cmax), y))
 end
 
 """

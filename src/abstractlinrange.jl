@@ -114,7 +114,7 @@ for (F,f) in ((:M,:m), (:S,:s))
                 convert(T, +(first(r1), first(r2))),
                 convert(T, +(last(r1), last(r2))),
                 len
-               )
+            )
         end
     end
 end
