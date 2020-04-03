@@ -5,6 +5,22 @@ using StaticRanges: can_set_first, can_set_last, can_set_step, has_step, can_set
     group_min, min_of_group_max, max_of_group_min, ordmin, ordmax,
     Unordered, set_ref!, set_offset!, set_lendiv!, Size, Length
 
+using StaticRanges:
+    prev_type,
+    next_type,
+    grow_first,
+    grow_first!,
+    grow_last,
+    grow_last!,
+    shrink_first,
+    shrink_first!,
+    shrink_last,
+    shrink_last!,
+    resize_first,
+    resize_first!,
+    resize_last,
+    resize_last!
+
 using OffsetArrays
 using OffsetArrays: IdOffsetRange
 # Uniqueness methods
@@ -780,6 +796,10 @@ end
 @testset "AbstractStepRangeLen" begin
     @test StaticRanges.floatmrange(1.0, 1.0, 10, 2.0) == Base.floatrange(1.0, 1.0, 10, 2.0)
     @test StaticRanges.floatsrange(1.0, 1.0, 10, 2.0) == Base.floatrange(1.0, 1.0, 10, 2.0)
+end
+
+@testset "resize tests" begin
+    include("resize_tests.jl")
 end
 #=
 #@test 1.0:(.3-.1)/.1 == 1.0:2.0

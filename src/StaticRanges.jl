@@ -273,6 +273,8 @@ include("find_lastlt.jl")
 include("find_lastgteq.jl")
 include("find_lastlteq.jl")
 
+include("resize.jl")
+
 include("offset_range.jl")
 
 end
