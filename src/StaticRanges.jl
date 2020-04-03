@@ -12,7 +12,8 @@ using Base.Broadcast: DefaultArrayStyle
 using Dates
 using StaticArrays
 using ArrayInterface
-using IntervalSets, OffsetArrays
+using IntervalSets
+using OffsetArrays
 
 using StaticArrays: Dynamic
 using ArrayInterface: can_setindex

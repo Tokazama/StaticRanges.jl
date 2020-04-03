@@ -1,4 +1,5 @@
 using Test, StaticRanges, Dates, Documenter, IntervalSets
+using StaticArrays
 using StaticRanges: can_set_first, can_set_last, can_set_step, has_step, can_set_length,
     stephi, steplo, refhi, reflo, eqmax, eqmin, ltmax, ltmin, gtmax, gtmin, group_max,
     group_min, min_of_group_max, max_of_group_min, ordmin, ordmax,

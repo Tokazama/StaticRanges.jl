@@ -8,22 +8,22 @@
                     (LinRange(1, 4, 4), LinMRange(1, 4, 4), LinSRange(1, 4, 4)),
                    )
         @testset "as_dynamic($(typeof(i).name))" begin
-            i2 = as_dynamic(i)
-            m2 = as_dynamic(m)
-            s2 = as_dynamic(s)
-            @test is_dynamic(i2)
-            @test is_dynamic(m2)
-            @test is_dynamic(s2)
+            i2 = @inferred(as_dynamic(i))
+            m2 = @inferred(as_dynamic(m))
+            s2 = @inferred(as_dynamic(s))
+            @test @inferred(is_dynamic(i2))
+            @test @inferred(is_dynamic(m2))
+            @test @inferred(is_dynamic(s2))
             @test i2 == m2 == s2
         end
 
         @testset "as_fixed($(typeof(i).name))" begin
-            i2 = as_fixed(i)
-            m2 = as_fixed(m)
-            s2 = as_fixed(s)
-            @test is_fixed(i2)
-            @test is_fixed(m2)
-            @test is_fixed(s2)
+            i2 = @inferred(as_fixed(i))
+            m2 = @inferred(as_fixed(m))
+            s2 = @inferred(as_fixed(s))
+            @test @inferred(is_fixed(i2))
+            @test @inferred(is_fixed(m2))
+            @test @inferred(is_fixed(s2))
             @test i2 == m2 == s2
         end
 
@@ -37,5 +37,13 @@
             @test i2 == m2 == s2
         end
     end
+
+    x = @inferred(as_static(SVector(1)))
+    @test @inferred(is_static(x))
+    @test @inferred(is_fixed(x))
+    @test !@inferred(is_dynamic(x))
+
+    x = @inferred(as_dynamic(x))
+    @test @inferred(is_dynamic(x))
 end
 
