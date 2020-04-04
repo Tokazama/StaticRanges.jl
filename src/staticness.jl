@@ -252,6 +252,10 @@ as_fixed(x::AbstractLinRange) = LinRange(x.start, x.stop, x.len)
 as_fixed(x::StepRangeLen) = x
 as_fixed(x::AbstractStepRangeLen) = StepRangeLen(x.ref, x.step, x.len, x.offset)
 
+# FIXME there currently isn't a clear solution for "fixed" versions of these that
+# aren't also static
+as_fixed(x::AbstractArray) = x
+
 """
     as_static(x)
 
@@ -305,6 +309,31 @@ function as_static(A::AbstractArray)
         return A
     else
         return SArray{Tuple{size(A)...}}(A)
+    end
+end
+
+"""
+    as_static(x::AbstractArray[, hint::Val{S}])
+
+If `x` is static then returns `x`, otherwise returns a comparable but static size
+type to `x`. `hint` provides the option of passing along a statically defined
+tuple representing the size `S` of `x`.
+
+## Examples
+```jldoctest
+julia> using StaticRanges, StaticArrays
+
+julia> x = as_static([1], Val((1,)))
+1-element SArray{Tuple{1},Int64,1,1} with indices SOneTo(1):
+ 1
+
+```
+"""
+function as_static(A::AbstractArray, hint::Val{S}) where {S}
+    if is_static(A)
+        return A
+    else
+        return SArray{Tuple{S...}}(A)
     end
 end
 
