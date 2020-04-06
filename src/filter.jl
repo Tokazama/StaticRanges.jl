@@ -7,14 +7,8 @@
 
 # FIXME specify Bit operator filters here to <,<=,>=,>,==,isequal,isless
 # Currently will return incorrect order or repeated results otherwise
-@propagate_inbounds function Base.filter(f::Function, r::UnionRange)
-    if isempty(r)
-        return r[OneToSRange(0)]
-    else
-        return @inbounds(r[find_all(f, r)])
-    end
-end
+Base.filter(f::Function, r::UnionRange)  = r[find_all(f, r)]
 
-@propagate_inbounds Base.filter(f::ChainedFix, r::UnionRange) = r[findall(f, r)]
+Base.filter(f::ChainedFix, r::UnionRange) = r[findall(f, r)]
 
 

@@ -85,5 +85,10 @@ Base.in(x::Integer, r::OneToRange{<:Integer}) = !(1 > x) & !(x > last(r))
 
 function Base.in(x::Real, r::OneToRange{T}) where {T}
     val = round(Integer, x)
-    return in(val, r) & (@inbounds(getindex(r, val)) == x)
+    if in(val, r)
+        return @inbounds(getindex(r, val)) == x
+    else
+        return false
+    end
 end
+

@@ -72,9 +72,7 @@ to_vec(x) = x
     end
 end
 
-include("findall_tests.jl")
-include("findin_tests.jl")
-include("filter_tests.jl")
+include("find.jl")
 include("count_tests.jl")
 include("gaprange_tests.jl")
 

@@ -90,6 +90,11 @@ export
     find_lastlteq,
     findin,
     find_all,
+    find_alleq,
+    find_allgt,
+    find_alllt,
+    find_allgteq,
+    find_alllteq,
     find_max,
     find_min,
     # Traits
