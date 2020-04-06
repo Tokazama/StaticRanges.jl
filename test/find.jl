@@ -174,6 +174,12 @@ end
         end
     end
 
+    for x in (-1, -0.5, 0, 0.5, 1, 9, 9.5, 10, 10.5, 11)
+        find_first_tests(x, collect(1:10))
+        find_last_tests(x, collect(1:10))
+        find_all_tests(x, collect(1:10))
+    end
+
 
     for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
                     (UnitMRange(2, 6), UnitSRange(2, 6), UnitRange(2, 6)),
