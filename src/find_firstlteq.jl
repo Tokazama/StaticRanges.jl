@@ -1,31 +1,42 @@
 
-@inline function find_firstlteq(x, r::AbstractUnitRange)
-    @boundscheck if first(r) > x
+@inline function find_firstlteq(x, r::OneToUnion)
+    if (r.stop == 0) | (1 > x)
         return nothing
+    else
+        return firstindex(r)
     end
-    return firstindex(r)
+end
+
+@inline function find_firstlteq(x, r::AbstractUnitRange)
+    if isempty(r) | (first(r) > x)
+        return nothing
+    else
+        return firstindex(r)
+    end
 end
 
 @inline function find_firstlteq(x, r::AbstractRange{T}) where {T}
-    if step(r) > zero(T)
-        @boundscheck if first(r) > x
-            return nothing
-        end
-        return firstindex(r)
-    elseif step(r) < zero(T)
-        idx = unsafe_findvalue(x, r)
-        @boundscheck if (lastindex(r) < idx)
-            return nothing
-        end
-        if firstindex(r) >= idx
-            return firstindex(r)
-        elseif @inbounds(r[idx]) <= x
-            return idx
-        else
-            return idx - oneunit(idx)
-        end
-    else  # isempty(r)
+    if isempty(r)
         return nothing
+    elseif step(r) > zero(T)
+        if first(r) > x
+            return nothing
+        else
+            return firstindex(r)
+        end
+    else  # step(r) < zero(T)
+        if first(r) <= x
+            return firstindex(r)
+        elseif last(r) > x
+            return nothing
+        else
+            idx = unsafe_findvalue(x, r)
+            if @inbounds(r[idx]) <= x
+                return idx
+            else
+                return idx + oneunit(idx)
+            end
+        end
     end
 end
 

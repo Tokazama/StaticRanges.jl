@@ -1,6 +1,6 @@
 
 @inline function find_firstlt(x, r::AbstractUnitRange)
-    if first(r) >= x
+    if (first(r) >= x) | isempty(r)
         return nothing
     else
         return firstindex(r)
@@ -8,13 +8,15 @@
 end
 
 @inline function find_firstlt(x, r::AbstractRange{T}) where {T}
-    if step(r) > zero(T)
+    if isempty(r)
+        return nothing
+    elseif step(r) > zero(T)
         if first(r) >= x
             return nothing
         else
             return firstindex(r)
         end
-    elseif step(r) < zero(T)
+    else  # step(r) < zero(T)
         idx = unsafe_findvalue(x, r)
         if lastindex(r) <= idx
             return nothing
@@ -25,8 +27,6 @@ end
         else
             return idx + oneunit(idx)
         end
-    else
-        return nothing
     end
 end
 
@@ -36,4 +36,3 @@ function find_firstlt(x, a)
     end
     return nothing
 end
-

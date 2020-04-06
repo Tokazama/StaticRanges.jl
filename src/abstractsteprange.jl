@@ -94,6 +94,3 @@ for (F,f) in ((:M,:m), (:S,:s))
     end
 end
 
-is_static(::Type{<:StepSRange}) = true
-is_fixed(::Type{<:StepMRange}) = false
-

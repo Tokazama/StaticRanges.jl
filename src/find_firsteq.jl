@@ -12,4 +12,3 @@ function find_firsteq(x, a)
     end
     return nothing
 end
-

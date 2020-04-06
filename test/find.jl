@@ -1,5 +1,81 @@
+function typed_findfirst(f, x)
+    out = findfirst(f, x)
+    if out isa Nothing
+        return 0
+    else
+        return out
+    end
+end
 
-@testset "find" begin
+function find_tests(x, collection)
+    @testset "find test - $x, $(typeof(collection))" begin
+        @test @inferred(catch_nothing(find_firstgt(x, collection))) ==
+              catch_nothing(findfirst(i -> i > x,  collection))
+        @test @inferred(catch_nothing(find_firstgteq(x, collection))) ==
+              catch_nothing(findfirst(i -> i >= x, collection))
+        @test @inferred(catch_nothing(find_firstlt(x, collection))) ==
+              catch_nothing(findfirst(i -> i < x, collection))
+        @test @inferred(catch_nothing(find_firstlteq(x, collection))) ==
+              catch_nothing(findfirst(i -> i <= x, collection))
+        @test @inferred(catch_nothing(find_firsteq(x, collection))) ==
+              catch_nothing(findfirst(i -> i == x, collection))
+
+        @test @inferred(catch_nothing(find_lastgt(x, collection))) ==
+              catch_nothing(findlast(i -> i > x,collection))
+        @test @inferred(catch_nothing(find_lastgteq(x, collection))) ==
+              catch_nothing(findlast(i -> i >= x, collection))
+        @test @inferred(catch_nothing(find_lastlt(x, collection))) ==
+              catch_nothing(findlast(i -> i < x,collection))
+        @test @inferred(catch_nothing(find_lastlteq(x,collection))) ==
+              catch_nothing(findlast(i -> i <= x, collection))
+        @test @inferred(catch_nothing(find_lasteq(x, collection))) ==
+              catch_nothing(findlast(i -> i == x, collection))
+    end
+end
+
+
+@testset "find methods" begin
+    for frange in (mrange, srange)
+        @testset "findfirst-$(frange)" begin
+            @test @inferred(typed_findfirst(isequal(7), frange(1, step=2, stop=10))) == 4
+            @test @inferred(typed_findfirst(==(7), frange(1, step=2, stop=10))) == 4
+            @test @inferred(typed_findfirst(==(10), frange(1, step=2, stop=10))) == 0
+            @test @inferred(typed_findfirst(==(11), frange(1, step=2, stop=10))) == 0
+        end
+    end
+
+    step_range = StepMRange(1,1,4)
+    lin_range = LinMRange(1,4,4)
+    oneto_range = OneToMRange(10)
+    @test @inferred(typed_findfirst(isequal(3), step_range)) == 3
+    @test @inferred(typed_findfirst(isequal(3), lin_range)) == 3
+    @test @inferred(typed_findfirst(isequal(3), oneto_range)) == 3
+
+    for collection in (OneTo(10),
+                    IdOffsetRange(OneTo(10), 2),
+                    1:10,
+                    IdOffsetRange(1:10, 2),
+                    UnitRange(1.0, 10.0),
+                    StepRange(1, 2, 10),
+                    StepRange(10, -2, 1),
+                    LinRange(1, 5, 10),
+                    LinRange(5, 1, 10),
+                    range(1.0, step=0.25, stop=10),
+                    range(10.0, step=-0.25, stop=1.0))
+        for x in (first(collection) - step(collection),
+                first(collection) - step(collection) / 2,
+                first(collection),
+                first(collection) + step(collection) / 2,
+                first(collection) + step(collection),
+                last(collection) - step(collection),
+                last(collection) - step(collection) / 2,
+                last(collection),
+                last(collection) + step(collection) / 2,
+                last(collection) + step(collection))
+            find_tests(x, collection)
+        end
+    end
+
     for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
                     (UnitMRange(2, 6), UnitSRange(2, 6), UnitRange(2, 6)),
                     (StepMRange(1, 2, 11), StepSRange(1, 2, 11), StepRange(1, 2, 11)),
@@ -85,22 +161,18 @@
         end
     end
 
+    for collection in (OneTo(0), 1:0, 1:1:0, 0:-1:1,LinRange(1, 1, 0))
+        for x in (-1, -0.5, 0, 0.5, 1)
+            find_tests(x, collection)
+        end
+    end
+
 
     @testset "Find with empty range" begin
         for i in (0, 1)
             @testset "Number: $i" begin
                 for f in (<, >, <=, >=, ==)
                     m, s, b = LinMRange(1, 1, 0), LinSRange(1, 1, 0), LinRange(1, 1, 0)
-                    @testset "findfirst" begin
-                        @test findfirst(f(i), m) == findfirst(f(i), s)
-                        @test findfirst(f(i), s) == findfirst(f(i), s)
-                    end
-
-                    @testset "findlast" begin
-                        @test findlast(f(i), m) == findlast(f(i), b)
-                        @test findlast(f(i), s) == findlast(f(i), b)
-                    end
-
                     @testset "findall" begin
                         @test findall(f(i), m) == findall(f(i), b)
                         @test findall(f(i), s) == findall(f(i), b)

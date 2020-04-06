@@ -177,6 +177,4 @@ for (F,f) in ((:M,:m), (:S,:s))
    end
 end
 
-is_static(::Type{<:StepSRangeLen}) = true
-is_fixed(::Type{<:StepMRangeLen}) = false
 

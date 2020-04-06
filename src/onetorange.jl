@@ -76,9 +76,6 @@ function Base.setproperty!(r::OneToMRange, s::Symbol, val)
     end
 end
 
-is_static(::Type{<:OneToSRange}) = true
-is_fixed(::Type{<:OneToMRange}) = false
-
 const OneToUnion{T} = Union{OneTo{T},OneToRange{T}}
 
 OneToSRange{T,<:Any}(r::OneToUnion) where {T<:Integer} = OneToSRange{T}(last(r))

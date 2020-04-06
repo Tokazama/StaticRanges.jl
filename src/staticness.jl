@@ -41,6 +41,18 @@ function axes_type(::Type{<:AbstractArray{T,N}}) where {T,N}
     return Tuple{ntuple(_ -> OneTo{Int}, Val(N))...}
 end
 
+function axes_type(::Type{<:StaticArray{S,T,N}}) where {S,T,N}
+    axs = ntuple(Val(N)) do i
+        if S.parameters[i] isa Int
+            SOneTo{S.parameters[i]}
+        else
+            OneTo{Int}
+        end
+    end
+    return Tuple{axs...}
+end
+
+
 """
     axes_type(::T, i) = axes_type(T, i)
     axes_type(::Type{T}, i)
@@ -64,6 +76,12 @@ for f in (:is_dynamic, :is_static, :is_fixed)
         $f(::T) where {T} = $f(T)
         $f(::T, i::Integer) where {T} = $f(T, i)
         $f(::Type{T}, i::Integer) where {T} = $f(axes_type(T).parameters[i])
+        @inline function $f(type::Type{<:AbstractArray{T,N}}) where {T,N}
+            for i in 1:ndims(type)
+                $f(axes_type(type, i)) || return false
+            end
+            return true
+        end
     end
 end
 
@@ -86,14 +104,14 @@ julia> is_dynamic(StepMRange(1, 2, 20))
 true
 ```
 """
-@inline function is_dynamic(::Type{T}) where {T}
-    T2 = parent_type(T)
-    if T2 <: T
-        return !is_fixed(T)
-    else
-        return is_dynamic(T2)
-    end
-end
+is_dynamic(::Type{T}) where {T} = false
+is_dynamic(::Type{T}) where {T<:Vector} = true
+is_dynamic(::Type{T}) where {T<:OneToMRange} = true
+is_dynamic(::Type{T}) where {T<:UnitMRange} = true
+is_dynamic(::Type{T}) where {T<:StepMRange} = true
+is_dynamic(::Type{T}) where {T<:StepMRangeLen} = true
+is_dynamic(::Type{T}) where {T<:LinMRange} = true
+is_dynamic(::Type{T}) where {T<:AbstractRange} = false
 
 """
     is_static(x) -> Bool
@@ -120,17 +138,18 @@ julia> is_static((a=1, b=2))
 true
 ```
 """
-@inline function is_static(::Type{T}) where {T}
-    T2 = parent_type(T)
-    if T2 <: T
-        return false
-    else
-        return is_static(T2)
-    end
-end
+is_static(::Type{T}) where {T} = false
 is_static(::Type{T}) where {T<:Tuple} = true
 is_static(::Type{T}) where {T<:NamedTuple} = true
-is_static(::Type{T}) where {T<:StaticArray} = true
+is_static(::Type{T}) where {T<:SOneTo} = true
+is_static(::Type{T}) where {T<:StaticArrays.SUnitRange} = true
+is_static(::Type{T}) where {T<:OneToSRange} = true
+is_static(::Type{T}) where {T<:UnitSRange} = true
+is_static(::Type{T}) where {T<:StepSRange} = true
+is_static(::Type{T}) where {T<:StepSRangeLen} = true
+is_static(::Type{T}) where {T<:LinSRange} = true
+is_static(::Type{T}) where {T<:AbstractRange} = false
+
 
 """
     is_fixed(x) -> Bool
@@ -152,16 +171,14 @@ julia> is_fixed(StepMRange(1, 2, 20))
 false
 ```
 """
-@inline function is_fixed(::Type{T}) where {T}
-    T2 = parent_type(T)
-    if T2 <: T
-        return !T.mutable
-    else
-        return is_fixed(T2)
-    end
-end
-# most range types are fixed so just make it the default
+is_fixed(::Type{T}) where {T} = true
 is_fixed(::Type{T}) where {T<:AbstractRange} = true
+is_fixed(::Type{T}) where {T<:Vector} = false
+is_fixed(::Type{T}) where {T<:OneToMRange} = false
+is_fixed(::Type{T}) where {T<:UnitMRange} = false
+is_fixed(::Type{T}) where {T<:StepMRange} = false
+is_fixed(::Type{T}) where {T<:StepMRangeLen} = false
+is_fixed(::Type{T}) where {T<:LinMRange} = false
 
 """
     as_dynamic(x)
@@ -208,7 +225,6 @@ function as_dynamic(A::AbstractArray)
         return Array(A)
     end
 end
-
 
 """
     as_fixed(x)
@@ -290,9 +306,11 @@ julia> as_static(reshape(1:12, (3, 4)))
 ```
 """
 as_static(x::OneToSRange) = x
+as_static(::SOneTo{L}) where {L} = OneToSRange{Int,L}()
 as_static(x::Union{OneTo,OneToMRange}) = OneToSRange(last(x))
 
 as_static(x::UnitSRange) = x
+as_static(x::StaticArrays.SUnitRange{F,L}) where {F,L} = UnitSRange{Int,F,L}()
 as_static(x::AbstractUnitRange) = UnitSRange(first(x), last(x))
 
 as_static(x::StepSRange) = x
@@ -329,11 +347,20 @@ julia> x = as_static([1], Val((1,)))
 
 ```
 """
-function as_static(A::AbstractArray, hint::Val{S}) where {S}
-    if is_static(A)
-        return A
+@inline function as_static(x::AbstractArray, hint::Val{S}) where {S}
+    if is_static(x)
+        return x
     else
-        return SArray{Tuple{S...}}(A)
+        return SArray{Tuple{S...}}(x)
+    end
+end
+
+@inline function as_static(x::AbstractRange, hint::Val{S}) where {S}
+    if x isa OneToUnion
+        T = eltype(x)
+        return OneToSRange{T,T(first(S))}()
+    else
+        return as_static(x)
     end
 end
 

@@ -5,24 +5,13 @@ using StaticRanges: can_set_first, can_set_last, can_set_step, has_step, can_set
     group_min, min_of_group_max, max_of_group_min, ordmin, ordmax,
     Unordered, set_ref!, set_offset!, set_lendiv!, Size, Length
 
-using StaticRanges:
-    prev_type,
-    next_type,
-    grow_first,
-    grow_first!,
-    grow_last,
-    grow_last!,
-    shrink_first,
-    shrink_first!,
-    shrink_last,
-    shrink_last!,
-    resize_first,
-    resize_first!,
-    resize_last,
-    resize_last!
+using StaticRanges: prev_type, next_type, grow_first, grow_first!, grow_last, grow_last!,
+    shrink_first, shrink_first!, shrink_last, shrink_last!, resize_first, resize_first!,
+    resize_last, resize_last!
 
 using OffsetArrays
 using OffsetArrays: IdOffsetRange
+
 # Uniqueness methods
 using StaticRanges: ArrayInterface.ismutable
 
@@ -83,8 +72,6 @@ to_vec(x) = x
     end
 end
 
-include("findfirst_tests.jl")
-include("findlast_tests.jl")
 include("findall_tests.jl")
 include("findin_tests.jl")
 include("filter_tests.jl")

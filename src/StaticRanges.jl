@@ -10,13 +10,16 @@ using Base: @propagate_inbounds, @pure
 using Base.Broadcast: DefaultArrayStyle
 
 using Dates
-using StaticArrays
-using ArrayInterface
-using IntervalSets
-using OffsetArrays
 
+using StaticArrays
 using StaticArrays: Dynamic
+
+using ArrayInterface
 using ArrayInterface: can_setindex
+
+using IntervalSets
+
+using OffsetArrays
 using OffsetArrays: IdOffsetRange
 
 export

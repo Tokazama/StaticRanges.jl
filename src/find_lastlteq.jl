@@ -17,7 +17,9 @@ function find_lastlteq(x, r::AbstractUnitRange)
 end
 
 function find_lastlteq(x, r::AbstractRange{T}) where {T}
-    if step(r) > zero(T)
+    if isempty(r)
+        return nothing
+    elseif step(r) > zero(T)
         if last(r) <= x
             return lastindex(r)
         elseif first(r) > x
@@ -32,14 +34,12 @@ function find_lastlteq(x, r::AbstractRange{T}) where {T}
                 return nothing
             end
         end
-    elseif step(r) < zero(T)
+    else  # step(r) < zero(T)
         if last(r) <= x
             return lastindex(r)
         else
             return nothing
         end
-    else  # isempty(r)
-        return nothing
     end
 end
 

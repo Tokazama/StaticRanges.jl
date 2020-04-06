@@ -8,13 +8,15 @@
 end
 
 @inline function find_lastgt(x, r::AbstractRange{T}) where {T}
-    if step(r) > zero(T)
+    if isempty(r)
+        return nothing
+    elseif step(r) > zero(T)
         if last(r) <= x
             return nothing
         else
             return lastindex(r)
         end
-    elseif step(r) < zero(T)
+    else  # step(r) < zero(T)
         if first(r) <= x
             return nothing
         elseif last(r) > x
@@ -27,9 +29,6 @@ end
                 return idx
             end
         end
-        
-    else
-        return nothing
     end
 end
 

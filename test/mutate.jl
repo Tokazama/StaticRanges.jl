@@ -1,3 +1,4 @@
+
 @testset "Mutable interface" begin
 
 
@@ -16,3 +17,4 @@
         @test @inferred(is_static(UnitSRange(1, 10))) == true
     end
 end
+

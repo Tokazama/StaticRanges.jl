@@ -1,8 +1,11 @@
 
+###
+### OneToUnion
+###
 find_firstgt(x, r::OneToUnion) = _find_firstgt_oneto(x, r)
 
 @inline function _find_firstgt_oneto(x::Integer, r)
-    if x >= last(r)
+    if (x >= last(r)) | (r.stop == 0)
         return nothing
     elseif x < 1
         return 1
@@ -12,24 +15,22 @@ find_firstgt(x, r::OneToUnion) = _find_firstgt_oneto(x, r)
 end
 
 @inline function _find_firstgt_oneto(x, r)
-    idx = round(Integer, x, RoundUp)
-    if idx > x
-        if idx < 1
-            return nothing
-        elseif idx >= last(r)
-            return 1
-        else
-            return idx
-        end
+    if (x >= last(r)) | (r.stop == 0)
+        return nothing
+    elseif x < 1
+        return 1
     else
-        return _find_firstgt_oneto(idx, r)
+        return unsafe_findvalue(x, r) + 1
     end
 end
 
+###
+### AbstractUnitRange
+###
 find_firstgt(x, r::AbstractUnitRange) = _find_firstgt_unit(x, r)
 
 @inline function _find_firstgt_unit(x::Integer, r)
-    if x >= last(r)
+    if (x >= last(r)) | isempty(r)
         return nothing
     elseif x < first(r)
         return firstindex(r)
@@ -40,45 +41,47 @@ find_firstgt(x, r::AbstractUnitRange) = _find_firstgt_unit(x, r)
 end
 
 @inline function _find_firstgt_unit(x, r)
-    xnew = round(Integer, x, RoundUp)
-    if xnew > x
-        if xnew >= lastindex(r)
-            return nothing
-        elseif xnew < firstindex(r)
-            return firstindex(r)
-        else
-            return unsafe_findvalue(xnew, r)
-        end
+    if (last(r) <= x) | isempty(r)
+        return nothing
+    elseif first(r) > x
+        return firstindex(r)
     else
-        return _find_firstgt_unit(xnew, r)
+        idx = unsafe_findvalue(x, r, RoundUp)
+        if idx > x
+            return idx
+        else
+            return idx + oneunit(idx)
+        end
     end
 end
 
-@inline function find_firstgt(x, r::AbstractRange{T}) where {T}
-    if step(r) > zero(T)
-        idx = unsafe_findvalue(x, r)
-        if idx < firstindex(r)
-            return firstindex(r)
-        elseif idx > lastindex(r)
-            return nothing
-        elseif (@inbounds(r[idx]) == x) & (idx != lastindex(r))
-            return idx + oneunit(idx)
-        else
-            return nothing
-        end
-    elseif step(r) < zero(T)
-        idx = unsafe_findvalue(x, r)
-        if idx > lastindex(r)
-            return lastindex(r)
-        elseif idx < firstindex(r)
-            return nothing
-        elseif (@inbounds(r[idx]) == x) & (idx != firstindex(r))
-            return idx - oneunit(idx)
-        else
-            return nothing
-        end
-    else  # isempty(r)
+###
+### AbstractRange
+###
+function find_firstgt(x, r::AbstractRange{T}) where {T}
+    if isempty(r)
         return nothing
+    elseif step(r) > zero(T)
+        if (last(r) <= x) | isempty(r)
+            return nothing
+        elseif first(r) > x
+            return firstindex(r)
+        else
+            idx = unsafe_findvalue(x, r, RoundUp)
+            if @inbounds(r[idx]) > x
+                return idx
+            else
+                return idx + oneunit(idx)
+            end
+        end
+    else  # step(r) < zero(T)
+        if first(r) > x
+            return firstindex(r)
+        elseif last(r) < x
+            return nothing
+        else
+            return unsafe_findvalue(x, r, RoundUp)
+        end
     end
 end
 

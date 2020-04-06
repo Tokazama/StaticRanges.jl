@@ -1,4 +1,6 @@
+
 is_static(::Type{IdOffsetRange{T,P}}) where {T,P} = is_static(P)
+is_dynamic(::Type{IdOffsetRange{T,P}}) where {T,P} = is_dynamic(P)
 is_fixed(::Type{IdOffsetRange{T,P}}) where {T,P} = is_fixed(P)
 
 as_dynamic(x::IdOffsetRange) = IdOffsetRange(as_dynamic(parent(x)), x.offset)
@@ -30,5 +32,19 @@ end
 function set_length!(r::IdOffsetRange{T}, len) where {T}
     set_length!(parent(r), len)
     return r
+end
+
+for f in (:find_lasteq, :find_lastgt, :find_lastgteq, :find_lastlt, :find_lastlteq,
+          :find_firsteq, :find_firstgt, :find_firstgteq, :find_firstlt, :find_firstlteq)
+    @eval begin
+        function $f(x, r::IdOffsetRange)
+            idx = $f(x - r.offset, parent(r))
+            if idx isa Nothing
+                return idx
+            else
+                return idx + r.offset
+            end
+        end
+    end
 end
 
