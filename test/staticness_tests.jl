@@ -60,5 +60,7 @@
     @test is_static(s2)
 
     @test @inferred(axes_type(SVector(1))) <: Tuple{SOneTo{1}}
+
+    @test !StaticRanges.has_offset_axes(1:10)
 end
 

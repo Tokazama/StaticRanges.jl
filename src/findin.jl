@@ -26,6 +26,9 @@ function findin(x::AbstractArray, y)
     return out
 end
 
+###
+### AbstractRange
+###
 findin(x::AbstractRange, y) = _findin(x, y)
 
 function _find_first_in(x, y)
@@ -118,8 +121,11 @@ function _to_step(x, sx, sy)
     end
 end
 
-# TODO Does it matter what paramters are in the return empty range
-@propagate_inbounds function _findin(x::AbstractRange, y::AbstractRange)
+function _findin(x::AbstractRange{T1}, y::AbstractRange{T2}) where {T1,T2}
+    return _findin(promote(x, y)...)
+end
+
+function _findin(x::AbstractRange{T}, y::AbstractRange{T}) where {T<:Real}
     sx = step(x)
     sy = step(y)
     sxy = div(sx, sy)
@@ -132,12 +138,44 @@ end
             li = _find_last_in(x, y)
             return fi:_to_step(1, sx, sy):li
         end
-    elseif !iszero(rem(minimum(x) - minimum(y), div(sxy, sx)))
-        return 1:1:0
     else
-        fi = _find_first_in(x, y)
-        li = _find_last_in(x, y)
-        return fi:_to_step(Int(sxy), sx, sy):li
+        if !iszero(rem(minimum(x) - minimum(y), div(sxy, sx)))
+            return 1:1:0
+        else
+            fi = _find_first_in(x, y)
+            li = _find_last_in(x, y)
+            return fi:_to_step(Int(sxy), sx, sy):li
+        end
+    end
+end
+
+# Ideally the previous _findin method could be used, but things like `div(::Second, ::Integer)`
+# don't work. So this helps drop units by didingin by oneunit(::T) of the same type.
+dropunit(x) = x / oneunit(x)
+
+function _findin(x::AbstractRange{T}, y::AbstractRange{T}) where {T}
+    sx = dropunit(step(x))
+    sy = dropunit(step(y))
+    sxy = div(sx, sy)
+    minx = dropunit(minimum(x))
+    miny = dropunit(minimum(y))
+    if iszero(sxy)
+        if !iszero(rem(minx - miny, div(sxy, sx)))
+            return 1:1:0
+        else
+            fi = _find_first_in(x, y)
+            li = _find_last_in(x, y)
+            return fi:_to_step(1, sx, sy):li
+        end
+    else
+        sxy = div(sy, sx)
+        if !iszero(rem(minx - miny, div(sxy, sy)))
+            return 1:1:0
+        else
+            fi = _find_first_in(x, y)
+            li = _find_last_in(x, y)
+            return fi:_to_step(Int(sxy), sx, sy):li
+        end
     end
 end
 

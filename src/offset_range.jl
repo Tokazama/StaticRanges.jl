@@ -48,3 +48,6 @@ for f in (:find_lasteq, :find_lastgt, :find_lastgteq, :find_lastlt, :find_lastlt
     end
 end
 
+axes_type(::Type{T}) where {T<:IdOffsetRange} = Tuple{T}
+
+has_offset_axes(::Type{<:IdOffsetRange}) = true

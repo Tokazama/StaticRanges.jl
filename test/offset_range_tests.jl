@@ -44,5 +44,7 @@
 
     offset_x = set_length!(x, len_p1)
     @test length(offset_x) == len_p1 == length(x)
+
+    @test StaticRanges.has_offset_axes(typeof(offset_x))
 end
 

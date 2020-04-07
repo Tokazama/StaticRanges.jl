@@ -364,3 +364,7 @@ end
     end
 end
 
+# TODO This should go in base, but 
+has_offset_axes(::T) where {T} = has_offset_axes(T)
+has_offset_axes(::Type{T}) where {T} = false
+

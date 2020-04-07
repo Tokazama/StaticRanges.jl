@@ -1,11 +1,3 @@
-function typed_findfirst(f, x)
-    out = findfirst(f, x)
-    if out isa Nothing
-        return 0
-    else
-        return out
-    end
-end
 
 @noinline function find_first_tests(x, collection)
     @testset "find first test - $x, $(typeof(collection))" begin
@@ -114,24 +106,6 @@ end
 end
 
 @testset "find methods" begin
-    #=
-    for frange in (mrange, srange)
-        @testset "findfirst-$(frange)" begin
-            @test @inferred(typed_findfirst(isequal(7), frange(1, step=2, stop=10))) == 4
-            @test @inferred(typed_findfirst(==(7), frange(1, step=2, stop=10))) == 4
-            @test @inferred(typed_findfirst(==(10), frange(1, step=2, stop=10))) == 0
-            @test @inferred(typed_findfirst(==(11), frange(1, step=2, stop=10))) == 0
-        end
-    end
-
-    step_range = StepMRange(1,1,4)
-    lin_range = LinMRange(1,4,4)
-    oneto_range = OneToMRange(10)
-    @test @inferred(typed_findfirst(isequal(3), step_range)) == 3
-    @test @inferred(typed_findfirst(isequal(3), lin_range)) == 3
-    @test @inferred(typed_findfirst(isequal(3), oneto_range)) == 3
-    =#
-
     for collection in (OneToMRange(10),
                     IdOffsetRange(OneTo(10), 2),
                     1:10,
@@ -260,6 +234,7 @@ end
 @testset "filter non numerics" begin
     x = Second(1):Second(1):Second(10)
     @test @inferred(find_all(and(>=(Second(1)), <=(Second(3))), x)) == 1:3
+    @test @inferred(findin(Second(1):Second(1):Second(3), x)) == 1:3
 end
 
 @testset "find_all(in(x), r)" begin
