@@ -793,3 +793,4 @@ end
 @testset "docs" begin
     doctest(StaticRanges; manual=false)
 end
+

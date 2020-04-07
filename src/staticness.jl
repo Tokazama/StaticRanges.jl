@@ -364,7 +364,8 @@ end
     end
 end
 
-# TODO This should go in base, but 
+# TODO This is a more trait like version of the same method from base
+# (base doesn't operate on types)
 has_offset_axes(::T) where {T} = has_offset_axes(T)
 has_offset_axes(::Type{T}) where {T} = false
 
