@@ -164,3 +164,8 @@ end
     @test x == 1:10
 end
 
+@testset "[next/prev]_type" begin
+    @test @inferred(StaticRanges.grow_last(["a"], 1)) == ["a", "b"]
+    @test @inferred(StaticRanges.grow_first(["a"], 1)) == ["`", "a"]
+end
+

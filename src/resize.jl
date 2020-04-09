@@ -1,4 +1,12 @@
 
+
+function nprev_type(x::T, n) where {T}
+    return [x = prev_type(x) for _ in 1:n]::Vector{T}
+end
+function nnext_type(x::T, n) where {T}
+    return [x = next_type(x) for _ in 1:n]::Vector{T}
+end
+
 """
     next_type(x::T)
 
@@ -88,9 +96,10 @@ julia> StaticRanges.grow_last(mr, 2)
 UnitMRange(1:12)
 ```
 """
-function grow_last(x::AbstractVector, n::Integer)
+@inline function grow_last(x::AbstractVector, n::Integer)
     i = last(x)
-    return vcat(x, [i = next_type(i) for _ in 1:n])
+
+    return vcat(x, nnext_type(i, n))
 end
 grow_last(x::AbstractRange, n::Integer) = set_last(x, last(x) + step(x) * n)
 
@@ -114,7 +123,7 @@ UnitMRange(1:12)
 """
 function grow_last!(x::AbstractVector, n::Integer)
     i = last(x)
-    return append!(x, [i = next_type(i) for _ in 1:n])
+    return append!(x, nnext_type(i, n))
 end
 grow_last!(x::AbstractRange, n::Integer) = set_last!(x, last(x) + step(x) * n)
 """
@@ -135,7 +144,7 @@ UnitMRange(-1:10)
 """
 function grow_first(x::AbstractVector, n::Integer)
     i = first(x)
-    return vcat(reverse!([i = prev_type(i) for _ in 1:n]), x)
+    return vcat(reverse!(nprev_type(i, n)), x)
 end
 grow_first(x::AbstractRange, n::Integer) = set_first(x, first(x) - step(x) * n)
 
@@ -159,7 +168,7 @@ UnitMRange(-1:10)
 """
 function grow_first!(x::AbstractVector, n::Integer)
     i = first(x)
-    return prepend!(x, reverse!([i = prev_type(i) for _ in 1:n]))
+    return prepend!(x, reverse!(nprev_type(i, n)))
 end
 grow_first!(x::AbstractRange, n::Integer) = set_first!(x, first(x) - step(x) * n)
 

@@ -167,7 +167,7 @@ const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRang
 ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = true
 
 include("iterate.jl")
-include("staticness.jl")
+include("traits.jl")
 include("checkindex.jl")
 include("filter.jl")
 include("first.jl")
