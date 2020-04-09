@@ -266,6 +266,7 @@ end
     @test isa(r, UnitSRange)
 
     @test find_all(in(collect(1:10)), 1:20) == find_all(in(1:10), 1:20)
+    @test find_all(in(1:10), collect(1:20)) == 1:10
 
     @testset "steps match but no overlap" begin
         r = @inferred(findin(1:3, 4:5))
