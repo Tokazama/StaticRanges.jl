@@ -1,4 +1,13 @@
 
+"""
+    find_lastgteq(val, collection)
+
+Return the last index of `collection` where the element is greater than or equal
+to `val`. If no element of `collection` is greater than or equal to `val`, `nothing`
+is returned.
+"""
+function find_lastgteq end
+
 @inline function find_lastgteq(x, r::AbstractUnitRange)
     if last(r) < x
         return nothing

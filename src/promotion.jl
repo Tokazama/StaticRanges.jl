@@ -249,3 +249,4 @@ same_type(::Type{X}, ::Type{Y}) where {X<:LinSRange,Y<:LinSRange} = true
 same_type(::Type{X}, ::Type{Y}) where {X<:StepSRangeLen,Y<:StepSRangeLen} = true
 same_type(::Type{X}, ::Type{X}) where {X} = true
 same_type(::Type{X}, ::Type{Y}) where {X,Y} = false
+

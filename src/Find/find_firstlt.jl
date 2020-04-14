@@ -1,4 +1,12 @@
 
+"""
+    find_firstlt(val, collection)
+
+Return the first index of `collection` where the element is less than `val`.
+If no element of `collection` is less than `val`, `nothing` is returned.
+"""
+function find_firstlt end
+
 @inline function find_firstlt(x, r::AbstractUnitRange)
     if (first(r) >= x) | isempty(r)
         return nothing

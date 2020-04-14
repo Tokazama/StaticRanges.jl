@@ -1,4 +1,14 @@
 
+"""
+    find_lastlteq(val, collection)
+
+Return the last index of `collection` where the element is less than or equal to
+`val`. If no element of `collection` is less than or equal to`val`, `nothing` is
+returned.
+"""
+function find_lastlteq end
+
+
 function find_lastlteq(x, r::AbstractUnitRange)
     if last(r) <= x
         return lastindex(r)

@@ -40,7 +40,7 @@
 
     x = @inferred(as_static(SVector(1)))
     @test @inferred(is_static(x))
-    @test @inferred(is_fixed(x))
+    @test !@inferred(is_fixed(x))
     @test !@inferred(is_dynamic(x))
 
     x = @inferred(as_dynamic(x))
@@ -50,7 +50,7 @@
 
     x = @inferred(as_static(x, Val((1,))))
     @test @inferred(is_static(x))
-    @test @inferred(is_fixed(x))
+    @test !@inferred(is_fixed(x))
     @test !@inferred(is_dynamic(x))
 
     x = OneTo(10)

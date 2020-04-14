@@ -1,4 +1,13 @@
 
+"""
+    find_lastlt(val, collection)
+
+Return the last index of `collection` where the element is less than `val`.
+If no element of `collection` is less than `val`, `nothing` is returned.
+"""
+function find_lastlt end
+
+
 @inline function find_lastlt(x, r::AbstractUnitRange)
     idx = unsafe_findvalue(x, r)
     if firstindex(r) > idx

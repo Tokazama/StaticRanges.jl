@@ -1,3 +1,22 @@
+
+module ChainedFixes
+
+using Base: Fix2
+
+export
+    ChainedFix,
+    BitAnd,
+    BitOr,
+    Fix2Lt,
+    Fix2Eq,
+    F2LtAndLtEq,
+    F2GtAndGtEq,
+    F2IsLess,
+    or,
+    ⩔,
+    and,
+    ⩓
+
 struct ChainedFix{L,F1,F2} <: Function
     link::L
     f1::F1
@@ -82,3 +101,4 @@ const F2LtAndLtEq{T} = Fix2{<:Union{typeof(<),typeof(<=)},T}
 const F2GtAndGtEq{T} = Fix2{<:Union{typeof(>),typeof(>=)},T}
 const F2IsLess{T} = Fix2{<:Union{typeof(isless),typeof(<)},T}
 
+end

@@ -1,4 +1,13 @@
 
+"""
+    find_firstgt(val, collection)
+
+Return the first index of `collection` where the element is greater than `val`.
+If no element of `collection` is greater than `val`, `nothing` is returned.
+"""
+function find_firstgt end
+
+
 ###
 ### OneToUnion
 ###

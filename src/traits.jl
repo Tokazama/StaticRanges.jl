@@ -76,14 +76,76 @@ for f in (:is_dynamic, :is_static, :is_fixed)
         $f(::T) where {T} = $f(T)
         $f(::T, i::Integer) where {T} = $f(T, i)
         $f(::Type{T}, i::Integer) where {T} = $f(axes_type(T).parameters[i])
-        @inline function $f(type::Type{<:AbstractArray{T,N}}) where {T,N}
-            for i in 1:ndims(type)
-                $f(axes_type(type, i)) || return false
-            end
-            return true
-        end
     end
 end
+
+
+# this expand on the idea of `Dynamic` in StaticArrays
+abstract type Staticness end
+
+struct Static <: Staticness end
+
+struct Dynamic <: Staticness end
+
+struct Fixed <: Staticness end
+
+Staticness(::T) where {T} = Staticness(T)
+
+Staticness(::Type{T}) where {T<:Tuple} = Static()
+
+Staticness(::Type{T}) where {T<:NamedTuple} = Static()
+
+Staticness(::Type{T}) where {T<:SOneTo} = Static()
+
+Staticness(::Type{T}) where {T<:StaticArrays.SUnitRange} = Static()
+
+Staticness(::Type{T}) where {T<:StaticArray} = Static()
+
+Staticness(::Type{T}) where {T<:OneToSRange} = Static()
+
+Staticness(::Type{T}) where {T<:UnitSRange} = Static()
+
+Staticness(::Type{T}) where {T<:StepSRange} = Static()
+
+Staticness(::Type{T}) where {T<:StepSRangeLen} = Static()
+
+Staticness(::Type{T}) where {T<:LinSRange} = Static()
+
+Staticness(::Type{T}) where {T<:AbstractVector} = Dynamic()
+
+Staticness(::Type{T}) where {T<:AbstractRange} = Fixed()
+
+Staticness(::Type{T}) where {T<:OneToMRange} = Dynamic()
+
+Staticness(::Type{T}) where {T<:UnitMRange} = Dynamic()
+
+Staticness(::Type{T}) where {T<:StepMRange} = Dynamic()
+
+Staticness(::Type{T}) where {T<:StepMRangeLen} = Dynamic()
+
+Staticness(::Type{T}) where {T<:LinMRange} = Dynamic()
+
+# degenerative combinations of staticness
+Staticness(x, y) = Staticness(Staticness(x), Staticness(y))
+Staticness(x::Staticness) = x
+Staticness(x::T, y::T) where {T<:Staticness} = x
+Staticness(::Static, ::Dynamic) = Dynamic()
+Staticness(::Dynamic, ::Static) = Dynamic()
+Staticness(::Fixed, ::Dynamic) = Dynamic()
+Staticness(::Dynamic, ::Fixed) = Dynamic()
+Staticness(::Fixed, ::Static) = Fixed()
+Staticness(::Static, ::Fixed) = Fixed()
+
+Staticness(::Type{T}) where {T<:AbstractArray} = _combine(axes_type(T))
+
+Base.@pure function _combine(::Type{T}) where {T<:Tuple}
+    out = Static()
+    for ax_i in T.parameters
+        out = Staticness(out, Staticness(ax_i))
+    end
+    return out
+end
+
 
 """
     is_dynamic(x) -> Bool
@@ -104,14 +166,9 @@ julia> is_dynamic(StepMRange(1, 2, 20))
 true
 ```
 """
-is_dynamic(::Type{T}) where {T} = false
-is_dynamic(::Type{T}) where {T<:Vector} = true
-is_dynamic(::Type{T}) where {T<:OneToMRange} = true
-is_dynamic(::Type{T}) where {T<:UnitMRange} = true
-is_dynamic(::Type{T}) where {T<:StepMRange} = true
-is_dynamic(::Type{T}) where {T<:StepMRangeLen} = true
-is_dynamic(::Type{T}) where {T<:LinMRange} = true
-is_dynamic(::Type{T}) where {T<:AbstractRange} = false
+is_dynamic(::Dynamic) = true
+is_dynamic(::Staticness) = false
+is_dynamic(::Type{T}) where {T} = is_dynamic(Staticness(T))
 
 """
     is_static(x) -> Bool
@@ -138,31 +195,21 @@ julia> is_static((a=1, b=2))
 true
 ```
 """
-is_static(::Type{T}) where {T} = false
-is_static(::Type{T}) where {T<:Tuple} = true
-is_static(::Type{T}) where {T<:NamedTuple} = true
-is_static(::Type{T}) where {T<:SOneTo} = true
-is_static(::Type{T}) where {T<:StaticArrays.SUnitRange} = true
-is_static(::Type{T}) where {T<:OneToSRange} = true
-is_static(::Type{T}) where {T<:UnitSRange} = true
-is_static(::Type{T}) where {T<:StepSRange} = true
-is_static(::Type{T}) where {T<:StepSRangeLen} = true
-is_static(::Type{T}) where {T<:LinSRange} = true
-is_static(::Type{T}) where {T<:AbstractRange} = false
-
+is_static(::Static) = true
+is_static(::Staticness) = false
+is_static(::Type{T}) where {T} = is_static(Staticness(T))
 
 """
     is_fixed(x) -> Bool
 
-Returns `true` if the size of `x` is fixed. Note that if the size of `x` is known
-statically (at compile time) it is also interpreted as fixed.
+Returns `true` if the size of `x` is fixed.
 
 ## Examples
 ```jldoctest
 julia> using StaticRanges
 
 julia> is_fixed(UnitSRange(1, 10))
-true
+false
 
 julia> is_fixed(StepRange(1, 2, 20))
 true
@@ -171,14 +218,9 @@ julia> is_fixed(StepMRange(1, 2, 20))
 false
 ```
 """
-is_fixed(::Type{T}) where {T} = true
-is_fixed(::Type{T}) where {T<:AbstractRange} = true
-is_fixed(::Type{T}) where {T<:Vector} = false
-is_fixed(::Type{T}) where {T<:OneToMRange} = false
-is_fixed(::Type{T}) where {T<:UnitMRange} = false
-is_fixed(::Type{T}) where {T<:StepMRange} = false
-is_fixed(::Type{T}) where {T<:StepMRangeLen} = false
-is_fixed(::Type{T}) where {T<:LinMRange} = false
+is_fixed(::Fixed) = true
+is_fixed(::Staticness) = false
+is_fixed(::Type{T}) where {T} = is_fixed(Staticness(T))
 
 """
     as_dynamic(x)

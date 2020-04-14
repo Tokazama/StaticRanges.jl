@@ -1,4 +1,13 @@
 
+"""
+    find_firstgteq(val, collection)
+
+Return the first index of `collection` where the element is greater than or equal
+to `val`. If no element of `collection` is greater than or equal to `val`, `nothing`
+is returned.
+"""
+function find_firstgteq end
+
 ###
 ### OneToUnion
 ###

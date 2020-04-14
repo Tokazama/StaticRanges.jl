@@ -1,4 +1,12 @@
 
+"""
+    find_lastgt(val, collection)
+
+Return the last index of `collection` where the element is greater than `val`.
+If no element of `collection` is greater than `val`, `nothing` is returned.
+"""
+function find_lastgt end
+
 @inline function find_lastgt(x, r::AbstractUnitRange)
     if isempty(r) | (last(r) <= x)
         return nothing

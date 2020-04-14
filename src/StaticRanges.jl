@@ -12,7 +12,6 @@ using Base.Broadcast: DefaultArrayStyle
 using Dates
 
 using StaticArrays
-using StaticArrays: Dynamic
 
 using ArrayInterface
 using ArrayInterface: can_setindex
@@ -131,12 +130,10 @@ export
 include("./GapRange/GapRange.jl")
 
 include("chainedfix.jl")
+using .ChainedFixes
+
 include("continuity.jl")
 include("order.jl")
-include("findall.jl")
-include("findlast.jl")
-include("findfirst.jl")
-
 include("onetorange.jl")
 include("unitrange.jl")
 include("abstractsteprange.jl")
@@ -259,30 +256,15 @@ mrange
 
 include("merge.jl")
 include("intersect.jl")
-include("findin.jl")
 include("broadcast.jl")
 include("operators.jl")
 include("getindex.jl")
-include("findvalue.jl")
 include("pop.jl")
 include("push.jl")
 include("show.jl")
 include("vcat.jl")
-
-include("find_firsteq.jl")
-include("find_firstgt.jl")
-include("find_firstlt.jl")
-include("find_firstgteq.jl")
-include("find_firstlteq.jl")
-
-include("find_lasteq.jl")
-include("find_lastgt.jl")
-include("find_lastlt.jl")
-include("find_lastgteq.jl")
-include("find_lastlteq.jl")
-
 include("resize.jl")
-
 include("offset_range.jl")
+include("./Find/Find.jl")
 
 end
