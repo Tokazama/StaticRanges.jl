@@ -10,6 +10,7 @@ using Base: @propagate_inbounds, @pure
 using Base.Broadcast: DefaultArrayStyle
 
 using Dates
+using ChainedFixes
 
 using StaticArrays
 
@@ -128,9 +129,6 @@ export
     vcat_sort
 
 include("./GapRange/GapRange.jl")
-
-include("chainedfix.jl")
-using .ChainedFixes
 
 include("continuity.jl")
 include("order.jl")

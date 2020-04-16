@@ -10,5 +10,3 @@
 Base.filter(f::Function, r::UnionRange)  = r[find_all(f, r)]
 
 Base.filter(f::ChainedFix, r::UnionRange) = r[findall(f, r)]
-
-
