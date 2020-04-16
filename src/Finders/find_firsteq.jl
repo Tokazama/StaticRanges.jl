@@ -13,7 +13,7 @@ function find_firsteq(x, r::AbstractRange)
     end
 end
 
-find_firsteq(x, r::OneToUnion) = _find_firsteq_oneto(x, r)
+find_firsteq(x, r::OneTo) = _find_firsteq_oneto(x, r)
 
 function _find_firsteq_oneto(x::Integer, r)
     if (x < 1) | (x > last(r))
@@ -38,3 +38,4 @@ function find_firsteq(x, a)
     end
     return nothing
 end
+

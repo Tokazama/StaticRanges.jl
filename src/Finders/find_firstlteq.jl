@@ -9,7 +9,7 @@ is returned.
 function find_firstlteq end
 
 
-@inline function find_firstlteq(x, r::OneToUnion)
+@inline function find_firstlteq(x, r::OneTo)
     if (r.stop == 0) | (1 > x)
         return nothing
     else

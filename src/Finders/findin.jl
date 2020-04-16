@@ -31,56 +31,12 @@ end
 ###
 findin(x::AbstractRange, y) = _findin(x, y)
 
-function _find_first_in(x, y)
-    out = 1
-    if is_forward(x) & is_forward(y)
-        for x_i in x
-            idx = find_firsteq(x_i, y)
-            if !isa(idx, Nothing)
-                out = idx
-                break
-            end
-        end
-    else
-        for x_i in x
-            idx = find_lasteq(x_i, y)
-            if !isa(idx, Nothing)
-                out = idx
-                break
-            end
-        end
-    end
-    return out
-end
-
-function _find_last_in(x, y)
-    out = 0
-    if is_forward(x) & is_forward(y)
-        for x_i in reverse(x)
-            idx = find_firsteq(x_i, y)
-            if !isa(idx, Nothing)
-                out = idx
-                break
-            end
-        end
-    else
-        for x_i in reverse(x)
-            idx = find_lasteq(x_i, y)
-            if !isa(idx, Nothing)
-                out = idx
-                break
-            end
-        end
-    end
-    return out
-end
-
 function _findin(x::AbstractUnitRange{<:Integer}, y::AbstractUnitRange{<:Integer})
-    return promote_type(typeof(x), typeof(y))(_find_first_in(x, y), _find_last_in(x, y))
+    return promote_type(typeof(x), typeof(y))(find_firstin(x, y), find_lastin(x, y))
 end
 
 function _findin(x::OneToUnion{<:Integer}, y::OneToUnion{<:Integer})
-    return promote_type(typeof(x), typeof(y))(_find_last_in(x, y))
+    return promote_type(typeof(x), typeof(y))(find_lastin(x, y))
 end
 
 function _findin(x::AbstractUnitRange{T}, y::AbstractUnitRange{T}) where {T}
@@ -88,15 +44,15 @@ function _findin(x::AbstractUnitRange{T}, y::AbstractUnitRange{T}) where {T}
     if !iszero(rem(first(x) - first(y), 1))
         return R(1, 0)
     else
-        return R(_find_first_in(x, y), _find_last_in(x, y))
+        return R(find_firstin(x, y), find_lastin(x, y))
     end
 end
 
 _findin(x::AbstractUnitRange, y::AbstractUnitRange) = _findin(promote(x, y)...)
 
 # TODO this needs to be optimized for ranges
-@propagate_inbounds function _findin(x, y)
-    if is_forward(x) && is_forward(y)
+function _findin(x, y)
+    if (y isa AbstractRange) && (step(x) > 0) & (step(y) > 0)
         return Base._sortedfindin(y, x)
     else
         ind  = Vector{eltype(keys(y))}()
@@ -134,16 +90,16 @@ function _findin(x::AbstractRange{T}, y::AbstractRange{T}) where {T<:Real}
         if !iszero(rem(minimum(x) - minimum(y), div(sxy, sx)))
             return 1:1:0
         else
-            fi = _find_first_in(x, y)
-            li = _find_last_in(x, y)
+            fi = find_firstin(x, y)
+            li = find_lastin(x, y)
             return fi:_to_step(1, sx, sy):li
         end
     else
         if !iszero(rem(minimum(x) - minimum(y), div(sxy, sx)))
             return 1:1:0
         else
-            fi = _find_first_in(x, y)
-            li = _find_last_in(x, y)
+            fi = find_firstin(x, y)
+            li = find_lastin(x, y)
             return fi:_to_step(Int(sxy), sx, sy):li
         end
     end
@@ -163,8 +119,8 @@ function _findin(x::AbstractRange{T}, y::AbstractRange{T}) where {T}
         if !iszero(rem(minx - miny, div(sxy, sx)))
             return 1:1:0
         else
-            fi = _find_first_in(x, y)
-            li = _find_last_in(x, y)
+            fi = find_firstin(x, y)
+            li = find_lastin(x, y)
             return fi:_to_step(1, sx, sy):li
         end
     else
@@ -172,10 +128,9 @@ function _findin(x::AbstractRange{T}, y::AbstractRange{T}) where {T}
         if !iszero(rem(minx - miny, div(sxy, sy)))
             return 1:1:0
         else
-            fi = _find_first_in(x, y)
-            li = _find_last_in(x, y)
+            fi = find_firstin(x, y)
+            li = find_lastin(x, y)
             return fi:_to_step(Int(sxy), sx, sy):li
         end
     end
 end
-

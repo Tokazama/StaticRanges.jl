@@ -1,8 +1,12 @@
+
 module StaticRanges
+
+using ChainedFixes
 
 import Base: OneTo, TwicePrecision, el_same, unsafe_getindex, nbitslen, rat,
              IEEEFloat, floatrange, sumpair, add12, twiceprecision, step_hp,
              truncbits, Fix1, Fix2, tail, front, to_index, unsafe_length
+
 
 using Base.Order
 using Base: @propagate_inbounds, @pure
@@ -74,26 +78,6 @@ export
     as_fixed,
     mrange,
     srange,
-    # find
-    find_first,
-    find_firsteq,
-    find_firstgt,
-    find_firstlt,
-    find_firstgteq,
-    find_firstlteq,
-    find_last,
-    find_lasteq,
-    find_lastgt,
-    find_lastlt,
-    find_lastgteq,
-    find_lastlteq,
-    findin,
-    find_all,
-    find_alleq,
-    find_allgt,
-    find_alllt,
-    find_allgteq,
-    find_alllteq,
     find_max,
     find_min,
     # Traits
@@ -128,10 +112,6 @@ export
     vcat_sort
 
 include("./GapRange/GapRange.jl")
-
-include("chainedfix.jl")
-using .ChainedFixes
-
 include("continuity.jl")
 include("order.jl")
 include("onetorange.jl")
@@ -174,6 +154,25 @@ include("length.jl")
 include("size.jl")
 include("promotion.jl")
 include("range.jl")
+
+Base.axes(r::OneToRange) = (r,)
+
+for T in (UnitSRange,StepSRange,StepSRangeLen,LinSRange)
+    @eval begin
+        Base.axes(r::$T) = (OneToSRange{Int,length(r)}(),)
+    end
+end
+
+Base.findall(f::Function, r::UnionRange) = find_all(f, r)
+
+Base.findall(f::Fix2{typeof(in)}, r::UnionRange) = find_all(f, r)
+
+Base.findlast(f::Function, x::UnionRange) = find_last(f, x)
+
+Base.findfirst(f::Function, r::UnionRange) = find_first(f, r)
+
+# TODO this could easily be optimized more
+Base.count(f::Function, r::UnionRange) = length(find_all(f, r))
 
 """
     srange(start[, stop]; length, stop, step=1)
@@ -265,6 +264,6 @@ include("show.jl")
 include("vcat.jl")
 include("resize.jl")
 include("offset_range.jl")
-include("./Find/Find.jl")
+include("./Finders/Finders.jl")
 
 end

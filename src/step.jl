@@ -1,16 +1,4 @@
 
-struct Step{S} end
-
-Base.show(io::IO, ::Step{S}) where {S} = print(io, "First(", S, ")")
-
-Base.get(::Step{S}) where {S} = S
-
-Step(::Type{<:AbstractUnitRange{T}}) where {T} = Step{one(T)}()
-Step(::Type{StepSRange{T,Ts,F,S,L}}) where {T,Ts,F,S,L} = Step{S}()
-#Step(::Type{LinSRange{T,F,E,L,D}}) where {T,F,E,L,D} = First{F}()
-# TODO StepSRangeLen
-
-
 ### OneToRange
 Base.step(::OneToRange{T}) where {T} = one(T)
 
@@ -122,4 +110,3 @@ end
 set_step(r::StepRangeLen, st) = StepRangeLen(r.ref, st, r.len, r.offset)
 set_step(r::StepMRangeLen, st) = StepMRangeLen(r.ref, st, r.len, r.offset)
 set_step(r::StepSRangeLen, st) = StepSRangeLen(r.ref, st, r.len, r.offset)
-

@@ -34,20 +34,6 @@ function set_length!(r::IdOffsetRange{T}, len) where {T}
     return r
 end
 
-for f in (:find_lasteq, :find_lastgt, :find_lastgteq, :find_lastlt, :find_lastlteq,
-          :find_firsteq, :find_firstgt, :find_firstgteq, :find_firstlt, :find_firstlteq)
-    @eval begin
-        function $f(x, r::IdOffsetRange)
-            idx = $f(x - r.offset, parent(r))
-            if idx isa Nothing
-                return idx
-            else
-                return idx + r.offset
-            end
-        end
-    end
-end
-
 axes_type(::Type{T}) where {T<:IdOffsetRange} = Tuple{T}
 
 has_offset_axes(::Type{<:IdOffsetRange}) = true

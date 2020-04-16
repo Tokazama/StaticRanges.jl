@@ -411,3 +411,47 @@ end
 has_offset_axes(::T) where {T} = has_offset_axes(T)
 has_offset_axes(::Type{T}) where {T} = false
 
+# Extend RangeStepStyle for UnitRange
+# - we now that step(::UnitRange{T}) = oneunit(T) but this constant isn't propagated with
+# the current set of traits
+struct RangeStepRegularlyIrregular{T} <: Base.RangeStepStyle end
+
+#= Notes on nameing:
+It doesn't make sense to use something like RangeStopStyle because the point is
+that the endpoint is due to either a specified stop point or specified length.
+So it's named based on what controls range[end]. RangeBeginStyle is named for
+symmetry with RangeEndStyle (as opposed to being RangeStartStyle)
+=# 
+"""
+    RangeBeginStyle
+"""
+abstract type RangeBeginStyle end
+
+struct RangeBeginAtOne <: RangeBeginStyle end
+
+struct RangeBeginAtStart <: RangeBeginStyle end
+
+struct RangeBeginAtOffset <: RangeBeginStyle end
+
+RangeStartStyle(::Type{<:OneToUnion}) = RangeBeginAtOne()
+RangeStartStyle(::Type{<:OrdinalRange}) = RangeBeginAtStart()
+RangeStartStyle(::Type{<:StepRangeLen}) = RangeBeginAtOffset()
+RangeStartStyle(::Type{<:StepSRangeLen}) = RangeBeginAtOffset()
+RangeStartStyle(::Type{<:StepMRangeLen}) = RangeBeginAtOffset()
+
+"""
+    RangeEndStyle
+"""
+abstract type RangeEndStyle end
+
+struct RangeEndAtStop end
+
+struct RangeEndAtLength end
+
+RangeEndStyle(::Type{<:OrdinalRange}) = RangeEndAtStop()
+RangeEndStyle(::Type{<:LinRange}) = RangeEndAtLength()
+RangeEndStyle(::Type{<:LinSRange}) = RangeEndAtLength()
+RangeEndStyle(::Type{<:LinMRange}) = RangeEndAtLength()
+RangeEndStyle(::Type{<:StepRangeLen}) = RangeEndAtLength()
+RangeEndStyle(::Type{<:StepSRangeLen}) = RangeEndAtLength()
+RangeEndStyle(::Type{<:StepMRangeLen}) = RangeEndAtLength()

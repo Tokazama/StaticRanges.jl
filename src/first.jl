@@ -1,19 +1,4 @@
 
-struct First{F} end
-
-Base.show(io::IO, ::First{F}) where {F} = print(io, "First(", F, ")")
-
-Base.get(::First{F}) where {F} = F
-
-First(::Type{OneToSRange{T,L}}) where {T,L} = First{one(T)}()
-First(::Type{OneToMRange{T}}) where {T,L} = First{one(T)}()
-First(::Type{OneTo{T}}) where {T,L} = First{one(T)}()
-First(::Type{UnitSRange{T,F,L}}) where {T,F,L} = First{F}()
-First(::Type{StepSRange{T,Ts,F,S,L}}) where {T,Ts,F,S,L} = First{F}()
-First(::Type{LinSRange{T,F,E,L,D}}) where {T,F,E,L,D} = First{F}()
-# TODO StepSRangeLen
-
-
 ### first(x)
 Base.first(::OneToRange{T}) where {T} = one(T)
 

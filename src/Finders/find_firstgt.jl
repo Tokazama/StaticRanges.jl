@@ -9,9 +9,9 @@ function find_firstgt end
 
 
 ###
-### OneToUnion
+### OneTo
 ###
-find_firstgt(x, r::OneToUnion) = _find_firstgt_oneto(x, r)
+find_firstgt(x, r::OneTo) = _find_firstgt_oneto(x, r)
 
 @inline function _find_firstgt_oneto(x::Integer, r)
     if (x >= last(r)) | (r.stop == 0)

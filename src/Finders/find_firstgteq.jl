@@ -9,9 +9,9 @@ is returned.
 function find_firstgteq end
 
 ###
-### OneToUnion
+### OneTo
 ###
-find_firstgteq(x, r::OneToUnion) = _find_firstgteq_oneto(x, r)
+find_firstgteq(x, r::OneTo) = _find_firstgteq_oneto(x, r)
 
 @inline function _find_firstgteq_oneto(x::Integer, r)
     if (x > last(r)) | (r.stop == 0)
