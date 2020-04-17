@@ -1,18 +1,4 @@
 
-struct Last{L} end
-
-Base.show(io::IO, ::Last{L}) where {L} = print(io, "Last(", L, ")")
-
-Base.get(::Last{L}) where {L} = L
-
-Last(::Type{OneToSRange{T,L}}) where {T,L} = Last{L}()
-Last(::Type{UnitSRange{T,F,L}}) where {T,F,L} = Last{L}()
-Last(::Type{StepSRange{T,Ts,F,S,L}}) where {T,Ts,F,S,L} = Last{L}()
-Last(::Type{LinSRange{T,F,E,L,D}}) where {T,F,E,L,D} = Last{L}()
-# TODO StepSRangeLen
-
-Last(::Type{T}) where {T} = Last{Dynamic()}()
-
 Base.last(::OneToSRange{T,E}) where {T,E} = E
 
 Base.last(r::OneToMRange) = getfield(r, :stop)

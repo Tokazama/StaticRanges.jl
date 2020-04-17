@@ -11,8 +11,6 @@ function StaticArrays.Length(::Type{UnitSRange{T,F,L}}) where {T<:Union{Int,Int6
     return Length{Int(Base.Checked.checked_add(Base.Checked.checked_sub(L, F), one(T)))}()
 end
 
-
-
 Base.length(r::OneToMRange) = Int(last(r))
 
 Base.length(r::OneToSRange{T,L}) where {T,L} = Int(L)
