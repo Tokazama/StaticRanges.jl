@@ -235,6 +235,9 @@ UnitMRange(3:10)
 """
 @propagate_inbounds shrink_first(x::AbstractVector, n::Integer) = x[(firstindex(x) + n):end]
 shrink_first(x::AbstractRange, n::Integer) = set_first(x, first(x) + step(x) * n)
+shrink_first(x::OneTo{T}, n::Integer) where {T} = UnitRange{T}(1 + n, last(x))
+shrink_first(x::OneToMRange{T}, n::Integer) where {T} = UnitMRange{T}(1 + n, last(x))
+shrink_first(x::OneToSRange{T}, n::Integer) where {T} = UnitSRange{T}(1 + n, last(x))
 
 """
     shrink_first!(x, n)

@@ -24,14 +24,14 @@ julia> find_last(iseven, [1 4; 2 2])
 CartesianIndex(2, 2)
 ```
 """
-@inline find_last(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, a) = find_lasteq(f.x,   a)
-@inline find_last(f::Fix2{<:Union{typeof(<),typeof(isless)}},   a) = find_lastlt(f.x,   a)
-@inline find_last(f::Fix2{typeof(<=)},                          a) = find_lastlteq(f.x, a)
-@inline find_last(f::Fix2{typeof(>)},                           a) = find_lastgt(f.x,   a)
-@inline find_last(f::Fix2{typeof(>=)},                          a) = find_lastgteq(f.x, a)
-@inline function find_last(f, a)
-    for (i, a_i) in Iterators.reverse(pairs(a))
-        f(a_i) && return i
+@inline find_last(f::Equal,              x) = find_lasteq(f.x,   x)
+@inline find_last(f::Less,               x) = find_lastlt(f.x,   x)
+@inline find_last(f::LessThanOrEqual,    x) = find_lastlteq(f.x, x)
+@inline find_last(f::Greater,            x) = find_lastgt(f.x,   x)
+@inline find_last(f::GreaterThanOrEqual, x) = find_lastgteq(f.x, x)
+@inline function find_last(f, x)
+    for (i, x_i) in Iterators.reverse(pairs(x))
+        f(x_i) && return i
     end
     return nothing
 end

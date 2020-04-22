@@ -26,15 +26,15 @@ julia> find_first(iseven, [1 4; 2 2])
 CartesianIndex(2, 1)
 ```
 """
-@inline find_first(f::Fix2{<:Union{typeof(==),typeof(isequal)}}, a) = find_firsteq(f.x,   a)
-@inline find_first(f::Fix2{<:Union{typeof(<),typeof(isless)}},   a) = find_firstlt(f.x,   a)
-@inline find_first(f::Fix2{typeof(<=)},                          a) = find_firstlteq(f.x, a)
-@inline find_first(f::Fix2{typeof(>)},                           a) = find_firstgt(f.x,   a)
-@inline find_first(f::Fix2{typeof(>=)},                          a) = find_firstgteq(f.x, a)
-
-@inline function find_first(f, a)
-    for (i, a_i) in pairs(a)
-        f(a_i) && return i
+@inline find_first(f::Equal,              x) = find_firsteq(f.x,   x)
+@inline find_first(f::Less,               x) = find_firstlt(f.x,   x)
+@inline find_first(f::LessThanOrEqual,    x) = find_firstlteq(f.x, x)
+@inline find_first(f::Greater,            x) = find_firstgt(f.x,   x)
+@inline find_first(f::GreaterThanOrEqual, x) = find_firstgteq(f.x, x)
+@inline find_first(f::In,                 x) = find_firstin(f.x,   x)
+@inline function find_first(f, x)
+    for (i, x_i) in pairs(x)
+        f(x_i) && return i
     end
     return nothing
 end
