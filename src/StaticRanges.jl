@@ -18,9 +18,7 @@ using ArrayInterface
 using ArrayInterface: can_setindex
 
 using IntervalSets
-
-using OffsetArrays
-using OffsetArrays: IdOffsetRange
+using Requires
 
 export
     # Types
