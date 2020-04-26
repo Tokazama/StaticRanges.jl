@@ -250,6 +250,8 @@ StepMRangeLen(1.0:1.0:10.0)
 """
 mrange
 
+include("similar.jl")
+
 include("merge.jl")
 include("intersect.jl")
 include("broadcast.jl")
