@@ -25,9 +25,7 @@ lendiv(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = D
 
 Base.length(r::LinMRange) = getfield(r, :len)
 
-Base.length(r::StepSRange) = StaticArrays.get(Length(r))
-
-function Base.length(r::StepMRange{T}) where {T}
+function Base.length(r::AbstractStepRange{T}) where {T}
     return start_step_stop_to_length(T, first(r), step(r), last(r))
 end
 
