@@ -91,6 +91,8 @@ struct Fixed <: Staticness end
 
 Staticness(::T) where {T} = Staticness(T)
 
+Staticness(::Type{T}) where {T} = Fixed()  # fall back is `Fixed`
+
 Staticness(::Type{T}) where {T<:Tuple} = Static()
 
 Staticness(::Type{T}) where {T<:NamedTuple} = Static()
