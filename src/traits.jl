@@ -411,5 +411,15 @@ end
 # TODO This is a more trait like version of the same method from base
 # (base doesn't operate on types)
 has_offset_axes(::T) where {T} = has_offset_axes(T)
-has_offset_axes(::Type{T}) where {T} = false
+has_offset_axes(::Type{T}) where {T<:AbstractRange} = false
+has_offset_axes(::Type{T}) where {T<:AbstractArray} = _has_offset_axes(axes_type(T))
+Base.@pure function _has_offset_axes(::Type{T}) where {T<:Tuple}
+    for ax_i in T.parameters
+        has_offset_axes(ax_i) && return true
+    end
+    return false
+end
+
+
+
 

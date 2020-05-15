@@ -61,7 +61,8 @@
 
     @test @inferred(axes_type(SVector(1))) <: Tuple{SOneTo{1}}
 
-    @test !StaticRanges.has_offset_axes(1:10)
+    @test !@inferred(StaticRanges.has_offset_axes(1:10))
+    @test !@inferred(StaticRanges.has_offset_axes(ones(2,2)))
     @test is_fixed(Int)
 end
 
