@@ -10,6 +10,11 @@ struct UnitSRange{T,F,L} <: AbstractUnitRange{T}
     function UnitSRange{T}(start, stop) where {T<:Real}
         return new{T,start,Base.unitrange_last(start,stop)}()
     end
+    function UnitSRange{T,F,L}() where {T<:Real,F,L}
+        F isa T || error("UnitSRange has eltype $T specified but starting value of type $(typeof(F))")
+        L isa T || error("UnitSRange has eltype $T specified but starting value of type $(typeof(L))")
+        return new{T,F,Base.unitrange_last(F, L)}()
+    end
 end
 
 UnitSRange{T}(r::AbstractUnitRange) where {T<:Real} = UnitSRange{T}(first(r), last(r))
