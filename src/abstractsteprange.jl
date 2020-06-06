@@ -1,3 +1,4 @@
+
 """
     AbstractStepRange
 
@@ -7,7 +8,7 @@ identically to `StepRange`.
 abstract type AbstractStepRange{T,S} <: OrdinalRange{T,S} end
 
 function Base.isempty(r::AbstractStepRange)
-    (first(r) != last(r)) & ((step(r) > zero(step(r))) != (last(r) > first(r)))
+    return (first(r) != last(r)) & ((step(r) > zero(step(r))) != (last(r) > first(r)))
 end
 
 """

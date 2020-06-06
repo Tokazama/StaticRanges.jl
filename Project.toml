@@ -1,7 +1,7 @@
 name = "StaticRanges"
 uuid = "d8176aec-3168-11e9-3c98-e3954798be3a"
 authors = ["zchristensen "]
-version = "0.6.11"
+version = "0.6.12"
 
 [deps]
 ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
@@ -13,7 +13,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 ArrayInterface = "2"
-ChainedFixes = "0.1"
+ChainedFixes = "0.2"
 IntervalSets = "0.5"
 Requires = "1"
 StaticArrays = "0.12.1"

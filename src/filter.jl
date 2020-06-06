@@ -1,3 +1,4 @@
+
 # Notes on implementation:
 # Currently Base Julia reutrns an empty vector on empty(::AbstractRange)
 # We want the appropriate variant of the range that returns true when isempty(::AbstractRange)
@@ -10,3 +11,4 @@
 Base.filter(f::Function, r::UnionRange)  = r[find_all(f, r)]
 
 Base.filter(f::ChainedFix, r::UnionRange) = r[findall(f, r)]
+

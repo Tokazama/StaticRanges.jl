@@ -1,3 +1,4 @@
+
 Base.size(gr::GapRange) = (length(gr),)
 
 StaticArrays.Size(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = Size{(L,)}()
@@ -19,3 +20,4 @@ end
 StaticArrays.Size(::Type{OneToSRange{T,L}}) where {T<:Union{Int,Int64},L} = Size{(T(L),)}()
 
 StaticArrays.Size(::Type{OneToSRange{T,L}}) where {T,L} = Size{(Int(L - zero(T)),)}()
+

@@ -1,3 +1,4 @@
+
 # The goal is to create type stable merges that don't instantly result in an explosion
 # of allocations because everything has to become an array.
 

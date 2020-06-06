@@ -125,3 +125,4 @@ function __init__()
         has_offset_axes(::Type{<:OffsetArrays.IdOffsetRange}) = true
     end
 end
+

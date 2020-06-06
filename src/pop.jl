@@ -1,5 +1,4 @@
 # TODO:
-#   - Account for empty ranges, small length, etc.
 #   - ensure there are pop and popfirst working for all types (non-mutating)
 
 # FIXME this should be defined somewhere
@@ -88,7 +87,11 @@ end
 function Base.popfirst!(r::Union{StepMRange,UnitMRange})
     isempty(r) && error("array must be non-empty")
     f = first(r)
-    length(r) == 1 ? empty!(r) : setfield!(r, :start, @inbounds(r[2]))
+    if length(r) == 1
+        empty!(r)
+    else
+        setfield!(r, :start, @inbounds(r[2]))
+    end
     return f
 end
 
