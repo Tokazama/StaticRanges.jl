@@ -6,15 +6,20 @@ Return the first index of `collection` where the element is greater than or equa
 to `val`. If no element of `collection` is greater than or equal to `val`, `nothing`
 is returned.
 """
-function find_firstgteq end
+function find_firstgteq(x, r::AbstractRange)
+    if isempty(r)
+        return nothing
+    else
+        return unsafe_find_firstgteq(x, r)
+    end
+end
+
 
 ###
 ### OneToUnion
 ###
-find_firstgteq(x, r::OneToUnion) = _find_firstgteq_oneto(x, r)
-
-@inline function _find_firstgteq_oneto(x::Integer, r)
-    if (x > last(r)) | (r.stop == 0)
+@inline function unsafe_find_firstgteq(x::Integer, r::OneToUnion)
+    if x > last(r)
         return nothing
     elseif x <= 1
         return 1
@@ -23,8 +28,8 @@ find_firstgteq(x, r::OneToUnion) = _find_firstgteq_oneto(x, r)
     end
 end
 
-@inline function _find_firstgteq_oneto(x, r)
-    if (x > last(r)) | (r.stop == 0)
+@inline function unsafe_find_firstgteq(x, r::OneToUnion)
+    if x > last(r)
         return nothing
     elseif x <= 1
         return 1
@@ -36,10 +41,9 @@ end
 ###
 ### AbstractUnitRange
 ###
-find_firstgteq(x, r::AbstractUnitRange) = _find_firstgteq_unit(x, r)
 
-function _find_firstgteq_unit(x::Integer, r)
-    if (x > last(r)) | isempty(r)
+function unsafe_find_firstgteq(x::Integer, r::AbstractUnitRange)
+    if x > last(r)
         return nothing
     elseif x < first(r)
         return firstindex(r)
@@ -48,8 +52,8 @@ function _find_firstgteq_unit(x::Integer, r)
     end
 end
 
-function _find_firstgteq_unit(x, r)
-    if (last(r) < x) | isempty(r)
+function unsafe_find_firstgteq(x, r)
+    if last(r) < x
         return nothing
     elseif first(r) > x
         return firstindex(r)
@@ -58,10 +62,11 @@ function _find_firstgteq_unit(x, r)
     end
 end
 
-@inline function find_firstgteq(x, r::AbstractRange{T}) where {T}
-    if isempty(r)
-        return nothing
-    elseif step(r) > zero(T)
+###
+### AbstractRange
+###
+@inline function unsafe_find_firstgteq(x, r::AbstractRange{T}) where {T}
+    if step(r) > zero(T)
         if last(r) < x
             return nothing
         elseif first(r) >= x

@@ -1,7 +1,10 @@
 
 
-include("findin.jl")
+
 include("findvalue.jl")
+include("find_firstin.jl")
+include("find_lastin.jl")
+include("findin.jl")
 include("find_firsteq.jl")
 include("find_firstgt.jl")
 include("find_firstlt.jl")
@@ -15,4 +18,4 @@ include("find_lastlteq.jl")
 include("findall.jl")
 include("findlast.jl")
 include("findfirst.jl")
-
+include("allin.jl")

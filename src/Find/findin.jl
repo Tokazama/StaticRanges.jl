@@ -31,28 +31,6 @@ end
 ###
 findin(x::AbstractRange, y) = _findin(x, y)
 
-function _find_first_in(x, y)
-    out = 1
-    if is_forward(x) & is_forward(y)
-        for x_i in x
-            idx = find_firsteq(x_i, y)
-            if !isa(idx, Nothing)
-                out = idx
-                break
-            end
-        end
-    else
-        for x_i in x
-            idx = find_lasteq(x_i, y)
-            if !isa(idx, Nothing)
-                out = idx
-                break
-            end
-        end
-    end
-    return out
-end
-
 function _find_last_in(x, y)
     out = 0
     if is_forward(x) & is_forward(y)

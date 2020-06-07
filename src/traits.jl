@@ -420,3 +420,53 @@ Base.@pure function _has_offset_axes(::Type{T}) where {T<:Tuple}
     return false
 end
 
+###
+###
+###
+
+"""
+    RangeStartStyle
+"""
+abstract type RangeFirstStyle end
+
+struct RangeFirstByOne <: RangeFirstStyle end
+
+struct RangeFirstByStart <: RangeFirstStyle end
+
+struct RangeFirstByOffset <: RangeFirstStyle end
+
+RangeFirstStyle(::Type{T}) where {T<:OneToUnion} = RangeFirstByOne()
+RangeFirstStyle(::Type{T}) where {T<:OrdinalRange} = RangeFirstByStart()
+RangeFirstStyle(::Type{T}) where {T<:LinRangeUnion} = RangeFirstByStart()
+RangeFirstStyle(::Type{T}) where {T<:StepRangeLen} = RangeFirstByOffset()
+RangeFirstStyle(::Type{T}) where {T<:StepSRangeLen} = RangeFirstByOffset()
+RangeFirstStyle(::Type{T}) where {T<:StepMRangeLen} = RangeFirstByOffset()
+
+"""
+    RangeLastStyle
+"""
+abstract type RangeLastStyle end
+
+struct RangeLastByLength <: RangeLastStyle end
+
+struct RangeLastByStop <: RangeLastStyle end
+
+RangeLastStyle(::Type{T}) where {T<:OneToUnion} = RangeLastByStop()
+RangeLastStyle(::Type{T}) where {T<:OrdinalRange} = RangeLastByStop()
+RangeLastStyle(::Type{T}) where {T<:LinRangeUnion} = RangeLastByStop()
+RangeLastStyle(::Type{T}) where {T<:StepRangeLen} = RangeStopByLength()
+RangeLastStyle(::Type{T}) where {T<:StepSRangeLen} = RangeStopByLength()
+RangeLastStyle(::Type{T}) where {T<:StepMRangeLen} = RangeStopByLength()
+
+"""
+    RangeStepStyle
+"""
+abstract type RangeStepStyle end
+
+struct RangeStepByStep <: RangeStepStyle end
+
+struct RangeStepByDivision <: RangeStepStyle end
+
+RangeStepByDivision(::Type{T}) where {T<:AbstractRange} = RangeStepByStep()
+RangeStepByDivision(::Type{T}) where {T<:LinRangeUnion} = RangeStepByDivision()
+
