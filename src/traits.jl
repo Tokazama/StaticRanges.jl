@@ -148,6 +148,16 @@ Base.@pure function _combine(::Type{T}) where {T<:Tuple}
     return out
 end
 
+# SubArray cannot be dynamic
+function Staticness(::Type{A}) where {A<:SubArray}
+    S = Staticness(parent_type(A))
+    if S isa Static
+        return S
+    else
+        Fixed()
+    end
+end
+
 
 """
     is_dynamic(x) -> Bool
@@ -408,6 +418,11 @@ end
     end
 end
 
+# FIXME does it make sense for the default to be nothing
+as_static(x) = x
+as_fixed(x) = x
+as_dynamic(x) = x
+
 # TODO This is a more trait like version of the same method from base
 # (base doesn't operate on types)
 has_offset_axes(::T) where {T} = has_offset_axes(T)
@@ -419,4 +434,5 @@ Base.@pure function _has_offset_axes(::Type{T}) where {T<:Tuple}
     end
     return false
 end
+
 
