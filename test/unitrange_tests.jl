@@ -39,5 +39,20 @@
         @test T(2, 3) isa UnitSRange{Int,2,3}
         @test !isa(T(2, 3),  UnitSRange{Int,1,2})
     end
+
+    @testset "show" begin
+        r = UnitSRange(1, 2)
+        io = IOBuffer()
+        show(io, r)
+        str = String(take!(io))
+        @test str == "UnitSRange(1:2)"
+
+        r = UnitMRange(1, 2)
+        io = IOBuffer()
+        show(io, r)
+        str = String(take!(io))
+        @test str == "UnitMRange(1:2)"
+    end
+
 end
 

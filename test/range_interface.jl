@@ -31,20 +31,6 @@
                 @test @inferred(length(r)) == 10
             end
 
-            if r isa UnitSRange || r isa UnitMRange
-                io = IOBuffer()
-                show(io, r)
-                str = String(take!(io))
-                @test str == string(typeof(r).name, "(", first(r), ":", last(r), ")")
-            end
-
-            if r isa StaticRanges.AbstractStepRangeLen
-                io = IOBuffer()
-                show(io, r)
-                str = String(take!(io))
-                @test str == string(typeof(r).name, "(", first(r), ":", step(r), ":", last(r), ")")
-            end
-
 
             if r isa StaticRanges.AbstractStepRange
                 @testset "start-property" begin
@@ -56,10 +42,6 @@
                 @testset "stop-property" begin
                     @test @inferred(getproperty(r, :stop)) == 10
                 end
-                io = IOBuffer()
-                show(io, r)
-                str = String(take!(io))
-                @test str == string(typeof(r).name, "(", first(r), ":", step(r), ":", last(r), ")")
             end
 
             if r isa StaticRanges.AbstractLinRange

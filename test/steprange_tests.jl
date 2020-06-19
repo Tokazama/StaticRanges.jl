@@ -29,5 +29,19 @@
         end
     end
     @test -(StepSRange(1, 1, 1)) == StepSRange(-1, -1, -1)
+
+    @testset "show" begin
+        r = StepSRange(1,2,9)
+        io = IOBuffer()
+        show(io, r)
+        str = String(take!(io))
+        @test str == "StepSRange(1:2:9)"
+
+        r = StepMRange(1,2,9)
+        io = IOBuffer()
+        show(io, r)
+        str = String(take!(io))
+        @test str == "StepMRange(1:2:9)"
+    end
 end
 

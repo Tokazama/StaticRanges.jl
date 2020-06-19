@@ -79,5 +79,20 @@
 
     @test eltype(StepMRangeLen{UInt,Int,Int}(r)) <: UInt64
 
+
+    @testset "show" begin
+        r = StepSRangeLen(1, 1, 10)
+        io = IOBuffer()
+        show(io, r)
+        str = String(take!(io))
+        @test str == "StepSRangeLen(1:1:10)"
+
+        r = StepMRangeLen(1, 1, 10)
+        io = IOBuffer()
+        show(io, r)
+        str = String(take!(io))
+        @test str == "StepMRangeLen(1:1:10)"
+    end
+
 end
 
