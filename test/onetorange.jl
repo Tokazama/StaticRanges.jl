@@ -36,10 +36,6 @@ for (frange, oneto) in ((mrange, OneToMRange),(srange ,OneToSRange))
             @test intersect(r, 2) == intersect(2, r) == frange(2, 2)
             @test findall(in(r), r) == findall(in(frange(1, length(r))), r) ==
                 findall(in(r), frange(1, length(r))) == frange(1, length(r))
-            io = IOBuffer()
-            show(io, r)
-            str = String(take!(io))
-            @test str == "$(oneto)(3)"
             @test in(1, r) == true
             @test in(1.0, r) == true
         end
@@ -80,4 +76,17 @@ for (frange, oneto) in ((mrange, OneToMRange),(srange ,OneToSRange))
     @test AbstractUnitRange{Int}(OneToSRange(10)) isa OneToSRange
 
     @test_throws ErrorException r.throw_error_please
+    @testset "show" begin
+        r = OneToMRange(10)
+        io = IOBuffer()
+        show(io, r)
+        str = String(take!(io))
+        @test str == "OneToMRange(10)"
+
+        r = OneToSRange(10)
+        io = IOBuffer()
+        show(io, r)
+        str = String(take!(io))
+        @test str == "OneToSRange(10)"
+    end
 end
