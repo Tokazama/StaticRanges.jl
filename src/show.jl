@@ -3,8 +3,12 @@ Base.show(io::IO, r::OneToSRange) = print(io, "OneToSRange($(last(r)))")
 
 Base.show(io::IO, r::OneToMRange) = print(io, "OneToMRange($(last(r)))")
 
-function Base.show(io::IO, r::AbstractStepRangeLen)
-    print(io, typeof(r).name, "(", first(r), ":", step(r), ":", last(r), ")")
+function Base.show(io::IO, r::StepMRangeLen)
+    print(io, "StepMRangeLen(", first(r), ":", step(r), ":", last(r), ")")
+end
+
+function Base.show(io::IO, r::StepSRangeLen)
+    print(io, "StepSRangeLen(", first(r), ":", step(r), ":", last(r), ")")
 end
 
 function Base.show(io::IO, r::StepMRange)
