@@ -31,5 +31,13 @@
             end
         end
     end
+
+    @testset "Fully typed reconstruction" begin
+        T = typeof(UnitMRange(1, 2))
+        @test @inferred(T(2, 3)) isa UnitMRange{Int}
+        T = typeof(UnitSRange(1, 2))
+        @test T(2, 3) isa UnitSRange{Int,2,3}
+        @test !isa(T(2, 3),  UnitSRange{Int,1,2})
+    end
 end
 
