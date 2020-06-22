@@ -1,27 +1,5 @@
 
 """
-    parent_type(::T) = parent_type(T)
-    parent_type(::Type{T})
-
-Returns the equivalent output of `typeof(parent(x))` but derives this directly
-from the type of x (e.g., parametric typing).
-
-## Examples
-```jldoctest
-julia> using StaticRanges
-
-julia> parent_type([1 2; 3 4])
-Array{Int64,2}
-
-julia> parent_type(view([1 2; 3 4], 1, 1))
-Array{Int64,2}
-```
-"""
-parent_type(::T) where {T} = parent_type(T)
-parent_type(::Type{T}) where {T} = T
-parent_type(::Type{<:SubArray{T,N,P}}) where {T,N,P} = P
-
-"""
     axes_type(::T) = axes_type(T)
     axes_type(::Type{T})
 
