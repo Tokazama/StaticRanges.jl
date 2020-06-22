@@ -1,6 +1,10 @@
 
 mutable struct MutableTuple{N,T}
     data::NTuple{N,T}
+
+    MutableTuple{N,T}() where {N,T} = new{N,T}()
+    MutableTuple{N,T}(data::NTuple{N,T}) where {N,T} = new{N,T}(data)
+    MutableTuple(data::NTuple{N,T}) where {N,T} = MutableTuple{N,T}(data)
 end
 
 ###
@@ -100,6 +104,9 @@ struct StaticMutableVector{T,I,L} <: MutableVector{T,I,OneToSRange{Int,L}}
     StaticMutableVector(data::AbstractVector) = StaticMutableVector{eltype(data)}(tuple(data...))
     StaticMutableVector(data::Tuple) = StaticMutableVector{eltype(data)}(data)
     StaticMutableVector(args::Vararg) where {T} = StaticMutableVector(args)
+
+    StaticMutableVector{T,I}(init::UndefInitializer, len::I) where {T,I} = new{T,I,len}(MutableTuple{len,T}(), OneToSRange{I}(len))
+    StaticMutableVector{T}(init::UndefInitializer, len::Integer) where {T} = StaticMutableVector{T,Int}(init, len)
 end
 
 @inline function unsafe_getindex(V::StaticMutableVector{T,I}, i::Int) where {T,I}
@@ -110,16 +117,18 @@ function unsafe_getindex(V::StaticMutableVector{T,I}, inds::AbstractVector{<:Int
     if is_static(inds)
         return StaticMutableVector{T,I}(unsafe_getindex_tuple(getfield(getfield(V, :data), :data), inds, Length(inds)))
     else
-        v = getfield(V, :data)
+        v = getfield(getfield(V, :data), :data)
         return FixedMutableVector{T,I}(tuple([getfield(v, i, false) for i in inds]...), OneTo{I}(length(inds)))
     end
 end
 
 function unsafe_setindex!(V::StaticMutableVector{T}, val, i::Int) where {T}
-    v = getfield(getifield(V, :data), :data)
+    v = getfield(V, :data)
     GC.@preserve v unsafe_store!(Base.unsafe_convert(Ptr{T}, pointer_from_objref(v)), convert(T, val), i)
     return val
 end
+
+Base.similar(v::StaticMutableVector, ::Type{T}) where {T} = StaticMutableVector{T}(undef, length(v))
 
 """
     FixedMutableVector{T,I}
@@ -139,9 +148,9 @@ struct FixedMutableVector{T,I} <: MutableVector{T,I,OneTo{I}}
             end
         else
             if eltype(axis) <: I
-                return FixedMutableVector{T,I}(convert(Tuple{Varar{T}}, data), axis)
+                return FixedMutableVector{T,I}(convert(Tuple{Vararg{T}}, data), axis)
             else
-                return FixedMutableVector{T,I}(convert(Tuple{Varar{T}}, data), OneTo{I}(axis.stop))
+                return FixedMutableVector{T,I}(convert(Tuple{Vararg{T}}, data), OneTo{I}(axis.stop))
             end
         end
     end
@@ -165,6 +174,9 @@ struct FixedMutableVector{T,I} <: MutableVector{T,I,OneTo{I}}
     FixedMutableVector(data::AbstractVector) = FixedMutableVector{eltype(data)}(tuple(data...))
     FixedMutableVector(data::Tuple) = FixedMutableVector{eltype(data)}(data)
     FixedMutableVector(args::Vararg) where {T} = FixedMutableVector(args)
+
+    FixedMutableVector{T,I}(init::UndefInitializer, len::Integer) where {T,I} = new{T,I}(MutableTuple{len,T}(), OneTo{I}(len))
+    FixedMutableVector{T}(init::UndefInitializer, len::Integer) where {T} = FixedMutableVector{T,Int}(init, len)
 end
 
 @inline function unsafe_getindex(V::FixedMutableVector{T,I}, i::Int) where {T,I}
@@ -181,10 +193,12 @@ function unsafe_getindex(V::FixedMutableVector{T,I}, inds::AbstractVector{<:Inte
 end
 
 function unsafe_setindex!(V::FixedMutableVector{T}, val, i::Int) where {T}
-    v = getfield(getifield(V, :data), :data)
+    v = getfield(V, :data)
     GC.@preserve v unsafe_store!(Base.unsafe_convert(Ptr{T}, pointer_from_objref(v)), convert(T, val), i)
     return val
 end
+
+Base.similar(v::FixedMutableVector, ::Type{T}) where {T} = FixedMutableVector{T}(undef, length(v))
 
 """
     DynamicMutableVector{T,I}
@@ -219,6 +233,14 @@ struct DynamicMutableVector{T,I} <: MutableVector{T,I,OneToMRange{I}}
 
     DynamicMutableVector(data::AbstractVector) = DynamicMutableVector{eltype(data)}(data)
     DynamicMutableVector(args::Vararg) where {T} = DynamicMutableVector([args...])
+
+    function DynamicMutableVector{T}(init::UndefInitializer, len::Integer) where {T}
+        return DynamicMutableVector{T}(Vector{T}(init, len))
+    end
+
+    function DynamicMutableVector{T}(init::UndefInitializer, len::AbstractUnitRange{<:Integer}) where {T}
+        return DynamicMutableVector{T}(init, length(len))
+    end
 end
 
 function unsafe_getindex(V::DynamicMutableVector{T,I}, inds::AbstractVector{<:Integer}) where {T,I}
@@ -226,7 +248,7 @@ function unsafe_getindex(V::DynamicMutableVector{T,I}, inds::AbstractVector{<:In
     if is_static(inds)
         return StaticMutableVector{T,I}(unsafe_getindex_vector(v, inds), inds, Length(inds))
     else
-        return DynamicMutableVector{T,I}([getfield(v, i, false) for i in inds], OneToMRange{I}(length(inds)))
+        return DynamicMutableVector{T,I}(@inbounds(v[inds]), OneToMRange{I}(length(inds)))
     end
 end
 
@@ -237,22 +259,19 @@ end
 
 unsafe_getindex(v::Vector{T}, i::Int) where {T} = Core.arrayref(false, v, i)
 
-function unsafe_setindex!(V::DynamicMutableVector{T}, vals, inds::AbstractUnitRange{<:Integer}) where {T}
-    unsafe_copyto!(getfield(V, :data), first(inds), vals, 1, length(inds))
-    return V
-end
+unsafe_setindex!(v::DynamicMutableVector{T}, val, i::Int) where {T} =  setindex!(getfield(v, :data), val, i)
 
 @inline function unsafe_setindex!(v::DynamicMutableVector{T}, vals, inds::AbstractVector{<:Integer}) where {T}
     v = getfield(v, :data)
-    count = 1
-    for i in inds
-        unsafe_setindex!(v, @inbounds(vals[count]), i)
-        count += 1
-    end
+    @inbounds(setindex!(v, vals, inds))
     return V
 end
 
 function unsafe_setindex!(V::DynamicMutableVector{T}, vals, ::Colon) where {T}
     unsafe_copyto!(getfield(V, :data), 1, vals, 1, length(v))
     return V
+end
+
+function Base.similar(v::DynamicMutableVector{T1,I1}, ::Type{T}) where {T1,I1,T}
+    return DynamicMutableVector{T,I1}(similar(getfield(v, :data), T))
 end

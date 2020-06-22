@@ -16,7 +16,7 @@ using StaticArrays
 using StaticArrays: Length
 
 using ArrayInterface
-using ArrayInterface: can_setindex
+using ArrayInterface: can_setindex, parent_type
 
 using IntervalSets
 using Requires
