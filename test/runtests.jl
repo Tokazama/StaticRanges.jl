@@ -786,6 +786,8 @@ end
 @testset "resize tests" begin
     include("resize_tests.jl")
 end
+
+include("./CoreVectors/CoreVectors.jl")
 #=
 #@test 1.0:(.3-.1)/.1 == 1.0:2.0
 =#

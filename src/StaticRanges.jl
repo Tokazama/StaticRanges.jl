@@ -13,6 +13,7 @@ using Dates
 using ChainedFixes
 
 using StaticArrays
+using StaticArrays: Length
 
 using ArrayInterface
 using ArrayInterface: can_setindex
@@ -262,5 +263,8 @@ include("vcat.jl")
 include("resize.jl")
 include("offset_range.jl")
 include("./Find/Find.jl")
+
+include("./CoreVectors/CoreVectors.jl")
+using .CoreVectors
 
 end

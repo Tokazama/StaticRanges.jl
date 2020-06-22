@@ -434,4 +434,3 @@ Base.@pure function _has_offset_axes(::Type{T}) where {T<:Tuple}
     end
     return false
 end
-
