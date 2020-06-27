@@ -30,7 +30,6 @@ function axes_type(::Type{<:StaticArray{S,T,N}}) where {S,T,N}
     return Tuple{axs...}
 end
 
-
 """
     axes_type(::T, i) = axes_type(T, i)
     axes_type(::Type{T}, i)
@@ -75,12 +74,6 @@ Staticness(::Type{T}) where {T<:Tuple} = Static()
 
 Staticness(::Type{T}) where {T<:NamedTuple} = Static()
 
-Staticness(::Type{T}) where {T<:SOneTo} = Static()
-
-Staticness(::Type{T}) where {T<:StaticArrays.SUnitRange} = Static()
-
-Staticness(::Type{T}) where {T<:StaticArray} = Static()
-
 Staticness(::Type{T}) where {T<:OneToSRange} = Static()
 
 Staticness(::Type{T}) where {T<:UnitSRange} = Static()
@@ -104,6 +97,13 @@ Staticness(::Type{T}) where {T<:StepMRange} = Dynamic()
 Staticness(::Type{T}) where {T<:StepMRangeLen} = Dynamic()
 
 Staticness(::Type{T}) where {T<:LinMRange} = Dynamic()
+
+Staticness(::Type{T}) where {T<:SOneTo} = Static()
+
+Staticness(::Type{T}) where {T<:StaticArrays.SUnitRange} = Static()
+
+Staticness(::Type{T}) where {T<:StaticArray} = Static()
+
 
 # degenerative combinations of staticness
 Staticness(x, y) = Staticness(Staticness(x), Staticness(y))
@@ -339,10 +339,9 @@ julia> as_static(reshape(1:12, (3, 4)))
 """
 as_static(x::OneToSRange) = x
 as_static(::SOneTo{L}) where {L} = OneToSRange{Int,L}()
+as_static(x::StaticArrays.SUnitRange{F,L}) where {F,L} = UnitSRange{Int,F,L}()
 as_static(x::Union{OneTo,OneToMRange}) = OneToSRange(last(x))
 
-as_static(x::UnitSRange) = x
-as_static(x::StaticArrays.SUnitRange{F,L}) where {F,L} = UnitSRange{Int,F,L}()
 as_static(x::AbstractUnitRange) = UnitSRange(first(x), last(x))
 
 as_static(x::StepSRange) = x
@@ -362,6 +361,7 @@ function as_static(A::AbstractArray)
     end
 end
 
+# FIXME
 """
     as_static(x::AbstractArray[, hint::Val{S}])
 

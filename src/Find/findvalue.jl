@@ -33,9 +33,18 @@ function _unsafe_findvalue(idx::TwicePrecision{T}, rounding_mode) where {T}
     return round(Integer, T(idx), rounding_mode)
 end
 
-Base.findall(f::Function, r::UnionRange) = find_all(f, r)
+#=
+for T in (:OneToMRange,:UnitMRange,:StepMRange,:LinMRange,:StepMRangeLen,:OneToSRange,:UnitSRange,:StepSRange,:LinSRange,:StepSRangeLen)
+    @eval begin
+        Base.findall(f::Function, r::$T) = find_all(f, r)
+        Base.findall(f::Fix2{typeof(in)}, r::$T) = find_all(f, r)
+    end
+end
+=#
 
+Base.findall(f::Function, r::UnionRange) = find_all(f, r)
 Base.findall(f::Fix2{typeof(in)}, r::UnionRange) = find_all(f, r)
+Base.findall(f::Base.Fix2{typeof(in),IntervalSets.Interval{L,R,T}}, x::UnionRange) where {L,R,T} = find_all(f, r)
 
 Base.findlast(f::Function, x::UnionRange) = find_last(f, x)
 

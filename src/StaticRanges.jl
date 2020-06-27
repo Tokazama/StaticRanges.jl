@@ -1,5 +1,7 @@
 module StaticRanges
 
+using SparseArrays
+
 import Base: OneTo, TwicePrecision, el_same, unsafe_getindex, nbitslen, rat,
              IEEEFloat, floatrange, sumpair, add12, twiceprecision, step_hp,
              truncbits, Fix1, Fix2, tail, front, to_index, unsafe_length
@@ -14,6 +16,7 @@ using ChainedFixes
 
 using StaticArrays
 using StaticArrays: Length
+import StaticArrays: Length, pop, popfirst
 
 using ArrayInterface
 using ArrayInterface: can_setindex, parent_type
@@ -136,7 +139,6 @@ include("unitrange.jl")
 include("abstractsteprange.jl")
 include("abstractlinrange.jl")
 include("abstractsteprangelen.jl")
-
 const LinRangeUnion{T} = Union{LinRange{T},AbstractLinRange{T}}
 const StepRangeUnion{T,S} = Union{StepRange{T,S},AbstractStepRange{T,S}}
 const UnitRangeUnion{T} = Union{UnitRange{T},UnitSRange{T},UnitMRange{T}}
@@ -264,7 +266,7 @@ include("resize.jl")
 include("offset_range.jl")
 include("./Find/Find.jl")
 
-include("./CoreVectors/CoreVectors.jl")
-using .CoreVectors
+include("./CoreArrays/CoreArrays.jl")
+using .CoreArrays
 
 end

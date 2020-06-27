@@ -1,5 +1,6 @@
-using Test, StaticRanges, Dates, Documenter, IntervalSets
+
 using StaticArrays
+using Test, StaticRanges, Dates, Documenter, IntervalSets
 using StaticRanges: can_set_first, can_set_last, can_set_step, has_step, can_set_length,
     stephi, steplo, refhi, reflo, eqmax, eqmin, ltmax, ltmin, gtmax, gtmin, group_max,
     group_min, min_of_group_max, max_of_group_min, ordmin, ordmax,
@@ -21,6 +22,8 @@ using Base.Order
 catch_nothing(x) = x
 catch_nothing(x::Nothing) = 0
 
+
+@test isempty(setdiff(detect_ambiguities(StaticRanges,Base,Core), detect_ambiguities(StaticArrays,Base,Core)))
 
 #=
 When using ranges find_all will produce either an AbstractUnitRange or GapRange.
@@ -796,3 +799,8 @@ include("./CoreVectors/CoreVectors.jl")
     doctest(StaticRanges; manual=false)
 end
 
+#=
+detect_ambiguities(StaticRanges,Base,Core)
+
+
+=#

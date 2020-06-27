@@ -1,23 +1,42 @@
 
-### intersect
+#= intersect
 for R in (:StepMRange,:LinMRange,:StepMRangeLen)
     @eval begin
         Base.intersect(r::$(R){T}, i::T) where {T} = intersect(i, r)
         Base.intersect(r::$(R){<:Real}, i::Real) = intersect(eltype(r)(i), r)
         Base.intersect(i::Real, r::$(R){Real}) = intersect(eltype(r)(i), r)
         function Base.intersect(i::T, r::$(R){T}) where {T}
-            return i in r ? mrange(i, stop=i, length=1) : mrange(i, stop=i, length=0)
+            if i in r
+                return mrange(i, stop=i, length=1)
+            else
+                return mrange(i, stop=i, length=0)
+            end
         end
     end
 end
+=#
 
-for R in (:StepSRange,:LinSRange,:StepSRangeLen)
-    @eval begin
-        Base.intersect(r::$(R){T}, i::T) where {T} = intersect(i, r)
-        Base.intersect(r::$(R){<:Real}, i::Real) = intersect(eltype(r)(i), r)
-        Base.intersect(i::Real, r::$(R){Real}) = intersect(eltype(r)(i), r)
-        function Base.intersect(i::T, r::$(R){T}) where {T}
-            return i in r ? srange(i, stop=i, length=1) : srange(i, stop=i, length=0)
+Base.intersect(x::AbstractStepRange, y) = _step_intersect(x, y)
+Base.intersect(x::AbstractLinRange, y) = _lin_intersect(x, y)
+Base.intersect(x::AbstractStepRangeLen, y) = _steplen_intersect(x, y)
+Base.intersect(r::StepRange, s::AbstractStepRange) = _step_intersect(r, s)
+
+_step_intersect(x::AbstractRange{T}, y::Real) where {T} = _el_instersect(x, T(y))
+_lin_intersect(x::AbstractRange{T}, y::Real) where {T} = _el_instersect(x, T(y))
+_steplen_intersect(x::AbstractRange{T}, y::Real) where {T} = _el_instersect(x, T(y))
+
+function _el_instersect(x::AbstractRange{T}, y::T) where {T}
+    if is_static(x)
+        if y in x
+            return srange(y, stop=y, length=1)
+        else
+            return srange(y, stop=y, length=0)
+        end
+    else
+        if y in x
+            return mrange(y, stop=y, length=1)
+        else
+            return mrange(y, stop=y, length=0)
         end
     end
 end
@@ -51,11 +70,8 @@ function Base.intersect(r::AbstractStepRange{<:Integer}, s::AbstractUnitRange{<:
     end
 end
 
-Base.intersect(r::AbstractStepRange, s::StepRange) = _intersect(r, s)
-Base.intersect(r::StepRange,         s::AbstractStepRange) = _intersect(r, s)
-Base.intersect(r::AbstractStepRange, s::AbstractStepRange) = _intersect(r, s)
 
-function _intersect(r, s)
+function _step_intersect(r, s::OrdinalRange)
     if isempty(r) || isempty(s)
         return range(first(r), step=step(r), length=0)
     elseif step(s) < zero(step(s))
@@ -88,4 +104,3 @@ function _intersect(r, s)
     n = min(stop1 - mod(stop1 - b, a), stop2 - mod(stop2 - b, a))
     range(m, step=a, stop=n)
 end
-

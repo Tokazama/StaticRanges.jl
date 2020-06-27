@@ -33,17 +33,23 @@ struct GapRange{T,F,L} <: AbstractVector{T}
 
    function GapRange{T,F,L}(fr::F, lr::L) where {T,F,L}
        if (eltype(fr) <: T) & (eltype(lr) <: T)
-           return new{T,F,L}(fr, lr)
+           if F <: AbstractRange || F <: GapRange || F <: T
+               if L <: AbstractRange || L <: GapRange || L <: T
+                   return new{T,F,L}(fr, lr)
+               else
+                   error("A GapRange can only be composed of ranges or othe GapRanges, got $L.")
+               end
+           else
+               error("A GapRange can only be composed of ranges or othe GapRanges, got $F.")
+           end
        else
            error("element type of first and last range must be the same, got $(eltype(fr)) and $(eltype(lr)).")
        end
     end
 end
 
-const SubGapRange{T} = Union{<:AbstractRange{T},<:GapRange{T}}
-
 GapRange(f::T, l::T) where {T} = GapRange{T,T,T}(f, l)
-function GapRange(f::T, l::SubGapRange{T}) where {T}
+function GapRange(f::T, l::AbstractVector{T}) where {T<:Real}
     if is_forward(l)
         if is_before(f, l)
             return GapRange{T,T,typeof(l)}(f, l)
@@ -63,7 +69,7 @@ function GapRange(f::T, l::SubGapRange{T}) where {T}
     end
 end
 
-function GapRange(f::SubGapRange{T}, l::T) where {T}
+function GapRange(f::AbstractVector{T}, l::T) where {T<:Real}
     if is_forward(f)
         if is_before(f, l)
             return GapRange{T,typeof(f),T}(f, l)
@@ -83,7 +89,7 @@ function GapRange(f::SubGapRange{T}, l::T) where {T}
     end
 end
 
-function GapRange(f::SubGapRange{T}, l::SubGapRange{T}) where {T}
+function GapRange(f::AbstractVector{T}, l::AbstractVector{T}) where {T}
     if is_forward(f)
         if is_forward(l)
             if is_before(f, l)

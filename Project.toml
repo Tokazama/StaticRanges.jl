@@ -9,6 +9,7 @@ ChainedFixes = "9706b775-b1f4-4c74-b677-0491368ea71c"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]

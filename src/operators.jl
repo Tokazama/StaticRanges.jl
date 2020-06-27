@@ -56,9 +56,8 @@ end
 ###
 ### +(r1, r2)
 ###
-Base.:(+)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::AbstractRange) = +(promote(r1, r2)...)
-Base.:(+)(r1::AbstractRange, r2::Union{AbstractStepRangeLen,AbstractLinRange}) =  +(promote(r1, r2)...)
-Base.:(+)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::Union{AbstractStepRangeLen,AbstractLinRange}) = +(promote(r1, r2)...)
+#Base.:(+)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::AbstractRange) = +(promote(r1, r2)...)
+Base.:(+)(r1::StepMRangeLen, r2::StepMRangeLen) = +(promote(r1, r2)...)
 function Base.:(+)(r1::StepMRangeLen{T,S}, r2::StepMRangeLen{T,S}) where {T,S}
     len = length(r1)
     (len == length(r2) ||
@@ -71,7 +70,7 @@ function Base.:(+)(r1::StepSRangeLen{T,S}, r2::StepSRangeLen{T,S}) where {T,S}
         throw(DimensionMismatch("argument dimensions must match")))
     return StepSRangeLen(first(r1)+first(r2), step(r1)+step(r2), len)
 end
-function Base.:(+)(r1::StepMRangeLen{T,TwicePrecision{T}}, r2::StepMRangeLen{T,TwicePrecision{T}}) where {T}
+function Base.:(+)(r1::StepMRangeLen{T,R}, r2::StepMRangeLen{T,R}) where {T,R<:TwicePrecision}
     len = length(r1)
     (len == length(r2) || throw(DimensionMismatch("argument dimensions must match")))
     if r1.offset == r2.offset
@@ -87,8 +86,9 @@ function Base.:(+)(r1::StepMRangeLen{T,TwicePrecision{T}}, r2::StepMRangeLen{T,T
     return StepMRangeLen{T,typeof(ref),typeof(step)}(ref, step, len, imid)
 end
 
-function Base.:(+)(r1::StepSRangeLen{T,TwicePrecision{T},<:Any,<:Any,<:Any,<:Any,<:Any},
-                   r2::StepSRangeLen{T,TwicePrecision{T},<:Any,<:Any,<:Any,<:Any,<:Any}) where {T}
+Base.:(+)(r1::StepSRangeLen, r2::StepSRangeLen) = +(promote(r1, r2)...)
+function Base.:(+)(r1::StepSRangeLen{T,R,<:Any,<:Any,<:Any,<:Any,<:Any},
+                   r2::StepSRangeLen{T,R,<:Any,<:Any,<:Any,<:Any,<:Any}) where {T,R<:TwicePrecision}
     len = length(r1)
     (len == length(r2) ||
         throw(DimensionMismatch("argument dimensions must match")))
@@ -132,16 +132,66 @@ end
 ###
 ### -(r1, r2)
 ###
-Base.:(-)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::AbstractRange) = -(promote(r1, r2)...)
-Base.:(-)(r1::AbstractRange, r2::Union{AbstractStepRangeLen,AbstractLinRange}) =  -(promote(r1, r2)...)
-Base.:(-)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::Union{AbstractStepRangeLen,AbstractLinRange}) = -(promote(r1, r2)...)
+#Base.:(-)(r1::AbstractLinRange, r2::AbstractRange) = -(promote(r1, r2)...)
+#Base.:(-)(r1::AbstractStepRangeLen r2::AbstractRange) = -(promote(r1, r2)...)
+#Base.:(-)(r1::AbstractRange, r2::Union{AbstractStepRangeLen,AbstractLinRange}) =  -(promote(r1, r2)...)
+#Base.:(-)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::Union{AbstractStepRangeLen,AbstractLinRange}) = -(promote(r1, r2)...)
+
+#=
+for R in (:AbstractLinRange, :AbstractStepRangeLen)
+    for f in (:+, :-)
+        @eval Base.$(f)(r1::$R, r2::AbstractRange) = $f(promote(r1, r2)...)
+        @eval Base.$(f)(r1::AbstractRange, r2::$R) = $f(promote(r1, r2)...)
+        for S in (:AbstractLinRange, :AbstractStepRangeLen)
+            if R != S
+                @eval Base.$(f)(r1::$R, r2::$S) = $f(promote(r1, r2)...)
+            end
+        end
+    end
+end
+
+Base.:(-)(x::AbstractLinRange{T}, y::AbstractRange{T}) where T<:Dates.TimeType = -(promote(x, y)...)
+Base.:(-)(x::AbstractStepRangeLen{T}, y::AbstractRange{T}) where T<:Dates.TimeType = -(promote(x, y)...)
+Base.:(-)(x::AbstractRange{T}, y::AbstractLinRange{T}) where T<:Dates.TimeType = -(promote(x, y)...)
+Base.:(-)(x::AbstractRange{T}, y::AbstractStepRangeLen{T}) where T<:Dates.TimeType = -(promote(x, y)...)
+=#
+
+# (-(x::AbstractRange{T}, y::AbstractRange{T}) where T<:Dates.TimeType
+#=
+Base.:(+)(r1::Union{AbstractStepRangeLen,AbstractLinRange}, r2::Union{AbstractStepRangeLen,AbstractLinRange}) = +(promote(r1, r2)...)
+Base.:(+)(r1::AbstractRange, r2::Union{AbstractStepRangeLen,AbstractLinRange}) =  +(promote(r1, r2)...)
+=#
+Base.:(+)(x::AbstractStepRangeLen, y::AbstractStepRangeLen) = +(promote(x, y)...)
+Base.:(+)(x::AbstractStepRangeLen, y::StepRangeLen) = +(promote(x, y)...)
+
+Base.:(+)(x::StepRangeLen, y::AbstractStepRangeLen) = +(promote(x, y)...)
+Base.:(+)(x::StepRange, y::AbstractStepRangeLen) = +(promote(x, y)...)
+Base.:(+)(x::AbstractStepRangeLen, y::StepMRange) = +(promote(x, y)...)
+Base.:(+)(x::StepMRange, y::AbstractStepRangeLen) = +(promote(x, y)...)
+Base.:(+)(x::AbstractStepRangeLen, y::StepSRange) = +(promote(x, y)...)
+Base.:(+)(x::StepSRange, y::AbstractStepRangeLen) = +(promote(x, y)...)
+
+Base.:(+)(x::AbstractStepRangeLen, y::StepRange) = +(promote(x, y)...)
+Base.:(-)(x::AbstractStepRangeLen, y::AbstractStepRangeLen) = +(x, -y)
+Base.:(-)(x::AbstractStepRangeLen, y::StepRangeLen) = +(x, -y)
+Base.:(-)(x::StepRangeLen, y::AbstractStepRangeLen) = +(x, -y)
+
+Base.:(+)(x::LinMRange, y::LinRange) = +(promote(x, y)...)
+Base.:(+)(x::LinSRange, y::LinRange) = +(promote(x, y)...)
+Base.:(+)(x::LinRange, y::LinMRange) = +(promote(x, y)...)
+Base.:(+)(x::LinRange, y::LinSRange) = +(promote(x, y)...)
+Base.:(-)(x::LinRange, y::LinMRange) = +(x, -y)
+Base.:(-)(x::LinRange, y::LinSRange) = +(x, -y)
+Base.:(-)(x::LinMRange, y::LinRange) = +(x, -y)
+Base.:(-)(x::LinSRange, y::LinRange) = +(x, -y)
+
+
 
 function Base.:(-)(r::AbstractStepRangeLen)
     return similar_type(r)(-r.ref, -step(r), length(r), r.offset)
 end
 Base.:(-)(r1::StepMRangeLen{T,R,S}, r2::StepMRangeLen{T,R,S}) where {T,R,S} = +(r1, -r2)
 Base.:(-)(r1::StepSRangeLen{T,R,S}, r2::StepSRangeLen{T,R,S}) where {T,R,S} = +(r1, -r2)
-
 
 ###
 ### *(r1, r2)
@@ -166,9 +216,14 @@ end
 
 for (frange,R) in ((mrange, :StepMRange), (srange, :StepSRange))
     for f in (:+, :-)
+        @eval Base.$(f)(r1::$R, r2::StepRange) = $f(promote(r1, r2)...)
+        if R == :StepMRange
+            @eval Base.$(f)(r1::$R, r2::StepSRange) = $f(promote(r1, r2)...)
+        else
+            @eval Base.$(f)(r1::$R, r2::StepMRange) = $f(promote(r1, r2)...)
+        end
+
         @eval begin
-            Base.$(f)(r1::$R, r2::OrdinalRange) = $(f)(promote(r1, r2)...)
-            Base.$(f)(r1::OrdinalRange, r2::$R) =  $(f)(promote(r1, r2)...)
             function Base.$(f)(r1::$R, r2::$R)
                 r1l = length(r1)
                 (r1l == length(r2) ||
@@ -188,6 +243,8 @@ float(r::StepRangeLen{T}) where {T} =
 function float(r::LinRange)
     LinRange(float(r.start), float(r.stop), length(r))
 end
+@test +(mr, (1 .+ br)) == +(br, (1 .+ br)) == +(sr, (1 .+ br))
+mr, br, sr = (StepMRange(1, 1, 10),    StepRange(1, 1, 10),    StepSRange(1, 1, 10))
 =#
 
 Base.empty!(r::LinMRange{T}) where {T} = (setfield!(r, :len, 0); r)

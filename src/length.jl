@@ -1,13 +1,13 @@
 
-StaticArrays.Length(::Type{OneToSRange{T,L}}) where {T,L} = Length{Int(L)}()
+Length(::Type{OneToSRange{T,L}}) where {T,L} = Length{Int(L)}()
 
-StaticArrays.Length(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = Length{L}()
+Length(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = Length{L}()
 
-function StaticArrays.Length(::Type{UnitSRange{T,F,L}})  where {T<:Union{UInt,UInt64,UInt128},F,L}
+function Length(::Type{UnitSRange{T,F,L}})  where {T<:Union{UInt,UInt64,UInt128},F,L}
     return Length{L < F ? 0 : Int(Base.Checked.checked_add(L - F, one(T)))}()
 end
 
-function StaticArrays.Length(::Type{UnitSRange{T,F,L}}) where {T<:Union{Int,Int64,Int128},F,L}
+function Length(::Type{UnitSRange{T,F,L}}) where {T<:Union{Int,Int64,Int128},F,L}
     return Length{Int(Base.Checked.checked_add(Base.Checked.checked_sub(L, F), one(T)))}()
 end
 
@@ -182,4 +182,3 @@ function set_lendiv!(r::LinMRange, d::Int)
     setfield!(r, :lendiv, d)
     return r
 end
-

@@ -34,6 +34,19 @@ end
     end
 end
 
+# these get rid of ambiguites from `detect_ambiguities`
+@propagate_inbounds function Base.getindex(x::SparseArrays.AbstractSparseArray{Tv,Ti,1}, I::GapRange) where {Tv, Ti}
+    return vcat(getindex(x, first_range(gr)), getindex(x, last_range(gr)))
+end
+
+@propagate_inbounds function Base.getindex(A::SparseArrays.AbstractSparseMatrixCSC, I::GapRange{Bool})
+    return vcat(getindex(x, first_range(gr)), getindex(x, last_range(gr)))
+end
+
+@propagate_inbounds function Base.getindex(A::SparseArrays.AbstractSparseMatrixCSC{Tv,Ti}, I::GapRange) where {Tv,Ti}
+    return vcat(getindex(x, first_range(gr)), getindex(x, last_range(gr)))
+end
+
 function unsafe_spanning_getindex(gr, v)
     ltfli = find_all(<=(first_lastindex(gr)), v)
     gtlfi = find_all(>=(last_firstindex(gr)), v)

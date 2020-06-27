@@ -34,7 +34,6 @@ for RT in (:StepMRangeLen,:StepSRangeLen)
     end
 end
 
-
 # although these should technically not need to be completely typed for
 # each, dispatch ignores TwicePrecision on the static version and only
 # uses the first otherwise
@@ -163,3 +162,4 @@ for R in (:OneToMRange, :OneToSRange)
         =#
     end
 end
+

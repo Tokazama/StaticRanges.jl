@@ -67,21 +67,20 @@ julia> first(mr)
 2
 ```
 """
-function set_first!(x::AbstractVector{T}, val::T) where {T}
+function set_first!(x::AbstractVector{T}, val) where {T}
     can_set_first(x) || throw(MethodError(set_first!, (x, val)))
-    setindex!(x, val, firstindex(x))
+    setindex!(x, T(val), firstindex(x))
     return x
 end
-set_first!(x::AbstractVector{T}, val) where {T} = set_first!(x, convert(T, val))
-set_first!(r::LinMRange{T}, val::T) where {T} = (setfield!(r, :start, val); r)
-function set_first!(r::StepMRange{T,S}, val::T) where {T,S}
-    setfield!(r, :start, val)
-    setfield!(r, :stop, Base.steprange_last(val, step(r), last(r)))
+set_first!(r::LinMRange{T}, val) where {T} = (setfield!(r, :start, T(val)); r)
+function set_first!(r::StepMRange{T,S}, val) where {T,S}
+    val2 = T(val)
+    setfield!(r, :start, val2)
+    setfield!(r, :stop, Base.steprange_last(val2, step(r), last(r)))
 end
-set_first!(r::UnitMRange{T}, val::T) where {T} = (setfield!(r, :start, val); r)
-set_first!(r::StepMRangeLen{T,R,S}, val::R) where {T,R,S} = (setfield!(r, :ref, val); r)
+set_first!(r::UnitMRange{T}, val::T) where {T} = (setfield!(r, :start, T(val)); r)
 function set_first!(r::StepMRangeLen{T,R,S}, val) where {T,R,S}
-    return set_ref!(r, val - (1 - r.offset) * step_hp(r))
+    return set_ref!(r, R(val) - (1 - r.offset) * step_hp(r))
 end
 
 """

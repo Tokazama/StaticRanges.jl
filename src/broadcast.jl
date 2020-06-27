@@ -1,27 +1,27 @@
 
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::OneToRange) = r
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractStepRange) = r
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractStepRangeLen) = r
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractLinRange) = r
+Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::OneToRange) = r
+Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractStepRange) = r
+Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractStepRangeLen) = r
+Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractLinRange) = r
 
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRange) = srange(-first(r), step=-step(r), length=length(r))
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepMRange) = mrange(-first(r), step=-step(r), length=length(r))
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRangeLen) = StepSRangeLen(-r.ref, -r.step, length(r), r.offset)
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepMRangeLen) = StepMRangeLen(-r.ref, -r.step, length(r), r.offset)
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinSRange) = LinSRange(-r.start, -r.stop, length(r))
-Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinMRange) = LinMRange(-r.start, -r.stop, length(r))
+Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRange) = srange(-first(r), step=-step(r), length=length(r))
+Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepMRange) = mrange(-first(r), step=-step(r), length=length(r))
+Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRangeLen) = StepSRangeLen(-r.ref, -r.step, length(r), r.offset)
+Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepMRangeLen) = StepMRangeLen(-r.ref, -r.step, length(r), r.offset)
+Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinSRange) = LinSRange(-r.start, -r.stop, length(r))
+Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinMRange) = LinMRange(-r.start, -r.stop, length(r))
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Real, r::UnitSRange)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Real, r::UnitSRange)
     return srange(x + first(r), length=length(r))
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Real, r::UnitMRange)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Real, r::UnitMRange)
     return mrange(x + first(r), length=length(r))
 end
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::UnitSRange, x::Real)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::UnitSRange, x::Real)
     return srange(first(r) + x, length=length(r))
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::UnitMRange, x::Real)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::UnitMRange, x::Real)
     return mrange(x + first(r), length=length(r))
 end
 # For #18336 we need to prevent promotion of the step type: TODO
@@ -29,25 +29,25 @@ end
 #Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Number, r::AbstractRange) = range(x + first(r), step=step(r), length=length(r))
 
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::StepSRangeLen{T}, x::Number) where T
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::StepSRangeLen{T}, x::Number) where T
     return StepSRangeLen{typeof(T(r.ref)+x)}(r.ref+x, r.step, length(r), r.offset)
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::StepMRangeLen{T}, x::Number) where T
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::StepMRangeLen{T}, x::Number) where T
     return StepMRangeLen{typeof(T(r.ref)+x)}(r.ref+x, r.step, length(r), r.offset)
 end
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Number, r::StepSRangeLen{T}) where T
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Number, r::StepSRangeLen{T}) where T
     return StepSRangeLen{typeof(x+T(r.ref))}(x + r.ref, r.step, length(r), r.offset)
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Number, r::StepMRangeLen{T}) where T
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Number, r::StepMRangeLen{T}) where T
     return StepMRangeLen{typeof(x+T(r.ref))}(x + r.ref, r.step, length(r), r.offset)
 end
 
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::LinSRange, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::LinSRange, x::Number)
     return LinSRange(r.start + x, r.stop + x, length(r))
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::LinMRange, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::LinMRange, x::Number)
     return LinMRange(r.start + x, r.stop + x, length(r))
 end
 
@@ -55,7 +55,7 @@ end
 function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Number, r::LinSRange)
     return LinSRange(x + r.start, x + r.stop, length(r))
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Number, r::LinMRange)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Number, r::LinMRange)
     return LinMRange(x + r.start, x + r.stop, length(r))
 end
 
@@ -66,53 +66,53 @@ end
 ###
 ### :(-)
 ###
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::Union{UnitSRange,OneToSRange}, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::Union{UnitSRange,OneToSRange}, x::Number)
     return srange(first(r)-x, length=length(r))
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::Union{UnitMRange,OneToMRange}, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::Union{UnitMRange,OneToMRange}, x::Number)
     return range(first(r)-x, length=length(r))
 end
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRange, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRange, x::Number)
     return srange(first(r)-x, step=step(r), length=length(r))
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepMRange, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepMRange, x::Number)
     return mrange(first(r)-x, step=step(r), length=length(r))
 end
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::StepSRange)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::StepSRange)
     return srange(x-first(r), step=-step(r), length=length(r))
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::StepMRange)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::StepMRange)
     return mrange(x-first(r), step=-step(r), length=length(r))
 end
 
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRangeLen{T}, x::Number) where T
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepSRangeLen{T}, x::Number) where T
     return StepSRangeLen{typeof(T(r.ref)-x)}(r.ref - x, r.step, length(r), r.offset)
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepMRangeLen{T}, x::Number) where T
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::StepMRangeLen{T}, x::Number) where T
     return StepMRangeLen{typeof(T(r.ref)-x)}(r.ref - x, r.step, length(r), r.offset)
 end
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::StepSRangeLen{T}) where T
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::StepSRangeLen{T}) where T
     return StepSRangeLen{typeof(x-T(r.ref))}(x - r.ref, -r.step, length(r), r.offset)
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::StepMRangeLen{T}) where T
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::StepMRangeLen{T}) where T
     return StepMRangeLen{typeof(x-T(r.ref))}(x - r.ref, -r.step, length(r), r.offset)
 end
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinSRange, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinSRange, x::Number)
     return LinSRange(r.start - x, r.stop - x, length(r))
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinMRange, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::LinMRange, x::Number)
     return LinMRange(r.start - x, r.stop - x, length(r))
 end
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::LinSRange)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::LinSRange)
     return LinSRange(x - r.start, x - r.stop, length(r))
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::LinMRange)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), x::Number, r::LinMRange)
     return LinMRange(x - r.start, x - r.stop, length(r))
 end
 # TODO
@@ -123,49 +123,49 @@ end
 ###
 ### :(*)
 ###
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::Union{StepSRange,UnitSRange,OneToSRange})
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::Union{StepSRange,UnitSRange,OneToSRange})
     return srange(x*first(r), step=x*step(r), length=length(r))
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::Union{StepMRange,UnitMRange,OneToMRange})
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::Union{StepMRange,UnitMRange,OneToMRange})
     return mrange(x*first(r), step=x*step(r), length=length(r))
 end
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::StepSRangeLen{T}) where {T}
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::StepSRangeLen{T}) where {T}
     return StepSRangeLen{typeof(x*T(r.ref))}(x*r.ref, x*r.step, length(r), r.offset)
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::StepMRangeLen{T}) where {T}
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::StepMRangeLen{T}) where {T}
     return StepMRangeLen{typeof(x*T(r.ref))}(x*r.ref, x*r.step, length(r), r.offset)
 end
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::LinSRange)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::LinSRange)
     return LinSRange(x * r.start, x * r.stop, r.len)
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::LinMRange)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), x::Number, r::LinMRange)
     return LinMRange(x * r.start, x * r.stop, r.len)
 end
 # separate in case of noncommutative multiplication
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::Union{StepSRange,UnitSRange,OneToSRange}, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::Union{StepSRange,UnitSRange,OneToSRange}, x::Number)
     return srange(first(r)*x, step=step(r)*x, length=length(r))
 end
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::Union{StepMRange,UnitMRange,OneToMRange}, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::Union{StepMRange,UnitMRange,OneToMRange}, x::Number)
     return mrange(first(r)*x, step=step(r)*x, length=length(r))
 end
 
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::StepSRangeLen{T}, x::Number) where {T}
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::StepSRangeLen{T}, x::Number) where {T}
     return StepSRangeLen{typeof(T(r.ref)*x)}(r.ref*x, r.step*x, length(r), r.offset)
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::StepMRangeLen{T}, x::Number) where {T}
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::StepMRangeLen{T}, x::Number) where {T}
     return StepMRangeLen{typeof(T(r.ref)*x)}(r.ref*x, r.step*x, length(r), r.offset)
 end
 
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::LinSRange, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::LinSRange, x::Number)
     return LinSRange(r.start * x, r.stop * x, r.len)
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::LinMRange, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(*), r::LinMRange, x::Number)
     return LinMRange(r.start * x, r.stop * x, r.len)
 end
 
@@ -173,25 +173,25 @@ end
 ###
 ### :(/)
 ###
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::Union{StepSRange,UnitSRange,OneToSRange}, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::Union{StepSRange,UnitSRange,OneToSRange}, x::Number)
     return srange(first(r)/x, step=step(r)/x, length=length(r))
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::Union{StepMRange,UnitMRange,OneToMRange}, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::Union{StepMRange,UnitMRange,OneToMRange}, x::Number)
     return mrange(first(r)/x, step=step(r)/x, length=length(r))
 end
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::StepSRangeLen{T}, x::Number) where {T}
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::StepSRangeLen{T}, x::Number) where {T}
     return StepSRangeLen{typeof(T(r.ref)/x)}(r.ref/x, r.step/x, length(r), r.offset)
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::StepMRangeLen{T}, x::Number) where {T}
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::StepMRangeLen{T}, x::Number) where {T}
     return StepMRangeLen{typeof(T(r.ref)/x)}(r.ref/x, r.step/x, length(r), r.offset)
 end
 
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::LinSRange, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::LinSRange, x::Number)
     return LinSRange(r.start / x, r.stop / x, r.len)
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::LinMRange, x::Number)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(/), r::LinMRange, x::Number)
     return LinMRange(r.start / x, r.stop / x, r.len)
 end
 
@@ -200,24 +200,24 @@ end
 ### :(\)
 ###
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::Union{StepSRange,UnitSRange,OneToSRange})
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::Union{StepSRange,UnitSRange,OneToSRange})
     return srange(x\first(r), step=x\step(r), length=length(r))
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::Union{StepMRange,UnitMRange,OneToMRange})
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::Union{StepMRange,UnitMRange,OneToMRange})
     return mrange(x\first(r), step=x\step(r), length=length(r))
 end
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::StepSRangeLen)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::StepSRangeLen)
     return StepSRangeLen(x\r.ref, x\r.step, length(r), r.offset)
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::StepMRangeLen)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::StepMRangeLen)
     return StepMRangeLen(x\r.ref, x\r.step, length(r), r.offset)
 end
 
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::LinSRange)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::LinSRange)
     return LinSRange(x \ r.start, x \ r.stop, r.len)
 end
-function Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::LinMRange)
+function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(\), x::Number, r::LinMRange)
     return LinMRange(x \ r.start, x \ r.stop, r.len)
 end
 

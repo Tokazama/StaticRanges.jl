@@ -8,8 +8,8 @@ checkindexhi(r, i) = lastindex(r) >= i
 checkindexhi(r, i::CartesianIndex{1}) = firstindex(r) <= first(i.I)
 
 
-Base.checkbounds(::Type{Bool}, gr::GapRange, i) = checkindex(Bool, gr, i)
-function Base.checkindex(::Type{Bool}, gr::GapRange, i)
+Base.checkbounds(::Type{Bool}, gr::GapRange, i::Integer) = checkindex(Bool, gr, i)
+function Base.checkindex(::Type{Bool}, gr::GapRange, i::Integer)
     return checkindexlo(gr, i) & checkindexhi(gr, i)
 end
 

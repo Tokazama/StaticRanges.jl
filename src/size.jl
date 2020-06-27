@@ -20,4 +20,3 @@ end
 StaticArrays.Size(::Type{OneToSRange{T,L}}) where {T<:Union{Int,Int64},L} = Size{(T(L),)}()
 
 StaticArrays.Size(::Type{OneToSRange{T,L}}) where {T,L} = Size{(Int(L - zero(T)),)}()
-

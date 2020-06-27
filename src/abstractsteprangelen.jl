@@ -98,6 +98,7 @@ end
 
 const StepRangeLenUnion{T,R,S} = Union{StepRangeLen{T,R,S},AbstractStepRangeLen{T,R,S}}
 
+
 for (F,f) in ((:M,:m), (:S,:s))
     SR = Symbol(:Step, F, :RangeLen)
     frange = Symbol(f, :range)
@@ -109,37 +110,49 @@ for (F,f) in ((:M,:m), (:S,:s))
         function $(SR){T,R1,S1}(ref::R2, step::S2, len::Integer, offset::Integer) where {T,R1,S1,R2,S2}
             return $(SR){T,R1,S1}(R1(ref), S1(step), len, offset)
         end
-        $(SR){T,R,S}(r::$(SR){T,R,S}) where {T,R,S} = r
 
-        (::Type{<:$(SR){Float64}})(r::AbstractRange) = $(CSRL)($(SR){Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
-        (::Type{<:$(SR){Float64}})(r::StepRangeLenUnion) = $(CSRL)($(SR){Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
-        $(SR){T}(r::StepRangeLenUnion) where {T} = $(SR)(T(r.ref), T(r.step), r.len, r.offset)
-        $(SR){T,R,S}(r::StepRangeLenUnion) where {T,R,S} = $(SR){T,R,S}(R(r.ref), S(r.step), r.len, r.offset)
+        # This is one big function b/c it results in ambiguities otherwise
+        @inline function $(SR){T}(r::AbstractRange) where {T}
+            if T <: AbstractFloat
+                if r isa StepRangeLenUnion && T <: Float64
+                    return $(CSRL)($(SR){Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
+                else
+                    return $(CSRL)($(SR){T,Float64,Float64}, r)
+                end
+            else
+                if r isa StepRangeLenUnion
+                    return $(SR)(T(r.ref), T(r.step), r.len, r.offset)
+                else
+                    return $(SR)(T(first(r)), T(step(r)), length(r))
+                end
+            end
+        end
 
-        $(SR){T,R,S}(r::AbstractRange) where {T,R,S} = $(SR){T,R,S}(R(first(r)), S(step(r)), length(r))
-        $(SR){T}(r::AbstractRange) where {T} = $(SR)(T(first(r)), T(step(r)), length(r))
+        function $(SR){T,R,S}(r::AbstractRange{T2}) where {T,R,S,T2}
+            if r isa StepRangeLenUnion
+                if T2 <: T && (r.step isa R) && (r.ref isa R) && (r isa $SR)
+                    return copy(r)
+                elseif T2 <: AbstractFloat && R <: TwicePrecision && S <: TwicePrecision
+                    return $(CSRL)($(SR){T,R,S}, r)
+                else
+                    return $(SR){T,R,S}(convert(R, r.ref), convert(S, r.step), length(r), r.offset)
+                end
+            else
+                return $(SR){T,R,S}(R(first(r)), S(step(r)), length(r))
+            end
+        end
+
         $(SR)(r::AbstractRange) = $(SR){eltype(r)}(r)
-
-        function $(SR)(
-            ref::TwicePrecision{T},
-            step::TwicePrecision{T},
-            len::Integer,
-            offset::Integer=1
-           ) where {T}
+        function $(SR)(ref::TwicePrecision{T}, step::TwicePrecision{T}, len::Integer, offset::Integer=1) where {T}
             return $(SR){T,TwicePrecision{T},TwicePrecision{T}}(ref, step, len, offset)
         end
 
-        $(SR){T,R,S}(r::$(SR){T,R,S}) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision} = r
         function $(SR)(ref::R, step::S, len::Integer, offset::Integer = 1) where {R,S}
             return $(SR){typeof(ref+0*step),R,S}(ref, step, len, offset)
         end
         function $(SR){T}(ref::R, step::S, len::Integer, offset::Integer = 1) where {T,R,S}
             return $(SR){T,R,S}(ref, step, len, offset)
         end
-
-        $(SR){T}(r::$(SR)) where {T<:IEEEFloat} = $(CSRL)($(SR){T,Float64,Float64}, r)
-
-        $(SR){T}(r::AbstractRange) where {T<:IEEEFloat} = $(CSRL)($(SR){T,Float64,Float64}, r)
 
         function $(CSRL)(::Type{<:$(SR){T,R,S}}, r::$(SR){<:Integer}) where {T,R,S}
             return $(SR){T,R,S}(R(r.ref), S(step(r)), length(r), r.offset)
@@ -178,4 +191,58 @@ for (F,f) in ((:M,:m), (:S,:s))
    end
 end
 
+#=
+StepSRangeLen{Float16,R,S}(r::AbstractRange) = _convertSSRL(StepSRangeLen{Float16,Float64,Float64}, r)
+StepSRangeLen{Float32,R,S}(r::AbstractRange) = _convertSSRL(StepSRangeLen{Float32,Float64,Float64}, r)
+StepSRangeLen{Float64,R,S}(r::AbstractRange) = _convertSSRL(StepSRangeLen{Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
+StepSRangeLen{Float64,R,S}(r::StepRangeLenUnion) = _convertSSRL(StepSRangeLen{Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
 
+StepMRangeLen{Float16,R,S}(r::AbstractRange) = _convertSMRL(StepMRangeLen{Float16,Float64,Float64}, r)
+StepMRangeLen{Float32,R,S}(r::AbstractRange) = _convertSMRL(StepMRangeLen{Float32,Float64,Float64}, r)
+StepMRangeLen{Float64,R,S}(r::AbstractRange) = _convertSMRL(StepMRangeLen{Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
+StepMRangeLen{Float64,R,S}(r::StepRangeLenUnion) = _convertSMRL(StepMRangeLen{Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
+=#
+###
+### Constructors
+###
+#=
+function StepMRangeLen{T,R,S}(r::StepRangeLenUnion{T,R,S}) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision}
+    if is_dynamic()
+    else
+    end
+end
+
+function StepMRangeLen{T,R,S}(r::StepRangeLenUnion{T,R,S}) where {T,R,S}
+    if is_dynamic(r)
+        return r
+    else
+        return StepMRangeLen(r.ref, r.step, r.len, r.offset)
+    end
+end
+
+function StepSRangeLen{T,R,S}(r::StepRangeLenUnion{T,R,S}) where {T,R,S}
+    if is_static(r)
+        return r
+    else
+        return StepSRangeLen(r.ref, r.step, r.len, r.offset)
+    end
+end
+
+function StepMRangeLen{T,R,S}(r::StepRangeLenUnion) where {T,R,S}
+    return StepMRangeLen{T,R,S}(R(r.ref), S(r.step), r.len, r.offset)
+end
+
+function StepSRangeLen{T,R,S}(r::StepRangeLenUnion) where {T,R,S}
+    return StepSRangeLen{T,R,S}(R(r.ref), S(r.step), r.len, r.offset)
+end
+
+
+function StepMRangeLen{T,R,S}(r::AbstractRange) where {T,R,S}
+end
+
+StepRangeLen{T,R,S}(r::StepRangeLen{T,R,S}) where {T,R,S} = r
+StepRangeLen{T,R,S}(r::StepRangeLen) where {T,R,S} = StepRangeLen{T,R,S}(convert(R, r.ref), convert(S, r.step), length(r), r.offset)
+
+StepRangeLen{T,R,S}(r::StepRangeLen{T,R,S}) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision} = r
+StepRangeLen{T,R,S}(r::StepRangeLen) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision} =
+=#

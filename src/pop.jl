@@ -2,17 +2,17 @@
 #   - ensure there are pop and popfirst working for all types (non-mutating)
 
 # FIXME this should be defined somewhere
-function StaticArrays.pop(v::AbstractVector)
+function pop(v::AbstractVector)
     isempty(v) && error("array must be non-empty")
     return length(v) == 1 ? empty!(v) : @inbounds(v[1:end-1])
 end
-StaticArrays.pop(r::Union{OneTo,OneToRange}) = similar_type(r)(last(r) - one(eltype(r)))
+pop(r::Union{OneTo,OneToRange}) = similar_type(r)(last(r) - one(eltype(r)))
 
 ###
 ### popfirst
 ###
 # FIXME this should be defined somewhere else
-function StaticArrays.popfirst(v::AbstractVector)
+function popfirst(v::AbstractVector)
     isempty(v) && error("array must be non-empty")
     return length(v) == 1 ? empty!(v) : @inbounds(v[2:end])
 end
