@@ -1,3 +1,4 @@
+
 using BenchmarkTools, Statistics, StaticArrays, StaticRanges,
       DataFrames, VegaLite
 
@@ -54,4 +55,3 @@ df =  [tablegroup(results[@tagged "iterating" && "LinearIndices((5,6))"]);
 
 p = df |> @vlplot(:bar, x="subtest:o", y=:time, color=:subtest, column=:test)
 save("iterating.svg", p)
-

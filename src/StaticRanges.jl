@@ -1,13 +1,8 @@
 module StaticRanges
 
 using SparseArrays
+using SparseArrays: AbstractSparseMatrixCSC
 
-import Base: OneTo, TwicePrecision, el_same, unsafe_getindex, nbitslen, rat,
-             IEEEFloat, floatrange, sumpair, add12, twiceprecision, step_hp,
-             truncbits, Fix1, Fix2, tail, front, to_index, unsafe_length
-
-using Base.Order
-using Base: @propagate_inbounds, @pure
 
 using Base.Broadcast: DefaultArrayStyle
 
@@ -23,6 +18,13 @@ using ArrayInterface: can_setindex, parent_type
 
 using IntervalSets
 using Requires
+
+import Base: OneTo, TwicePrecision, el_same, unsafe_getindex, nbitslen, rat,
+             IEEEFloat, floatrange, sumpair, add12, twiceprecision, step_hp,
+             truncbits, Fix1, Fix2, tail, front, to_index, unsafe_length
+
+using Base.Order
+using Base: @propagate_inbounds, @pure
 
 export
     # Types
