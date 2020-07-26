@@ -795,8 +795,10 @@ include("./CoreVectors/CoreVectors.jl")
 #@test 1.0:(.3-.1)/.1 == 1.0:2.0
 =#
 
-@testset "docs" begin
-    doctest(StaticRanges; manual=false)
+if VERSION < v"1.6"  # printing has changed on nightly
+    @testset "docs" begin
+        doctest(StaticRanges; manual=false)
+    end
 end
 
 #=
