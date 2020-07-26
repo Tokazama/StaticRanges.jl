@@ -265,7 +265,7 @@ for (F,f) in ((:M,:m), (:S,:s))
             len::Integer,
             offset::Integer
            )
-            return $(SRL)(Base._TP(ref), twiceprecision(Base._TP(step), nb), Int(len), offset)
+            return $(SRL)(Base.TwicePrecision(ref...), twiceprecision(Base.TwicePrecision(step...), nb), Int(len), offset)
         end
 
         function $(stepfrangelen_hp)(
