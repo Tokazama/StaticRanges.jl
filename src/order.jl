@@ -126,28 +126,6 @@ ordmin(x, ::ReverseOrdering) = last(x)
 ordmin(x, ::UnorderedOrdering) = minimum(x)
 
 """
-    find_max(x)
-
-Returns the index of the maximum value for `x`. Differes from `findmax` by
-accounting for any sorting.
-"""
-find_max(x) = find_max(x, order(x))
-find_max(x, ::ForwardOrdering) = (last(x), lastindex(x))
-find_max(x, ::ReverseOrdering) = (first(x), firstindex(x))
-find_max(x, ::UnorderedOrdering) = findmax(x)
-
-"""
-    find_min(x)
-
-Returns the index of the minimum value for `x`. Differes from `findmin` by
-accounting for any sorting.
-"""
-find_min(x) = find_min(x, order(x))
-find_min(x, ::ForwardOrdering) = (first(x), firstindex(x))
-find_min(x, ::ReverseOrdering) = (last(x), lastindex(x))
-find_min(x, ::UnorderedOrdering) = findmin(x)
-
-"""
     is_within(x, y) -> Bool
 
 Returns `true` if all of `x` is found within `y`.

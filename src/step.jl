@@ -1,6 +1,5 @@
 
-### OneToRange
-Base.step(::OneToRange{T}) where {T} = one(T)
+# TODO better error messages for set_step
 
 ### AbstractStepRangeLen
 Base.step(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = convert(T, S)
@@ -49,8 +48,14 @@ Returns `true` if type of `x` has `step` field that can be set.
 """
 can_set_step(::T) where {T} = can_set_step(T)
 can_set_step(::Type{T}) where {T} = false
-can_set_step(::Type{T}) where {T<:StepMRange} = true
-can_set_step(::Type{T}) where {T<:StepMRangeLen} = true
+can_set_step(::Type{T}) where {T<:OrdinalRange} = is_dynamic(T)
+can_set_step(::Type{T}) where {T<:AbstractRange} = is_dynamic(T) && is_steprangelen(T)
+can_set_step(::Type{T}) where {T<:AbstractUnitRange} = false
+
+step_type(x) = step_type(typeof(x))
+step_type(::Type{<:AbstractRange{T}}) where {T} = T
+step_type(::Type{<:OrdinalRange{T,S}}) where {T,S} = S
+step_type(::Type{StepRangeLen{T,R,S}}) where {T,R,S} = S
 
 """
     set_step!(x, st)
@@ -69,19 +74,15 @@ julia> step(mr)
 2
 ```
 """
-set_step!(x::UnitMRange, st) = error("Step size of UnitMRange type can only be 1.")
-set_step!(x::OneToMRange, st) = error("Step size of OneToMRange type can only be 1.")
-function set_step!(x::Union{StepMRange{T,S},StepMRangeLen{T,S}}, st) where {T,S}
-    return set_step!(x, convert(S, st))
-end
-function set_step!(r::StepMRange{T,S}, st::S) where {T,S}
-    setfield!(r, :step, st)
-    setfield!(r, :stop, Base.steprange_last(first(r), st, last(r)))
-    return r
-end
-function set_step!(r::StepMRangeLen{T,R,S}, st::S) where {T,R,S}
-    setfield!(r, :step, st)
-    return r
+function set_step!(x::AbstractRange, st)
+    can_set_step(x) || throw(ArgumentError("cannot perform `set_step!` for type $x"))
+    if has_ref(x)
+        setfield!(x, :step, step_type(x)(st))
+    else
+        setfield!(x, :step, step_type(x)(st))
+        setfield!(x, :stop, Base.steprange_last(first(x), st, last(x)))
+    end
+    return x
 end
 
 """
@@ -97,17 +98,14 @@ julia> set_step(1:1:10, 2)
 1:2:9
 ```
 """
-function set_step(r::AbstractRange, st)
-    if is_static(r)
-        return srange(first(r), step=st, last(r))
-    elseif is_fixed(r)
-        return range(first(r), step=st, last(r))
+function set_step(x::AbstractRange, st)
+    if x isa AbstractUnitRange || is_linrange(x)
+        throw(ArgumentError("cannot set step for type $x"))
     else
-        return mrange(first(r), step=st, last(r))
+        if has_ref(x)
+            return typeof(x)(x.ref, step_type(x)(st), x.len, x.offset)
+        else
+            return typeof(x)(first(x), st, Base.steprange_last(first(x), st, last(x)))
+        end
     end
 end
-
-set_step(r::StepRangeLen, st) = StepRangeLen(r.ref, st, r.len, r.offset)
-set_step(r::StepMRangeLen, st) = StepMRangeLen(r.ref, st, r.len, r.offset)
-set_step(r::StepSRangeLen, st) = StepSRangeLen(r.ref, st, r.len, r.offset)
-

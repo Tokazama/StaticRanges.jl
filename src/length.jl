@@ -112,30 +112,39 @@ julia> length(mr)
 20
 ```
 """
-set_length!(r, val) = set_length!(r, Int(val))
-function set_length!(r::LinMRange, len::Int)
-    len >= 0 || throw(ArgumentError("set_length!($r, $len): negative length"))
-    if len == 1
-        r.start == r.stop || throw(ArgumentError("set_length!($r, $len): endpoints differ"))
-        setfield!(r, :len, 1)
-        setfield!(r, :lendiv, 1)
-        return r
+function set_length!(x::AbstractRange{T}, len) where {T}
+    if has_ref(x)
+        len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
+        1 <= x.offset <= max(1,len) || throw(ArgumentError("StepMRangeLen: offset must be in [1,$len], got $offset"))
+        setfield!(x, :len, Int(len))
+    else
+        len >= 0 || throw(ArgumentError("set_length!($x, $len): negative length"))
+        if len == 1
+            x.start == x.stop || throw(ArgumentError("set_length!($x, $len): endpoints differ"))
+            setfield!(x, :len, 1)
+            setfield!(x, :lendiv, 1)
+        else
+            setfield!(x, :len, Int(len))
+            setfield!(x, :lendiv, Int(max(len - 1, 1)))
+        end
     end
-    setfield!(r, :len, len)
-    setfield!(r, :lendiv, max(len - 1, 1))
-    return r
+    return x
 end
-function set_length!(r::StepMRangeLen, len::Int)
-    len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
-    1 <= r.offset <= max(1,len) || throw(ArgumentError("StepMRangeLen: offset must be in [1,$len], got $offset"))
-    setfield!(r, :len, len)
-    return r
+
+function set_length!(x::OrdinalRange{T}, len) where {T}
+    can_set_length(x) || throw(MethodError(set_length!, (x, len)))
+    setfield!(x, :stop, convert(T, first(x) + step(x) * (len - 1)))
+    return x
 end
-set_length!(x::OneToMRange{T}, len::T) where {T} = set_last!(x, len)
-set_length!(x::UnitMRange{T}, len) where {T} = set_last!(x, T(first(x)+len-1))
-function set_length!(r::StepMRange{T}, len) where {T}
-    setfield!(r, :stop, convert(T, first(r) + step(r) * (len - 1)))
-    return r
+
+function set_length!(x::AbstractUnitRange{T}, len) where {T}
+    can_set_length(x) || throw(MethodError(set_length!, (x, len)))
+    if known_first(x) === one(T)
+        set_last!(x, len)
+    else
+        set_last!(x, T(first(x)+len-1))
+    end
+    return x
 end
 
 """
@@ -151,13 +160,25 @@ julia> set_length(1:10, 20)
 1:20
 ```
 """
-set_length(r, val) = set_length(r, Int(val))
-set_length(r::LinRangeUnion, len::Int) = similar_type(r)(first(r), last(r), len)
-set_length(r::StepRangeLenUnion, len::Int) = similar_type(r)(r.ref, r.step, len, r.offset)
-set_length(r::OneToUnion{T}, len::T) where {T} = similar_type(r)(len)
-set_length(r::UnitRangeUnion{T}, len) where {T} = set_last(r, T(first(r) + len - 1))
-function set_length(r::StepRangeUnion{T}, len) where {T}
-    return set_last(r, convert(T, first(r) + step(r) * (len - 1)))
+function set_length(x::AbstractRange, len)
+    if has_ref(x)
+        return typeof(x)(x.ref, x.step, len, x.offset)
+    else
+        return typeof(x)(first(x), last(x), len)
+    end
+end
+
+
+function set_length(x::AbstractUnitRange{T}, len) where {T}
+    if known_first(x) === oneunit(T)
+        return set_last(x, len)
+    else
+        return set_last(x, T(first(x)+len-1))
+    end
+end
+
+function set_length(x::OrdinalRange{T}, len) where {T}
+    return set_last(x, convert(T, first(x) + step(x) * (len - 1)))
 end
 
 """

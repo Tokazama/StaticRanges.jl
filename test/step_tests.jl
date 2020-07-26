@@ -11,8 +11,8 @@
             @test @inferred(has_step([])) == false
             @test @inferred(has_step(Vector)) == false
         end
-        @test_throws ErrorException set_step!(OneToMRange(10), 2)
-        @test_throws ErrorException set_step!(UnitMRange(1, 10), 2)
+        @test_throws ArgumentError set_step!(OneToMRange(10), 2)
+        @test_throws ArgumentError set_step!(UnitMRange(1, 10), 2)
 
 
         for (r1,b,v,r2) in ((UnitMRange(1,3), false, nothing, nothing),

@@ -4,7 +4,7 @@ using Test, StaticRanges, Dates, Documenter, IntervalSets
 using StaticRanges: can_set_first, can_set_last, can_set_step, has_step, can_set_length,
     stephi, steplo, refhi, reflo, eqmax, eqmin, ltmax, ltmin, gtmax, gtmin, group_max,
     group_min, min_of_group_max, max_of_group_min, ordmin, ordmax,
-    Unordered, set_ref!, set_offset!, set_lendiv!, Size, Length
+    Unordered, set_offset!, set_lendiv!, Size, Length
 
 using StaticRanges: prev_type, next_type, grow_first, grow_first!, grow_last, grow_last!,
     shrink_first, shrink_first!, shrink_last, shrink_last!, resize_first, resize_first!,
@@ -226,7 +226,7 @@ for frange in (mrange, srange)
                 @test findall(in(span), r) == 5:10
 
                 r = frange(15, step=-2, stop=-38)
-                @test findall(in(span), r) == 6:-1:1
+                @test findall(in(span), r) == 1:6
             end
         end
 

@@ -1,5 +1,5 @@
 
-### first(x)
+# TODO move this first(x)
 Base.first(::OneToRange{T}) where {T} = one(T)
 
 Base.first(::UnitSRange{T,F,L}) where {T,F,L} = F
@@ -15,6 +15,17 @@ Base.first(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = B
 Base.first(r::LinMRange) = getfield(r, :start)
 
 Base.first(r::AbstractStepRangeLen) = unsafe_getindex(r, 1)
+
+has_ref(x) = has_ref(typeof(x))
+has_ref(::Type{T}) where {T} = false
+has_ref(::Type{StepRangeLen{T,R,S}}) where {T,R,S} = true
+has_ref(::Type{StepMRangeLen{T,R,S}}) where {T,R,S} = true
+has_ref(::Type{<:StepSRangeLen{T,R,S}}) where {T,R,S} = true
+
+ref_type(x) = ref_type(typeof(x))
+ref_type(::Type{StepRangeLen{T,R,S}}) where {T,R,S} = R
+ref_type(::Type{StepMRangeLen{T,R,S}}) where {T,R,S} = R
+ref_type(::Type{<:StepSRangeLen{T,R,S}}) where {T,R,S} = R
 
 """
     refhi(x::AbstractStepRangeLen)
@@ -40,15 +51,12 @@ reflo(r::StepRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.lo
 Returns `true` if the first element of `x` can be set. If `x` is a range then
 changing the first element will also change the length of `x`.
 """
-can_set_first(::T) where {T} = can_set_first(T)
+can_set_first(x) = can_set_first(typeof(x))
 can_set_first(::Type{T}) where {T} = can_setindex(T)
-can_set_first(::Type{T}) where {T<:StepMRangeLen} = true
-can_set_first(::Type{T}) where {T<:LinMRange} = true
-can_set_first(::Type{T}) where {T<:StepMRange} = true
-can_set_first(::Type{T}) where {T<:UnitMRange} = true
-
-# can_setfirst isn't sufficient here if the keys are like MVector where the first
-# elemnt can be set by size isn't dynamic
+can_set_first(::Type{T}) where {T<:AbstractRange} = is_dynamic(T)
+function can_set_first(::Type{T}) where {T<:AbstractUnitRange}
+    return is_dynamic(T) && known_first(T) === nothing
+end
 
 """
     set_first!(x, val)
@@ -72,15 +80,28 @@ function set_first!(x::AbstractVector{T}, val) where {T}
     setindex!(x, T(val), firstindex(x))
     return x
 end
-set_first!(r::LinMRange{T}, val) where {T} = (setfield!(r, :start, T(val)); r)
-function set_first!(r::StepMRange{T,S}, val) where {T,S}
-    val2 = T(val)
-    setfield!(r, :start, val2)
-    setfield!(r, :stop, Base.steprange_last(val2, step(r), last(r)))
+
+function set_first!(x::AbstractUnitRange{T}, val) where {T}
+    can_set_first(x) || throw(MethodError(set_first!, (x, val)))
+    setfield!(x, :start, T(val))
+    return x
 end
-set_first!(r::UnitMRange{T}, val::T) where {T} = (setfield!(r, :start, T(val)); r)
-function set_first!(r::StepMRangeLen{T,R,S}, val) where {T,R,S}
-    return set_ref!(r, R(val) - (1 - r.offset) * step_hp(r))
+
+function set_first!(x::OrdinalRange{T,S}, val) where {T,S}
+    can_set_first(x) || throw(MethodError(set_first!, (x, val)))
+    val2 = T(val)
+    setfield!(x, :start, val2)
+    setfield!(x, :stop, Base.steprange_last(val2, step(x), last(x)))
+    return x
+end
+
+function set_first!(x::AbstractRange{T}, val) where {T}
+    if has_ref(x)
+        setfield!(x, :ref, ref_type(x)(val) - (1 - x.offset) * step_hp(x))
+    else
+        setfield!(x, :start, T(val))
+    end
+    return x
 end
 
 """
@@ -96,8 +117,7 @@ julia> r = set_first(1:10, 2)
 2:10
 ```
 """
-set_first(x::AbstractVector{T}, val) where {T} = set_first(x, convert(T, val))
-function set_first(x::AbstractVector{T}, val::T) where {T}
+function set_first(x::AbstractVector, val)
     if isempty(x)
         return pushfirst(x, val)
     elseif length(x) == 1
@@ -106,20 +126,23 @@ function set_first(x::AbstractVector{T}, val::T) where {T}
         return pushfirst(@inbounds(x[2:end]), val)
     end
 end
-set_first(r::LinRangeUnion{T}, val::T) where {T} = similar_type(r)(val, last(r), r.len)
-set_first(r::StepRangeUnion{T}, val::T) where {T} = similar_type(r)(val, step(r), last(r))
-set_first(r::UnitRangeUnion{T}, val::T) where {T} = similar_type(r)(val, last(r))
-function set_first(r::StepRangeLenUnion{T}, val::T) where {T}
-    return similar_type(r)(val, step(r), r.len, r.offset)
+
+set_first(x::OrdinalRange, val) = typeof(x)(val, step(x), last(x))
+
+set_first(x::AbstractUnitRange{T}, val) where {T} = typeof(x)(T(val), last(x))
+
+function set_first(x::AbstractRange, val)
+    if has_ref(x)
+        return typeof(x)(val, step(x), x.len, x.offset)
+    else
+        return typeof(x)(val, last(x), x.len)
+    end
 end
+#= FIXME
+  MethodError: no method matching StepSRangeLen{Int64,Int64,Int64,1,1,3,1}(::Int64, ::Int64, ::Int64, ::Int64)
+  Stacktrace:
+=#
 
-"""
-    set_ref!(x, val)
-
-Set the reference field of an instance of `StepMRangeLen`.
-"""
-set_ref!(r::StepMRangeLen{T,R,S}, val::R) where {T,R,S} = (setfield!(r, :ref, val); r)
-set_ref!(r::StepMRangeLen{T,R,S}, val) where {T,R,S} = set_ref!(r, convert(R, val))
 
 """
     set_offset!(x, val)

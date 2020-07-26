@@ -37,12 +37,16 @@ alternatively you can supply it as the value of `r[offset]` for some other
 index `1 <= offset <= len`. In conjunction with `TwicePrecision` this can be
 used to implement ranges that are free of roundoff error.
 """
-struct StepSRangeLen{T,Tr,Ts,R,S,L,F} <: AbstractStepRangeLen{T,R,S} end
+struct StepSRangeLen{T,Tr,Ts,R,S,L,F} <: AbstractStepRangeLen{T,R,S}
 
-function StepSRangeLen{T,R,S}(ref::R, step::S, len::Integer, offset::Integer = 1) where {T,R,S}
-    len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
-    1 <= offset <= max(1,len) || throw(ArgumentError("StepSRangeLen: offset must be in [1,$len], got $offset"))
-    return StepSRangeLen{T,R,S,ref,step,len,offset}()
+    function StepSRangeLen{T,R,S}(ref::R, step::S, len::Integer, offset::Integer = 1) where {T,R,S}
+        len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
+        1 <= offset <= max(1,len) || throw(ArgumentError("StepSRangeLen: offset must be in [1,$len], got $offset"))
+        return new{T,R,S,ref,step,len,offset}()
+    end
+    function StepSRangeLen{T,Tr,Ts,R,S,L,F}(ref, step, len::Integer, offset::Integer = 1) where {T,Tr,Ts,R,S,L,F}
+        return StepSRangeLen{T,Tr,Ts}(ref, step, len, offset)
+    end
 end
 
 function Base.getproperty(r::StepSRangeLen{T,Tr,Ts,R,S,L,F}, s::Symbol) where {T,Tr,Ts,R,S,L,F}
@@ -82,9 +86,9 @@ mutable struct StepMRangeLen{T,R,S} <: AbstractStepRangeLen{T,R,S}
     end
 end
 
-function Base.setproperty!(r::StepMRangeLen, s::Symbol, val)
+function Base.setproperty!(r::StepMRangeLen{T,R,S}, s::Symbol, val) where {T,R,S}
     if s === :ref
-        return set_ref!(r, val)
+        return setfield!(r, s, val)  # TODO Get rid of this. no one should be changing this
     elseif s === :step
         return set_step!(r, val)
     elseif s === :len
@@ -246,3 +250,7 @@ StepRangeLen{T,R,S}(r::StepRangeLen) where {T,R,S} = StepRangeLen{T,R,S}(convert
 StepRangeLen{T,R,S}(r::StepRangeLen{T,R,S}) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision} = r
 StepRangeLen{T,R,S}(r::StepRangeLen) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision} =
 =#
+
+step_type(::Type{<:StepSRangeLen{T,R,S}}) where {T,R,S} = S
+step_type(::Type{StepMRangeLen{T,R,S}}) where {T,R,S} = S
+

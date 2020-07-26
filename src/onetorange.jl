@@ -92,3 +92,4 @@ function Base.in(x::Real, r::OneToRange{T}) where {T}
     end
 end
 
+ArrayInterface.known_first(::Type{<:OneToRange{T}}) where {T} = one(T)

@@ -9,7 +9,6 @@ StaticRanges.stephi
 StaticRanges.steplo
 StaticRanges.refhi
 StaticRanges.reflo
-StaticRanges.set_ref!
 StaticRanges.set_offset!
 ```
 

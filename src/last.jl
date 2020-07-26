@@ -23,13 +23,9 @@ Base.last(r::LinMRange) = getfield(r, :stop)
 Returns `true` if the last element of `x` can be set. If `x` is a range then
 changing the first element will also change the length of `x`.
 """
-can_set_last(::T) where {T} = can_set_last(T)
+can_set_last(x) = can_set_last(typeof(x))
 can_set_last(::Type{T}) where {T} = can_setindex(T)
-can_set_last(::Type{T}) where {T<:LinMRange} = true
-can_set_last(::Type{T}) where {T<:StepMRange} = true
-can_set_last(::Type{T}) where {T<:StepMRangeLen} = true
-can_set_last(::Type{T}) where {T<:UnitMRange} = true
-can_set_last(::Type{T}) where {T<:OneToMRange} = true
+can_set_last(::Type{T}) where {T<:AbstractRange} = is_dynamic(T)
 
 """
     set_last!(x, val)
@@ -48,28 +44,36 @@ julia> last(mr)
 5
 ```
 """
-function set_last!(x::AbstractVector{T}, val::T) where {T}
+function set_last!(x::AbstractVector, val)
     can_set_last(x) || throw(MethodError(set_last!, (x, val)))
     setindex!(x, val, lastindex(x))
     return x
 end
-set_last!(x::AbstractVector{T}, val) where {T} = set_last!(x, convert(T, val))
-set_last!(r::LinMRange{T}, val::T) where {T} = (setfield!(r, :stop, val); r)
-function set_last!(r::StepMRange{T,S}, val::T) where {T,S}
-    setfield!(r, :stop, Base.steprange_last(first(r), step(r), val))
-    return r
+function set_last!(x::OrdinalRange{T}, val) where {T}
+    can_set_last(x) || throw(MethodError(set_last!, (x, val)))
+    setfield!(x, :stop, T(Base.steprange_last(first(x), step(x), val)))
+    return x
 end
-set_last!(r::UnitMRange{T}, val::T) where {T} = (setfield!(r, :stop, val); r)
-function set_last!(r::OneToMRange{T}, val::T) where {T}
-    setfield!(r, :stop, max(zero(T), T(val)))
-    return r
+function set_last!(x::AbstractUnitRange{T}, val) where {T}
+    can_set_last(x) || throw(MethodError(set_last!, (x, val)))
+    if known_first(x) === oneunit(T)
+        setfield!(x, :stop, max(zero(T), T(val)))
+    else
+        setfield!(x, :stop, T(val))
+    end
+    return x
 end
-function set_last!(r::StepMRangeLen{T}, val::T) where {T}
-    len = unsafe_findvalue(val, r)
-    len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
-    1 <= r.offset <= max(1, len) || throw(ArgumentError("StepSRangeLen: offset must be in [1,$len], got $(r.offset)"))
-    setfield!(r, :len, len)
-    return r
+
+function set_last!(x::AbstractRange{T}, val) where {T}
+    if has_ref(x)
+        len = unsafe_findvalue(val, x) # FIXME should not use unsafe_findvalue at this point
+        len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
+        1 <= x.offset <= max(1, len) || throw(ArgumentError("StepSRangeLen: offset must be in [1,$len], got $(x.offset)"))
+        setfield!(x, :len, len)
+    else
+        setfield!(x, :stop, T(val))
+    end
+    return x
 end
 
 """
@@ -85,8 +89,7 @@ julia> set_last(1:10, 5)
 1:5
 ```
 """
-set_last(x::AbstractVector{T}, val) where {T} = set_last(x, convert(T, val))
-function set_last(x::AbstractVector{T}, val::T) where {T}
+function set_last(x::AbstractVector, val)
     if isempty(x)
         return push(x, val)
     elseif length(x) == 1
@@ -95,11 +98,22 @@ function set_last(x::AbstractVector{T}, val::T) where {T}
         return push(@inbounds(x[1:end-1]), val)
     end
 end
-set_last(r::LinRangeUnion{T}, val::T) where {T} = similar_type(r)(first(r), val, r.len)
-set_last(r::StepRangeUnion{T}, val::T) where {T} = similar_type(r)(first(r), step(r), val)
-set_last(r::UnitRangeUnion{T}, val::T) where {T} = similar_type(r)(first(r), val)
-set_last(r::OneToUnion{T}, val::T) where {T} = similar_type(r)(val)
-function set_last(r::StepRangeLenUnion{T}, val::T) where {T}
-    return similar_type(r)(r.ref, r.step, unsafe_findvalue(val, r), r.offset)
+
+set_last(x::OrdinalRange, val) = typeof(x)(first(x), step(x), val)
+function set_last(x::AbstractUnitRange{T}, val) where {T}
+    if known_first(x) === oneunit(T)
+        return typeof(x)(val)
+    else
+        return typeof(x)(first(x), val)
+    end
+    return x
+end
+
+function set_last(x::AbstractRange{T}, val) where {T}
+    if has_ref(x)
+        return typeof(x)(x.ref, x.step, unsafe_findvalue(val, x), x.offset)
+    else
+        return typeof(x)(first(x), val, x.len)
+    end
 end
 

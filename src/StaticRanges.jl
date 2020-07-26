@@ -14,7 +14,12 @@ using StaticArrays: Length
 import StaticArrays: Length, pop, popfirst
 
 using ArrayInterface
-using ArrayInterface: can_setindex, parent_type
+using ArrayInterface: can_setindex, parent_type, known_first, known_step, known_last
+
+# TODO remove these when new release of ArrayInterface
+ArrayInterface.known_first(x::AbstractRange) = known_first(typeof(x))
+ArrayInterface.known_last(x::AbstractRange) = known_last(typeof(x))
+ArrayInterface.known_step(x::AbstractRange) = known_step(typeof(x))
 
 using IntervalSets
 using Requires
@@ -51,8 +56,6 @@ export
     is_ordered,
     ordmax,
     ordmin,
-    find_max,
-    find_min,
     is_within,
     gtmax,
     ltmax,
@@ -79,29 +82,7 @@ export
     as_fixed,
     mrange,
     srange,
-    # find
-    find_first,
-    find_firsteq,
-    find_firstgt,
-    find_firstlt,
-    find_firstgteq,
-    find_firstlteq,
-    find_last,
-    find_lasteq,
-    find_lastgt,
-    find_lastlt,
-    find_lastgteq,
-    find_lastlteq,
-    findin,
-    find_all,
-    find_alleq,
-    find_allgt,
-    find_alllt,
-    find_allgteq,
-    find_alllteq,
-    find_max,
-    find_min,
-    # Traits
+   # Traits
     parent_type,
     axes_type,
     is_dynamic,
@@ -267,6 +248,55 @@ include("vcat.jl")
 include("resize.jl")
 include("offset_range.jl")
 include("./Find/Find.jl")
+
+is_one_to(x) = is_one_to(typeof(x))
+is_one_to(::Type{T}) where {T} = false
+is_one_to(::Type{<:OneTo}) = true
+is_one_to(::Type{<:OneToMRange}) = true
+is_one_to(::Type{<:OneToSRange}) = true
+
+is_unit_range(x) = is_unit_range(typeof(x))
+is_unit_range(::Type{T}) where {T} = false
+is_unit_range(::Type{T}) where {T<:AbstractUnitRange} = !is_one_to(T)
+
+is_steprangelen(x) = is_steprangelen(typeof(x))
+is_steprangelen(::Type{T}) where {T} = false
+is_steprangelen(::Type{T}) where {T<:StepRangeLen} = true
+is_steprangelen(::Type{T}) where {T<:StepSRangeLen} = true
+is_steprangelen(::Type{T}) where {T<:StepMRangeLen} = true
+
+is_linrange(x) = is_linrange(typeof(x))
+is_linrange(::Type{T}) where {T} = false
+is_linrange(::Type{T}) where {T<:LinRange} = true
+is_linrange(::Type{T}) where {T<:LinSRange} = true
+is_linrange(::Type{T}) where {T<:LinMRange} = true
+
+
+is_steprange(x) = is_steprange(typeof(x))
+is_steprange(::Type{T}) where {T} = false
+is_steprange(::Type{<:AbstractUnitRange}) = false
+is_steprange(::Type{<:AbstractRange}) = true
+is_steprange(::Type{<:OrdinalRange}) = true
+
+step_is_one(x) = step_is_one(typeof(x))
+function step_is_one(::Type{T}) where {T}
+    Tx = eltype(T)
+    if Tx <: Number
+        return known_step(T) === oneunit(Tx)
+    else
+        return false
+    end
+end
+
+first_is_one(x) = first_is_one(typeof(x))
+function first_is_one(::Type{T}) where {T}
+    Tx = eltype(T)
+    if Tx <: Number
+        return known_first(T) === oneunit(Tx)
+    else
+        return false
+    end
+end
 
 include("./CoreArrays/CoreArrays.jl")
 using .CoreArrays

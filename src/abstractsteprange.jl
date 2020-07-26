@@ -24,6 +24,11 @@ struct StepSRange{T,Ts,F,S,L} <: AbstractStepRange{T,Ts}
     function StepSRange{T,Ts}(start::T, step::Ts, stop::T) where {T,Ts}
         return new{T,Ts,start,step,Base.steprange_last(start, step, stop)}()
     end
+
+    function StepSRange{T,Ts,F,S,L}(start::T, step::Ts, stop::T) where {T,Ts,F,S,L}
+        return new{T,Ts,start,step,Base.steprange_last(start, step, stop)}()
+    end
+
 end
 
 function Base.getproperty(r::StepSRange, s::Symbol)
@@ -53,6 +58,10 @@ mutable struct StepMRange{T,S} <: AbstractStepRange{T,S}
 
     function StepMRange{T,S}(start::T, step::S, stop::T) where {T,S}
         return new(start, step, Base.steprange_last(start,step,stop))
+    end
+
+    function StepMRange{T,S}(start, st, stop) where {T,S}
+        return StepMRange{T,S}(T(start), S(st), T(stop))
     end
 end
 
