@@ -29,6 +29,5 @@ StaticRanges.is_contiguous
 ## Other Traits
 
 ```@docs
-StaticRanges.parent_type
 StaticRanges.axes_type
 ```

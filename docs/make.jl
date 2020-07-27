@@ -10,7 +10,6 @@ makedocs(;
             "Range Types" => "range_types.md",
             "Manipulating Ranges" => "manipulating_ranges.md",
         ],
-        "Chained Filters" => "chained_filters.md",
         "Internals" => [
             "Twice Precision" => "twice_precision.md",
             "Order Functions" => "order_functions.md",
