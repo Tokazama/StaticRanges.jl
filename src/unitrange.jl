@@ -8,6 +8,12 @@ with `a` and `b` both `Integer`s creates a `UnitRange`.
 """
 struct UnitSRange{T,F,L} <: AbstractUnitRange{T}
 
+    function UnitSRange{T,F,L}() where {T<:Real,F,L}
+        F isa T || error("UnitSRange has eltype $T specified but starting value of type $(typeof(F))")
+        L isa T || error("UnitSRange has eltype $T specified but starting value of type $(typeof(L))")
+        return new{T,F,Base.unitrange_last(F, L)}()
+    end
+
     function UnitSRange{T}(start, stop) where {T<:Real}
         return new{T,start,Base.unitrange_last(start,stop)}()
     end
@@ -21,9 +27,23 @@ struct UnitSRange{T,F,L} <: AbstractUnitRange{T}
         L isa T || error("UnitSRange has eltype $T specified but starting value of type $(typeof(L))")
         return new{T,F,Base.unitrange_last(F, L)}()
     end
+
+    function UnitSRange{T}(r::AbstractUnitRange{T}) where {T}
+        if r isa UnitSRange
+            return r
+        else
+            return UnitSRange(first(r), last(r))
+        end
+    end
+
+    UnitSRange{T}(r::AbstractUnitRange) where {T} = UnitSRange{T}(first(r), last(r))
+
+    UnitSRange(start::T, stop::T) where {T<:Real} = UnitSRange{T}(start, stop)
+
+    UnitSRange(r::AbstractUnitRange{T}) where {T} = UnitSRange{T}(r)
+
 end
 
-UnitSRange{T}(r::AbstractUnitRange) where {T<:Real} = UnitSRange{T}(first(r), last(r))
 
 function Base.getproperty(r::UnitSRange, s::Symbol)
     if s === :start
@@ -49,9 +69,14 @@ mutable struct UnitMRange{T<:Real} <: AbstractUnitRange{T}
     function UnitMRange{T}(start, stop) where {T<:Real}
         return new(start, Base.unitrange_last(start,stop))
     end
+
+    UnitMRange{T}(r::AbstractUnitRange) where {T<:Real} = UnitMRange{T}(first(r), last(r))
+
+    UnitMRange(start::T, stop::T) where {T<:Real} = UnitMRange{T}(start, stop)
+
+    UnitMRange(r::AbstractUnitRange) = UnitMRange(first(r), last(r))
 end
 
-UnitMRange{T}(r::AbstractUnitRange) where {T<:Real} = UnitMRange{T}(first(r), last(r))
 
 function Base.setproperty!(r::UnitMRange, s::Symbol, val)
     if s === :start
@@ -63,16 +88,5 @@ function Base.setproperty!(r::UnitMRange, s::Symbol, val)
     end
 end
 
-for (F,f) in ((:M,:m), (:S,:s))
-    UR = Symbol(:Unit, F, :Range)
-    frange = Symbol(f, :range)
-    @eval begin
-        Base.AbstractUnitRange{T}(r::R) where {T,R<:$(UR)} = $(UR){T}(r)
-        $(UR)(start::T, stop::T) where {T<:Real} = $(UR){T}(start, stop)
-        $(UR)(r::AbstractUnitRange) = $(UR)(first(r), last(r))
-
-        $(UR){T}(r::$(UR){T}) where {T<:Real} = r
-        $(UR){T}(r::$(UR)) where {T<:Real} = $(UR){T}(first(r), last(r))
-    end
-end
-
+Base.AbstractUnitRange{T}(r::UnitSRange) where {T} = UnitSRange{T}(r)
+Base.AbstractUnitRange{T}(r::UnitMRange) where {T} = UnitMRange{T}(r)

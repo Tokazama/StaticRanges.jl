@@ -7,7 +7,7 @@
             rfloat = AbstractUnitRange{Float64}(r)
             @test eltype(rfloat) == Float64
             @test isa(rfloat, R)
-            @test R{Int}(r) === r
+            @test R{Int}(r) == r  # we don't use `===` because dynamic ranges should construct different ones
             @test R{Float64}(r) == R(1., 10.)
             @test eltype(R{Int}(UnitRange(UInt(1), UInt(10)))) == Int
             @test R(UnitRange(UInt(1), UInt(10))) == R(UInt(1), UInt(10))
