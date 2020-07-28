@@ -1,13 +1,14 @@
 name = "StaticRanges"
 uuid = "d8176aec-3168-11e9-3c98-e3954798be3a"
 authors = ["zchristensen "]
-version = "0.7"
+version = "0.7.0"
 
 [deps]
 ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
 ChainedFixes = "9706b775-b1f4-4c74-b677-0491368ea71c"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
@@ -15,6 +16,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 [compat]
 ArrayInterface = "2"
 ChainedFixes = "0.2"
+Reexport = "0.2"
 IntervalSets = "0.5"
 Requires = "1"
 StaticArrays = "0.12.1"

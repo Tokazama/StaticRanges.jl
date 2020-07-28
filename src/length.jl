@@ -11,75 +11,12 @@ function Length(::Type{UnitSRange{T,F,L}}) where {T<:Union{Int,Int64,Int128},F,L
     return Length{Int(Base.Checked.checked_add(Base.Checked.checked_sub(L, F), one(T)))}()
 end
 
-Base.length(r::OneToMRange) = Int(last(r))
-
-Base.length(r::OneToSRange{T,L}) where {T,L} = Int(L)
-
-Base.length(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = L
-
-Base.length(r::StepMRangeLen) = getfield(r, :len)
-
-Base.length(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = L
-
 lendiv(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = D
-
-Base.length(r::LinMRange) = getfield(r, :len)
-
-function Base.length(r::AbstractStepRange{T}) where {T}
-    return start_step_stop_to_length(T, first(r), step(r), last(r))
-end
-
-function Base.length(r::UnitMRange{T})  where {T<:Union{UInt,UInt64,UInt128}}
-    return last(r) < first(r) ? 0 : Int(Base.Checked.checked_add(last(r) - first(r), one(T)))
-end
-
-function Base.length(r::UnitSRange{T,F,L})  where {T<:Union{UInt,UInt64,UInt128},F,L}
-    return L < F ? 0 : Int(Base.Checked.checked_add(L - F, one(T)))
-end
-
-function Base.length(r::UnitSRange{T,F,L}) where {T<:Union{Int,Int64,Int128},F,L}
-    return Int(Base.Checked.checked_add(Base.Checked.checked_sub(L, F), one(T)))
-end
-
-function Base.length(r::UnitMRange{T}) where {T<:Union{Int,Int64,Int128}}
-    return Int(Base.Checked.checked_add(Base.Checked.checked_sub(last(r), first(r)), one(T)))
-end
 
 lendiv(r::LinMRange) = getfield(r, :lendiv)
 
-function start_step_stop_to_length(::Type{T}, start, step, stop) where {T}
-    if (start != stop) & ((step > zero(step)) != (stop > start))
-        return 0
-    else
-        return Int(div((stop - start) + step, step))
-    end
-end
-
-function start_step_stop_to_length(::Type{T}, start, step, stop) where {T<:Union{Int,UInt,Int64,UInt64,Int128,UInt128}}
-    if (start != stop) & ((step > zero(step)) != (stop > start))
-        return 0
-    elseif step > 1
-        return Int(div(unsigned(stop - start), step)) + 1
-    elseif step < -1
-        return Int(div(unsigned(start - stop), -step)) + 1
-    elseif step > 0
-        return Int(div(stop - start, step) + 1)
-    else
-        return Int(div(start - stop, -step) + 1)
-    end
-end
-
 # some special cases to favor default Int type
-smallint = (Int === Int64 ? Union{Int8,UInt8,Int16,UInt16,Int32,UInt32} : Union{Int8,UInt8,Int16,UInt16})
 
-function Base.length(r::AbstractStepRange{T}) where {T<:smallint}
-    if isempty(r)
-        return Int(0)
-    else
-        return div(Int(last(r))+Int(step(r)) - Int(first(r)), Int(step(r)))
-    end
-end
-Base.length(r::OneToRange{<:smallint}) = Int(r.stop)
 
 """
     can_set_length(x) -> Bool
@@ -89,11 +26,7 @@ its first or last position.
 """
 can_set_length(::T) where {T} = can_set_length(T)
 can_set_length(::Type{T}) where {T} = false
-can_set_length(::Type{T}) where {T<:LinMRange} = true
-can_set_length(::Type{T}) where {T<:StepMRangeLen} = true
-can_set_length(::Type{T}) where {T<:StepMRange} = true
-can_set_length(::Type{T}) where {T<:UnitMRange} = true
-can_set_length(::Type{T}) where {T<:OneToMRange} = true
+can_set_length(::Type{T}) where {T<:AbstractRange} = is_dynamic(T)
 
 """
     set_length!(x, len)

@@ -49,13 +49,10 @@ Returns `true` if type of `x` has `step` field that can be set.
 can_set_step(::T) where {T} = can_set_step(T)
 can_set_step(::Type{T}) where {T} = false
 can_set_step(::Type{T}) where {T<:OrdinalRange} = is_dynamic(T)
-can_set_step(::Type{T}) where {T<:AbstractRange} = is_dynamic(T) && is_steprangelen(T)
+function can_set_step(::Type{T}) where {T<:AbstractRange}
+    return is_dynamic(T) && RangeInterface.has_offset_field(T)
+end
 can_set_step(::Type{T}) where {T<:AbstractUnitRange} = false
-
-step_type(x) = step_type(typeof(x))
-step_type(::Type{<:AbstractRange{T}}) where {T} = T
-step_type(::Type{<:OrdinalRange{T,S}}) where {T,S} = S
-step_type(::Type{StepRangeLen{T,R,S}}) where {T,R,S} = S
 
 """
     set_step!(x, st)
@@ -77,9 +74,9 @@ julia> step(mr)
 function set_step!(x::AbstractRange, st)
     can_set_step(x) || throw(ArgumentError("cannot perform `set_step!` for type $x"))
     if has_ref(x)
-        setfield!(x, :step, step_type(x)(st))
+        setfield!(x, :step, RangeInterface.step_type(x)(st))
     else
-        setfield!(x, :step, step_type(x)(st))
+        setfield!(x, :step, RangeInterface.step_type(x)(st))
         setfield!(x, :stop, Base.steprange_last(first(x), st, last(x)))
     end
     return x
@@ -99,11 +96,11 @@ julia> set_step(1:1:10, 2)
 ```
 """
 function set_step(x::AbstractRange, st)
-    if x isa AbstractUnitRange || is_linrange(x)
+    if x isa AbstractUnitRange || RangeInterface.has_lendiv_field(x)
         throw(ArgumentError("cannot set step for type $x"))
     else
         if has_ref(x)
-            return typeof(x)(x.ref, step_type(x)(st), x.len, x.offset)
+            return typeof(x)(x.ref, RangeInterface.step_type(x)(st), x.len, x.offset)
         else
             return typeof(x)(first(x), st, Base.steprange_last(first(x), st, last(x)))
         end

@@ -1,4 +1,83 @@
 
+"""
+    srange(start[, stop]; length, stop, step=1)
+
+Constructs static ranges within similar syntax and argument semantics as `range`.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> srange(1, length=100)
+UnitSRange(1:100)
+
+julia> srange(1, stop=100)
+UnitSRange(1:100)
+
+julia> srange(1, step=5, length=100)
+StepSRange(1:5:496)
+
+julia> srange(1, step=5, stop=100)
+StepSRange(1:5:96)
+
+julia> srange(1, step=5, stop=100)
+StepSRange(1:5:96)
+
+julia> srange(1, 10, length=101)
+StepSRangeLen(1.0:0.09:10.0)
+
+julia> srange(1, 100, step=5)
+StepSRange(1:5:96)
+
+julia> srange(1, 10)
+UnitSRange(1:10)
+
+julia> srange(1.0, length=10)
+StepSRangeLen(1.0:1.0:10.0)
+
+```
+"""
+srange
+
+"""
+    mrange(start[, stop]; length, stop, step=1)
+
+Constructs static ranges within similar syntax and argument semantics as `range`.
+
+## Examples
+```jldoctest
+julia> using StaticRanges
+
+julia> mrange(1, length=100)
+UnitMRange(1:100)
+
+julia> mrange(1, stop=100)
+UnitMRange(1:100)
+
+julia> mrange(1, step=5, length=100)
+StepMRange(1:5:496)
+
+julia> mrange(1, step=5, stop=100)
+StepMRange(1:5:96)
+
+julia> mrange(1, step=5, stop=100)
+StepMRange(1:5:96)
+
+julia> mrange(1, 10, length=101)
+StepMRangeLen(1.0:0.09:10.0)
+
+julia> mrange(1, 100, step=5)
+StepMRange(1:5:96)
+
+julia> mrange(1, 10)
+UnitMRange(1:10)
+
+julia> mrange(1.0, length=10)
+StepMRangeLen(1.0:1.0:10.0)
+```
+"""
+mrange
+
 for (F,f) in ((:M,:m), (:S,:s))
     frange = Symbol(f, :range)
     _frange = Symbol(:_, f, :range)

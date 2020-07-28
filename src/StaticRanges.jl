@@ -8,9 +8,9 @@ using Base.Broadcast: DefaultArrayStyle
 
 using Dates
 using ChainedFixes
+using Reexport
 
 using StaticArrays
-using StaticArrays: Length
 import StaticArrays: Length, pop, popfirst
 
 using ArrayInterface
@@ -48,15 +48,13 @@ export
     StepSRange,
     UnitMRange,
     UnitSRange,
+    # methods
+    mrange,
+    srange,
     # interface
-    # Order functions
-    is_forward,
-    is_reverse,
     order,
-    is_ordered,
     ordmax,
     ordmin,
-    is_within,
     gtmax,
     ltmax,
     eqmax,
@@ -69,24 +67,16 @@ export
     cmpmin,
     min_of_group_max,
     max_of_group_min,
-    is_before,
+    # Order functions
+    is_forward,
+    is_reverse,
+    is_ordered,
+    is_within,
+    # traits
     is_after,
+    is_before,
     is_contiguous,
-    # methods
-    and,
-    ⩓,
-    or,
-    ⩔,
-    as_static,
-    as_dynamic,
-    as_fixed,
-    mrange,
-    srange,
-   # Traits
-    parent_type,
-    axes_type,
-    is_dynamic,
-    is_fixed,
+    # Traits
     is_forward,
     is_reverse,
     is_ordered,
@@ -112,6 +102,9 @@ export
     pop,
     popfirst,
     vcat_sort
+
+include("./RangeInterface/RangeInterface.jl")
+@reexport using .RangeInterface
 
 include("./GapRange/GapRange.jl")
 
@@ -156,86 +149,6 @@ include("length.jl")
 include("size.jl")
 include("promotion.jl")
 include("range.jl")
-
-"""
-    srange(start[, stop]; length, stop, step=1)
-
-Constructs static ranges within similar syntax and argument semantics as `range`.
-
-## Examples
-```jldoctest
-julia> using StaticRanges
-
-julia> srange(1, length=100)
-UnitSRange(1:100)
-
-julia> srange(1, stop=100)
-UnitSRange(1:100)
-
-julia> srange(1, step=5, length=100)
-StepSRange(1:5:496)
-
-julia> srange(1, step=5, stop=100)
-StepSRange(1:5:96)
-
-julia> srange(1, step=5, stop=100)
-StepSRange(1:5:96)
-
-julia> srange(1, 10, length=101)
-StepSRangeLen(1.0:0.09:10.0)
-
-julia> srange(1, 100, step=5)
-StepSRange(1:5:96)
-
-julia> srange(1, 10)
-UnitSRange(1:10)
-
-julia> srange(1.0, length=10)
-StepSRangeLen(1.0:1.0:10.0)
-
-```
-"""
-srange
-
-"""
-    mrange(start[, stop]; length, stop, step=1)
-
-Constructs static ranges within similar syntax and argument semantics as `range`.
-
-## Examples
-```jldoctest
-julia> using StaticRanges
-
-julia> mrange(1, length=100)
-UnitMRange(1:100)
-
-julia> mrange(1, stop=100)
-UnitMRange(1:100)
-
-julia> mrange(1, step=5, length=100)
-StepMRange(1:5:496)
-
-julia> mrange(1, step=5, stop=100)
-StepMRange(1:5:96)
-
-julia> mrange(1, step=5, stop=100)
-StepMRange(1:5:96)
-
-julia> mrange(1, 10, length=101)
-StepMRangeLen(1.0:0.09:10.0)
-
-julia> mrange(1, 100, step=5)
-StepMRange(1:5:96)
-
-julia> mrange(1, 10)
-UnitMRange(1:10)
-
-julia> mrange(1.0, length=10)
-StepMRangeLen(1.0:1.0:10.0)
-```
-"""
-mrange
-
 include("merge.jl")
 include("intersect.jl")
 include("broadcast.jl")
@@ -249,56 +162,19 @@ include("resize.jl")
 include("offset_range.jl")
 include("./Find/Find.jl")
 
-is_one_to(x) = is_one_to(typeof(x))
-is_one_to(::Type{T}) where {T} = false
-is_one_to(::Type{<:OneTo}) = true
-is_one_to(::Type{<:OneToMRange}) = true
-is_one_to(::Type{<:OneToSRange}) = true
-
-is_unit_range(x) = is_unit_range(typeof(x))
-is_unit_range(::Type{T}) where {T} = false
-is_unit_range(::Type{T}) where {T<:AbstractUnitRange} = !is_one_to(T)
-
-is_steprangelen(x) = is_steprangelen(typeof(x))
-is_steprangelen(::Type{T}) where {T} = false
-is_steprangelen(::Type{T}) where {T<:StepRangeLen} = true
-is_steprangelen(::Type{T}) where {T<:StepSRangeLen} = true
-is_steprangelen(::Type{T}) where {T<:StepMRangeLen} = true
-
-is_linrange(x) = is_linrange(typeof(x))
-is_linrange(::Type{T}) where {T} = false
-is_linrange(::Type{T}) where {T<:LinRange} = true
-is_linrange(::Type{T}) where {T<:LinSRange} = true
-is_linrange(::Type{T}) where {T<:LinMRange} = true
-
-
-is_steprange(x) = is_steprange(typeof(x))
-is_steprange(::Type{T}) where {T} = false
-is_steprange(::Type{<:AbstractUnitRange}) = false
-is_steprange(::Type{<:AbstractRange}) = true
-is_steprange(::Type{<:OrdinalRange}) = true
-
-step_is_one(x) = step_is_one(typeof(x))
-function step_is_one(::Type{T}) where {T}
-    Tx = eltype(T)
-    if Tx <: Number
-        return known_step(T) === oneunit(Tx)
-    else
-        return false
-    end
-end
-
-first_is_one(x) = first_is_one(typeof(x))
-function first_is_one(::Type{T}) where {T}
-    Tx = eltype(T)
-    if Tx <: Number
-        return known_first(T) === oneunit(Tx)
-    else
-        return false
-    end
-end
-
 include("./CoreArrays/CoreArrays.jl")
 using .CoreArrays
+
+RangeInterface.is_static(::Type{T}) where {T<:OneToSRange} = true
+RangeInterface.is_static(::Type{T}) where {T<:StepSRangeLen} = true
+RangeInterface.is_static(::Type{T}) where {T<:StepSRange} = true
+RangeInterface.is_static(::Type{T}) where {T<:UnitSRange} = true
+RangeInterface.is_static(::Type{T}) where {T<:LinSRange} = true
+
+RangeInterface.is_dynamic(::Type{T}) where {T<:OneToMRange} = true
+RangeInterface.is_dynamic(::Type{T}) where {T<:StepMRangeLen} = true
+RangeInterface.is_dynamic(::Type{T}) where {T<:StepMRange} = true
+RangeInterface.is_dynamic(::Type{T}) where {T<:UnitMRange} = true
+RangeInterface.is_dynamic(::Type{T}) where {T<:LinMRange} = true
 
 end

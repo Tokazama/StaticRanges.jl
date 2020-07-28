@@ -251,6 +251,26 @@ StepRangeLen{T,R,S}(r::StepRangeLen{T,R,S}) where {T<:AbstractFloat,R<:TwicePrec
 StepRangeLen{T,R,S}(r::StepRangeLen) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision} =
 =#
 
-step_type(::Type{<:StepSRangeLen{T,R,S}}) where {T,R,S} = S
-step_type(::Type{StepMRangeLen{T,R,S}}) where {T,R,S} = S
+RangeInterface.step_type(::Type{<:StepSRangeLen{T,R,S}}) where {T,R,S} = S
+RangeInterface.step_type(::Type{StepMRangeLen{T,R,S}}) where {T,R,S} = S
+
+RangeInterface.has_len_field(::Type{T}) where {T<:StepSRangeLen} = true
+RangeInterface.has_len_field(::Type{T}) where {T<:StepMRangeLen} = true
+
+RangeInterface.has_ref_field(::Type{T}) where {T<:StepSRangeLen} = true
+RangeInterface.has_ref_field(::Type{T}) where {T<:StepMRangeLen} = true
+
+RangeInterface.has_step_field(::Type{T}) where {T<:StepSRangeLen} = true
+RangeInterface.has_step_field(::Type{T}) where {T<:StepMRangeLen} = true
+
+RangeInterface.has_offset_field(::Type{T}) where {T<:StepSRangeLen} = true
+RangeInterface.has_offset_field(::Type{T}) where {T<:StepMRangeLen} = true
+
+RangeInterface.known_offset(::Type{StepSRangeLen{T,Tr,Ts,R,S,L,F}}) where {T,Tr,Ts,R,S,L,F} = F
+RangeInterface.known_ref(::Type{StepSRangeLen{T,Tr,Ts,R,S,L,F}}) where {T,Tr,Ts,R,S,L,F} = R
+RangeInterface.known_step(::Type{StepSRangeLen{T,Tr,Ts,R,S,L,F}}) where {T,Tr,Ts,R,S,L,F} = S
+RangeInterface.known_len(::Type{StepSRangeLen{T,Tr,Ts,R,S,L,F}}) where {T,Tr,Ts,R,S,L,F} = L
+
+Base.length(x::StepSRangeLen) = RangeInterface.get_length(x)
+Base.length(x::StepMRangeLen) = RangeInterface.get_length(x)
 

@@ -1,17 +1,10 @@
 
-# only really applies to ordered vectors
-_find_all(::Type{T},        fi,        li) where {T} = fi:li
-_find_all(::Type{T}, ::Nothing,        li) where {T} = _empty_ur(T)
-_find_all(::Type{T},        fi, ::Nothing) where {T} = _empty_ur(T)
-_find_all(::Type{T}, ::Nothing, ::Nothing) where {T} = _empty_ur(T)
-_empty_ur(::Type{T}) where {T} = one(T):zero(T)
-
 @inline find_all(f::Equal,              x) = find_alleq(f.x,   x)
 @inline find_all(f::Less,               x) = find_alllt(f.x,   x)
 @inline find_all(f::LessThanOrEqual,    x) = find_alllteq(f.x, x)
 @inline find_all(f::Greater,            x) = find_allgt(f.x,   x)
 @inline find_all(f::GreaterThanOrEqual, x) = find_allgteq(f.x, x)
-@inline find_all(f::In,                 x) = find_in(f.x,       x)
+@inline find_all(f::In,                 x) = find_all_in(f.x,       x)
 @inline find_all(f::Not,                x) = find_not_in(f.x,  x)
 @inline find_all(f::Or,                 x) = combine(find_all(f.f1, x), find_all(f.f2, x))
 @inline find_all(f::And,                x) = intersect(find_all(f.f1, x), find_all(f.f2, x))

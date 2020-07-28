@@ -75,6 +75,7 @@ to_vec(x) = x
     end
 end
 
+include("length_tests.jl")
 include("find.jl")
 include("count_tests.jl")
 include("gaprange_tests.jl")
@@ -94,7 +95,6 @@ include("first_tests.jl")
 include("step_tests.jl")
 include("last_tests.jl")
 include("size_tests.jl")
-include("length_tests.jl")
 
 include("staticness_tests.jl")
 include("range_interface.jl")

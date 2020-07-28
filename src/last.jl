@@ -101,10 +101,10 @@ end
 
 set_last(x::OrdinalRange, val) = typeof(x)(first(x), step(x), val)
 function set_last(x::AbstractUnitRange{T}, val) where {T}
-    if known_first(x) === oneunit(T)
-        return typeof(x)(val)
-    else
+    if RangeInterface.has_start_field(x)
         return typeof(x)(first(x), val)
+    else
+        return typeof(x)(val)
     end
     return x
 end

@@ -120,3 +120,24 @@ for (F,f) in ((:M,:m), (:S,:s))
     end
 end
 
+RangeInterface.has_start_field(::Type{T}) where {T<:LinSRange} = true
+RangeInterface.has_start_field(::Type{T}) where {T<:LinMRange} = true
+
+RangeInterface.has_stop_field(::Type{T}) where {T<:LinSRange} = true
+RangeInterface.has_stop_field(::Type{T}) where {T<:LinMRange} = true
+
+RangeInterface.has_len_field(::Type{T}) where {T<:LinSRange} = true
+RangeInterface.has_len_field(::Type{T}) where {T<:LinMRange} = true
+
+RangeInterface.has_lendiv_field(::Type{T}) where {T<:LinSRange} = true
+RangeInterface.has_lendiv_field(::Type{T}) where {T<:LinMRange} = true
+
+RangeInterface.known_first(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = B
+RangeInterface.known_last(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = E
+RangeInterface.known_len(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = L
+RangeInterface.known_lendiv(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = D
+
+Base.length(x::LinSRange) = RangeInterface.get_length(x)
+Base.length(x::LinMRange) = RangeInterface.get_length(x)
+
+

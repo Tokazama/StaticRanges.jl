@@ -1,13 +1,13 @@
 
 function __init__()
     @require OffsetArrays="6fe1bfb0-de20-5000-8ca7-80f57d26f881" begin
-        is_static(::Type{OffsetArrays.IdOffsetRange{T,P}}) where {T,P} = is_static(P)
-        is_dynamic(::Type{OffsetArrays.IdOffsetRange{T,P}}) where {T,P} = is_dynamic(P)
-        is_fixed(::Type{OffsetArrays.IdOffsetRange{T,P}}) where {T,P} = is_fixed(P)
+        RangeInterface.is_static(::Type{OffsetArrays.IdOffsetRange{T,P}}) where {T,P} = is_static(P)
+        RangeInterface.is_dynamic(::Type{OffsetArrays.IdOffsetRange{T,P}}) where {T,P} = is_dynamic(P)
+        RangeInterface.is_fixed(::Type{OffsetArrays.IdOffsetRange{T,P}}) where {T,P} = is_fixed(P)
 
-        as_dynamic(x::OffsetArrays.IdOffsetRange) = OffsetArrays.IdOffsetRange(as_dynamic(parent(x)), x.offset)
-        as_fixed(x::OffsetArrays.IdOffsetRange) = OffsetArrays.IdOffsetRange(as_fixed(parent(x)), x.offset)
-        as_static(x::OffsetArrays.IdOffsetRange) = OffsetArrays.IdOffsetRange(as_static(parent(x)), x.offset)
+        RangeInterface.as_dynamic(x::OffsetArrays.IdOffsetRange) = OffsetArrays.IdOffsetRange(as_dynamic(parent(x)), x.offset)
+        RangeInterface.as_fixed(x::OffsetArrays.IdOffsetRange) = OffsetArrays.IdOffsetRange(as_fixed(parent(x)), x.offset)
+        RangeInterface.as_static(x::OffsetArrays.IdOffsetRange) = OffsetArrays.IdOffsetRange(as_static(parent(x)), x.offset)
 
         can_set_first(::Type{<:OffsetArrays.IdOffsetRange{T,P}}) where {T,P} = can_set_first(P)
         function set_first(r::OffsetArrays.IdOffsetRange{T}, val::T) where {T}
@@ -120,9 +120,9 @@ function __init__()
             end
         end
 
-        axes_type(::Type{T}) where {T<:OffsetArrays.IdOffsetRange} = Tuple{T}
+        RangeInterface.axes_type(::Type{T}) where {T<:OffsetArrays.IdOffsetRange} = Tuple{T}
 
-        has_offset_axes(::Type{<:OffsetArrays.IdOffsetRange}) = true
+        RangeInterface.has_offset_axes(::Type{<:OffsetArrays.IdOffsetRange}) = true
     end
 end
 

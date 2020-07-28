@@ -22,12 +22,6 @@ struct UnitSRange{T,F,L} <: AbstractUnitRange{T}
         return UnitSRange{T,T(start),T(stop)}()
     end
 
-    function UnitSRange{T,F,L}() where {T<:Real,F,L}
-        F isa T || error("UnitSRange has eltype $T specified but starting value of type $(typeof(F))")
-        L isa T || error("UnitSRange has eltype $T specified but starting value of type $(typeof(L))")
-        return new{T,F,Base.unitrange_last(F, L)}()
-    end
-
     function UnitSRange{T}(r::AbstractUnitRange{T}) where {T}
         if r isa UnitSRange
             return r
@@ -41,7 +35,6 @@ struct UnitSRange{T,F,L} <: AbstractUnitRange{T}
     UnitSRange(start::T, stop::T) where {T<:Real} = UnitSRange{T}(start, stop)
 
     UnitSRange(r::AbstractUnitRange{T}) where {T} = UnitSRange{T}(r)
-
 end
 
 
@@ -90,3 +83,15 @@ end
 
 Base.AbstractUnitRange{T}(r::UnitSRange) where {T} = UnitSRange{T}(r)
 Base.AbstractUnitRange{T}(r::UnitMRange) where {T} = UnitMRange{T}(r)
+
+RangeInterface.has_start_field(::Type{T}) where {T<:UnitSRange} = true
+RangeInterface.has_start_field(::Type{T}) where {T<:UnitMRange} = true
+
+RangeInterface.has_stop_field(::Type{T}) where {T<:UnitSRange} = true
+RangeInterface.has_stop_field(::Type{T}) where {T<:UnitMRange} = true
+
+RangeInterface.known_first(::Type{UnitSRange{T,F,L}}) where {T,F,L} = F
+RangeInterface.known_last(::Type{UnitSRange{T,F,L}}) where {T,F,L} = L
+
+Base.length(x::UnitSRange) = RangeInterface.get_length(x)
+Base.length(x::UnitMRange) = RangeInterface.get_length(x)

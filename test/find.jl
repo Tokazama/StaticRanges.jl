@@ -107,9 +107,9 @@ end
 
 @testset "find methods" begin
     for collection in (OneToMRange(10),
-                    IdOffsetRange(OneTo(10), 2),
+                    #IdOffsetRange(OneTo(10), 2),
                     1:10,
-                    IdOffsetRange(1:10, 2),
+                    #IdOffsetRange(1:10, 2),
                     UnitMRange(1.0, 10.0),
                     StepMRange(1, 2, 10),
                     StepMRange(10, -2, 1),
@@ -234,10 +234,10 @@ end
 @testset "filter non numerics" begin
     x = Second(1):Second(1):Second(10)
     @test @inferred(find_all(and(>=(Second(1)), <=(Second(3))), x)) == 1:3
-    @test @inferred(find_in(Second(1):Second(1):Second(3), x)) == 1:3
+    @test @inferred(find_all_in(Second(1):Second(1):Second(3), x)) == 1:3
 
     x = Second(10):Second(-1):Second(1)
-    @test @inferred(find_in(Second(1):Second(1):Second(3), x)) == 10:1:9
+    @test @inferred(find_all_in(Second(1):Second(1):Second(3), x)) == 10:1:9
 end
 
 @testset "find_all(in(x), r)" begin
@@ -269,12 +269,12 @@ end
     @test find_all(in(1:10), collect(1:20)) == 1:10
 
     @testset "steps match but no overlap" begin
-        r = @inferred(find_in(1:3, 4:5))
+        r = @inferred(find_all_in(1:3, 4:5))
         @test r == 1:0
         @test isa(r, UnitRange)
     end
 
-    @test find_in([1, 2, 3], collect(1:10)) == [1, 2, 3]
+    @test find_all_in([1, 2, 3], collect(1:10)) == [1, 2, 3]
 
     for (x, y, z) in ((1:10, 1:2:10, 1:5),
                       (1:2:20, 1:8:20, 1:3),

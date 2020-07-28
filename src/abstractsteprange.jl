@@ -104,3 +104,19 @@ for (F,f) in ((:M,:m), (:S,:s))
     end
 end
 
+RangeInterface.has_start_field(::Type{T}) where {T<:StepSRange} = true
+RangeInterface.has_start_field(::Type{T}) where {T<:StepMRange} = true
+
+RangeInterface.has_step_field(::Type{T}) where {T<:StepSRange} = true
+RangeInterface.has_step_field(::Type{T}) where {T<:StepMRange} = true
+
+RangeInterface.has_stop_field(::Type{T}) where {T<:StepSRange} = true
+RangeInterface.has_stop_field(::Type{T}) where {T<:StepMRange} = true
+
+RangeInterface.known_first(::Type{StepSRange{T,Ts,F,S,L}}) where {T,Ts,F,S,L} = F
+RangeInterface.known_last(::Type{StepSRange{T,Ts,F,S,L}}) where {T,Ts,F,S,L} = L
+RangeInterface.known_step(::Type{StepSRange{T,Ts,F,S,L}}) where {T,Ts,F,S,L} = S
+
+Base.length(x::StepSRange) = RangeInterface.get_length(x)
+Base.length(x::StepMRange) = RangeInterface.get_length(x)
+

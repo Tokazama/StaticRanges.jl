@@ -37,7 +37,9 @@ function Base.reverse!(r::LinMRange)
     return r
 end
 
-Base.isempty(r::Union{AbstractLinRange,AbstractStepRangeLen}) = length(r) == 0
+function  Base.isempty(x::Union{AbstractLinRange,AbstractStepRangeLen})
+    return RangeInterface.get_len_field(x) === 0
+end
 
 ###
 ### ==(r1, r2)

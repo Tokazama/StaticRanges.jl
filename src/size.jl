@@ -6,7 +6,7 @@ StaticArrays.Size(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = Size{(L,)}()
 StaticArrays.Size(::Type{StepSRangeLen{T,Tr,Ts,R,S,L,F}}) where {T,Tr,Ts,R,S,L,F} = Size{(L,)}()
 
 function StaticArrays.Size(::Type{StepSRange{T,Ts,F,S,L}})  where {T,Ts,F,S,L}
-    return Size{(start_step_stop_to_length(T, F, S, L),)}()
+    return Size{(RangeInterface.step_range_length(T, F, S, L),)}()
 end
 
 function StaticArrays.Size(::Type{UnitSRange{T,F,L}})  where {T<:Union{UInt,UInt64,UInt128},F,L}

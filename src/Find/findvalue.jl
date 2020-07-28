@@ -36,14 +36,14 @@ function _unsafe_findvalue(idx::TwicePrecision{T}, rounding_mode) where {T}
 end
 
 function unsafe_findvalue(x, collection, rounding_mode=RoundToZero)
-    if is_one_to(collection)
+    if RangeInterface.first_is_known_one(collection)
         return unsafe_find_value_oneto(x, collection)
-    elseif step_is_one(collection)
+    elseif RangeInterface.step_is_known_one(collection)
         return unsafe_find_value_unitrange(x, collection)
-    elseif is_linrange(collection)
-        return unsafe_find_value_linrange(x, collection)
-    elseif is_steprangelen(collection)
+    elseif RangeInterface.has_offset_field(collection)
         return unsafe_find_value_steprangelen(x, collection)
+    elseif RangeInterface.has_len_field(collection)
+        return unsafe_find_value_linrange(x, collection)
     else
         return unsafe_find_value_steprange(x, collection)
     end
