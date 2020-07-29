@@ -67,10 +67,14 @@ export
     cmpmin,
     min_of_group_max,
     max_of_group_min,
-    # Order functions
+    # traits
+    axes_type,
     as_dynamic,
     as_fixed,
     as_static,
+    is_dynamic,
+    is_fixed,
+    is_static,
     of_staticness,
     is_forward,
     is_reverse,
@@ -108,7 +112,7 @@ export
     vcat_sort
 
 include("./RangeInterface/RangeInterface.jl")
-@reexport using .RangeInterface
+using .RangeInterface
 
 include("./GapRange/GapRange.jl")
 
