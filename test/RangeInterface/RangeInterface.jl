@@ -60,6 +60,40 @@ static_has_lendiv_field(x) = Val(RangeInterface.has_lendiv_field(x))
     end
 
 end
-  filter test - 1.125, StepMRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}      |    1     4  filter test - 1.125, StepMRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}      |    1     4
+
+
+struct Axes{N,T<:Tuple{Vararg{Any,N}}} <: AbstractArray{Int,N}
+    axes::T
+end
+Axes(args...) = Axes(args)
+
+StaticRanges.axes_type(::Type{Axes{N,T}}, i::Int) where {N,T} = T.parameters[i]
+Base.ndims(::Type{<:Axes{N}}) where {N} = N
+
+is_static_val(x) = Val(is_static(x))
+is_dynamic_val(x) = Val(is_dynamic(x))
+is_fixed_val(x) = Val(is_fixed(x))
+
+@testset "axes_type" begin
+    axs = Axes(UnitRange(1, 2), UnitRange(1, 2), UnitRange(1, 2));
+    @test is_static_val(axs) == Val(false)
+    @test is_fixed_val(axs) == Val(true)
+    @test is_dynamic_val(axs) == Val(false)
+
+    axs = Axes(UnitSRange(1, 2), UnitSRange(1, 2), UnitSRange(1, 2));
+    @test is_static_val(axs) == Val(true)
+    @test is_fixed_val(axs) == Val(true)
+    @test is_dynamic_val(axs) == Val(false)
+
+    axs = Axes(UnitSRange(1, 2), UnitRange(1, 2), UnitRange(1, 2));
+    @test is_static_val(axs) == Val(false)
+    @test is_fixed_val(axs) == Val(true)
+    @test is_dynamic_val(axs) == Val(false)
+
+    axs = Axes(UnitRange(1, 2), UnitMRange(1, 2), UnitRange(1, 2));
+    @test is_static_val(axs) == Val(false)
+    @test is_fixed_val(axs) == Val(false)
+    @test is_dynamic_val(axs) == Val(true)
+end
 
 

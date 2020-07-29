@@ -1,7 +1,9 @@
 module RangeInterface
 
+using ArrayInterface
 using ArrayInterface: parent_type
 using ArrayInterface: known_first, known_step, known_last
+using StaticArrays
 
 using Base: OneTo
 
@@ -24,14 +26,10 @@ export
     parent_type,
     has_offset_axes,
     first_is_known_one,
-    as_dynamic,
-    as_fixed,
-    as_static,
     is_dynamic,
     is_fixed,
     is_static,
     is_range,
-    of_staticness,
     step_is_known_one
 
 include("range_fields.jl")
@@ -116,8 +114,9 @@ Tuple{Base.OneTo{Int64},Base.OneTo{Int64}}
 ```
 """
 axes_type(x) = axes_type(typeof(x))
-@inline function axes_type(::Type{<:AbstractArray{T,N}}) where {T,N}
-    return Tuple{ntuple(_ -> OneTo{Int}, Val(N))...}
+
+@inline function axes_type(::Type{T}) where {T<:AbstractArray}
+    return Tuple{ntuple(i -> axes_type(T, i), Val(ndims(T)))...}
 end
 
 """
@@ -135,7 +134,17 @@ julia> axes_type([1 2; 3 4], 1)
 Base.OneTo{Int64}
 ```
 """
-axes_type(::T, i::Integer) where {T} = axes_type(T, i)
-axes_type(::Type{T}, i::Integer) where {T} = axes_type(T).parameters[i]
+axes_type(::T, i::Int) where {T} = axes_type(T, i)
+axes_type(::Type{T}, i::Int) where {T<:AbstractArray} = OneTo{Int}
+axes_type(::Type{T}, i::Int) where {T} = axes_type(T).parameters[i]
+@inline function axes_type(::Type{<:StaticArray{S}}, i::Int) where {S}
+    if S.parameters[i] isa Int
+        SOneTo{S.parameters[i]}
+    else
+        OneTo{Int}
+    end
+end
+
+
 
 end

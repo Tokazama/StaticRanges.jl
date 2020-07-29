@@ -90,25 +90,22 @@ _find_all(::Type{T},        fi, ::Nothing) where {T} = _empty_ur(T)
 _find_all(::Type{T}, ::Nothing, ::Nothing) where {T} = _empty_ur(T)
 _empty_ur(::Type{T}) where {T} = one(T):zero(T)
 
-@inline function _empty(x::X, y::Y) where {X,Y}
+_empty(x::X, y::Y) where {X,Y} = Vector{Int}()
+@inline function _empty(x::X, y::Y) where {X<:AbstractRange,Y<:AbstractRange}
     R = similar_type(promote_type(typeof(x), typeof(y)), Int)
     T = eltype(R)
-    if is_range(R)
-        if RangeInterface.has_step_field(R)
-            return one(T):one(T):zero(T)
-        else
-            if RangeInterface.has_start_field(R)
-                if RangeInterface.has_len_field(R)
-                    return one(T):one(T):zero(T)
-                else
-                    R(x, y)
-                end
-            else
-                return R(0)
-            end
-        end
+    if RangeInterface.has_step_field(R)
+        return one(T):one(T):zero(T)
     else
-        return Vector{T}()
+        if RangeInterface.has_start_field(R)
+            if RangeInterface.has_len_field(R)
+                return one(T):one(T):zero(T)
+            else
+                R(x, y)
+            end
+        else
+            return R(0)
+        end
     end
 end
 

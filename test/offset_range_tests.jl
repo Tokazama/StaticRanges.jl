@@ -7,7 +7,7 @@
     @test can_set_length(typeof(x))
 
     @test is_static(as_static(x))
-    @test !is_fixed(as_static(x))
+    @test is_fixed(as_static(x))
     @test !is_dynamic(as_static(x))
 
     @test !is_static(as_fixed(x))

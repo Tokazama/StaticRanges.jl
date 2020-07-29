@@ -68,6 +68,10 @@ export
     min_of_group_max,
     max_of_group_min,
     # Order functions
+    as_dynamic,
+    as_fixed,
+    as_static,
+    of_staticness,
     is_forward,
     is_reverse,
     is_ordered,
@@ -159,11 +163,7 @@ include("push.jl")
 include("show.jl")
 include("vcat.jl")
 include("resize.jl")
-include("offset_range.jl")
 include("./Find/Find.jl")
-
-include("./CoreArrays/CoreArrays.jl")
-using .CoreArrays
 
 RangeInterface.is_static(::Type{T}) where {T<:OneToSRange} = true
 RangeInterface.is_static(::Type{T}) where {T<:StepSRangeLen} = true

@@ -1,109 +1,39 @@
 
+"""
+    as_dynamic(x)
 
-function RangeInterface.axes_type(::Type{<:StaticArray{S,T,N}}) where {S,T,N}
-    axs = ntuple(Val(N)) do i
-        if S.parameters[i] isa Int
-            SOneTo{S.parameters[i]}
-        else
-            OneTo{Int}
-        end
-    end
-    return Tuple{axs...}
-end
+If `x` is mutable then returns `x`, otherwise returns a comparable but mutable
+type to `x`.
 
+## Examples
+```jldoctest
+julia> using StaticRanges
 
-# this expand on the idea of `Dynamic` in StaticArrays
-abstract type Staticness end
+julia> as_dynamic(Base.OneTo(10))
+OneToMRange(10)
 
-struct Static <: Staticness end
+julia> as_dynamic(UnitRange(1, 10))
+UnitMRange(1:10)
 
-struct Dynamic <: Staticness end
+julia> as_dynamic(StepRange(1, 2, 20))
+StepMRange(1:2:19)
 
-struct Fixed <: Staticness end
+julia> as_dynamic(range(1.0, step=2.0, stop=20.0))
+StepMRangeLen(1.0:2.0:19.0)
 
-Staticness(::T) where {T} = Staticness(T)
-
-Staticness(::Type{T}) where {T} = Fixed()  # fall back is `Fixed`
-
-Staticness(::Type{T}) where {T<:Tuple} = Static()
-
-Staticness(::Type{T}) where {T<:NamedTuple} = Static()
-
-Staticness(::Type{T}) where {T<:OneToSRange} = Static()
-
-Staticness(::Type{T}) where {T<:UnitSRange} = Static()
-
-Staticness(::Type{T}) where {T<:StepSRange} = Static()
-
-Staticness(::Type{T}) where {T<:StepSRangeLen} = Static()
-
-Staticness(::Type{T}) where {T<:LinSRange} = Static()
-
-Staticness(::Type{T}) where {T<:AbstractVector} = Dynamic()
-
-Staticness(::Type{T}) where {T<:AbstractRange} = Fixed()
-
-Staticness(::Type{T}) where {T<:OneToMRange} = Dynamic()
-
-Staticness(::Type{T}) where {T<:UnitMRange} = Dynamic()
-
-Staticness(::Type{T}) where {T<:StepMRange} = Dynamic()
-
-Staticness(::Type{T}) where {T<:StepMRangeLen} = Dynamic()
-
-Staticness(::Type{T}) where {T<:LinMRange} = Dynamic()
-
-Staticness(::Type{T}) where {T<:SOneTo} = Static()
-
-Staticness(::Type{T}) where {T<:StaticArrays.SUnitRange} = Static()
-
-Staticness(::Type{T}) where {T<:StaticArray} = Static()
-
-
-# degenerative combinations of staticness
-Staticness(x, y) = Staticness(Staticness(x), Staticness(y))
-Staticness(x::Staticness) = x
-Staticness(x::T, y::T) where {T<:Staticness} = x
-Staticness(::Static, ::Dynamic) = Dynamic()
-Staticness(::Dynamic, ::Static) = Dynamic()
-Staticness(::Fixed, ::Dynamic) = Dynamic()
-Staticness(::Dynamic, ::Fixed) = Dynamic()
-Staticness(::Fixed, ::Static) = Fixed()
-Staticness(::Static, ::Fixed) = Fixed()
-
-Staticness(::Type{T}) where {T<:AbstractArray} = _combine(RangeInterface.axes_type(T))
-
-Base.@pure function _combine(::Type{T}) where {T<:Tuple}
-    out = Static()
-    for ax_i in T.parameters
-        out = Staticness(out, Staticness(ax_i))
-    end
-    return out
-end
-
-# SubArray cannot be dynamic
-function Staticness(::Type{A}) where {A<:SubArray}
-    S = Staticness(parent_type(A))
-    if S isa Static
-        return S
-    else
-        Fixed()
-    end
-end
-
-RangeInterface.as_dynamic(x::OneToUnion) = OneToMRange(last(x))
-
-RangeInterface.as_dynamic(x::AbstractUnitRange) = UnitMRange(first(x), last(x))
-
-RangeInterface.as_dynamic(x::OrdinalRange) = StepMRange(first(x), step(x), last(x))
-
-RangeInterface.as_dynamic(x::LinMRange) = x
-RangeInterface.as_dynamic(x::Union{LinRange,LinSRange}) = LinMRange(x.start, x.stop, x.len)
-
-RangeInterface.as_dynamic(x::StepMRangeLen) = x
-RangeInterface.as_dynamic(x::Union{StepRangeLen,StepSRangeLen}) = StepMRangeLen(x.ref, x.step, x.len, x.offset)
-
-function RangeInterface.as_dynamic(A::AbstractArray)
+julia> as_dynamic(LinRange(1, 20, 10))
+LinMRange(1.0, stop=20.0, length=10)
+```
+"""
+as_dynamic(x) = x
+as_dynamic(x::OneToUnion) = OneToMRange(last(x))
+as_dynamic(x::AbstractUnitRange) = UnitMRange(first(x), last(x))
+as_dynamic(x::OrdinalRange) = StepMRange(first(x), step(x), last(x))
+as_dynamic(x::LinMRange) = x
+as_dynamic(x::Union{LinRange,LinSRange}) = LinMRange(x.start, x.stop, x.len)
+as_dynamic(x::StepMRangeLen) = x
+as_dynamic(x::Union{StepRangeLen,StepSRangeLen}) = StepMRangeLen(x.ref, x.step, x.len, x.offset)
+function as_dynamic(A::AbstractArray)
     if is_dynamic(A)
         return A
     else
@@ -111,31 +41,110 @@ function RangeInterface.as_dynamic(A::AbstractArray)
     end
 end
 
-RangeInterface.as_static(x::OneToSRange) = x
-RangeInterface.as_static(::SOneTo{L}) where {L} = OneToSRange{Int,L}()
-RangeInterface.as_static(x::StaticArrays.SUnitRange{F,L}) where {F,L} = UnitSRange{Int,F,L}()
-RangeInterface.as_static(x::Union{OneTo,OneToMRange}) = OneToSRange(last(x))
+# TODO as_dynamic(x::SubArray)
 
-RangeInterface.as_static(x::AbstractUnitRange) = UnitSRange(first(x), last(x))
+"""
+    as_fixed(x)
 
-RangeInterface.as_static(x::StepSRange) = x
-RangeInterface.as_static(x::OrdinalRange) = StepSRange(first(x), step(x), last(x))
+If `x` is immutable then returns `x`, otherwise returns a comparable but fixed size
+type to `x`.
 
-RangeInterface.as_static(x::LinSRange) = x
-RangeInterface.as_static(x::Union{LinRange,LinMRange}) = LinSRange(x.start, x.stop, x.len)
+## Examples
+```jldoctest
+julia> using StaticRanges
 
-RangeInterface.as_static(x::StepSRangeLen) = x
-RangeInterface.as_static(x::Union{StepRangeLen,StepMRangeLen}) = StepSRangeLen(x.ref, x.step, x.len, x.offset)
+julia> as_fixed(OneToMRange(10))
+Base.OneTo(10)
 
-function RangeInterface.as_static(A::AbstractArray)
-    if is_static(A)
-        return A
+julia> as_fixed(UnitMRange(1, 10))
+1:10
+
+julia> as_fixed(StepMRange(1, 2, 20))
+1:2:19
+
+julia> as_fixed(mrange(1.0, step=2.0, stop=20.0))
+1.0:2.0:19.0
+
+julia> as_fixed(LinMRange(1, 20, 10))
+10-element LinRange{Float64}:
+ 1.0,3.11111,5.22222,7.33333,9.44444,11.5556,13.6667,15.7778,17.8889,20.0
+```
+"""
+function as_fixed(x::AbstractArray{T,N}) where {T,N}
+    if is_fixed(x)
+        return x
     else
-        return SArray{Tuple{size(A)...}}(A)
+        return view(x, ntuple(_->:, Val(N)))
     end
 end
 
-# FIXME
+@inline function as_fixed(v::V) where {V<:AbstractVector}
+    if is_fixed(V)
+        return v
+    elseif is_range(V)
+        if RangeInterface.has_start_field(V)
+            if RangeInterface.has_step_field(V)
+                return StepRange(first(v), step(v), last(v))
+            else
+                if RangeInterface.has_len_field(V)
+                    return LinRange(first(v), last(v), length(v))
+                else
+                    return UnitRange(first(v), last(v))
+                end
+            end
+        else
+            if RangeInterface.has_offset_field(V)
+                return StepRangeLen(
+                    RangeInterface.get_ref_field(v),
+                    RangeInterface.get_step_field(v),
+                    RangeInterface.get_len_field(v),
+                    RangeInterface.get_offset_field(v)
+                )
+            else
+                return OneTo(last(v))
+            end
+        end
+    else
+        return v
+        #return view(v, :)
+    end
+end
+
+"""
+    as_static(x)
+
+If `x` is static then returns `x`, otherwise returns a comparable but static size
+type to `x`.
+
+## Examples
+```jldoctest
+julia> using StaticRanges, StaticArrays
+
+julia> as_static(Base.OneTo(10))
+OneToSRange(10)
+
+julia> as_static(UnitRange(1, 10))
+UnitSRange(1:10)
+
+julia> as_static(StepRange(1, 2, 20))
+StepSRange(1:2:19)
+
+julia> as_static(range(1.0, step=2.0, stop=20.0))
+StepSRangeLen(1.0:2.0:19.0)
+
+julia> as_static(LinRange(1, 20, 10))
+LinSRange(1.0, stop=20.0, length=10)
+
+julia> as_static(reshape(1:12, (3, 4)))
+3×4 SizedArray{Tuple{3,4},Int64,2,2} with indices SOneTo(3)×SOneTo(4):
+ 1  4  7  10
+ 2  5  8  11
+ 3  6  9  12
+
+```
+"""
+as_static(x) = x
+
 """
     as_static(x::AbstractArray[, hint::Val{S}])
 
@@ -148,22 +157,74 @@ tuple representing the size `S` of `x`.
 julia> using StaticRanges, StaticArrays
 
 julia> x = as_static([1], Val((1,)))
-1-element SArray{Tuple{1},Int64,1,1} with indices SOneTo(1):
+1-element SizedArray{Tuple{1},Int64,1,1} with indices SOneTo(1):
  1
 
 ```
 """
-@inline function RangeInterface.as_static(x::AbstractArray, hint::Val{S}) where {S}
+as_static(x::OneToSRange, hint::Val) = x
+as_static(x::OneToSRange) = x
+
+as_static(::SOneTo{L}) where {L} = OneToSRange{Int,L}()
+as_static(::SOneTo{L}, hint::Val) where {L} = OneToSRange{Int,first(L)}()
+
+as_static(x::StaticArrays.SUnitRange{F,L}) where {F,L} = UnitSRange{Int,F,L}()
+as_static(x::StaticArrays.SUnitRange{F,L}, hint::Val) where {F,L} = UnitSRange{Int,F,L}()
+
+as_static(x::OneTo) = as_static(x, Val(last(x)))
+as_static(x::OneTo{T}, hint::Val{L}) where {T,L} = OneToSRange{T}(T(first(L)))
+
+as_static(x::OneToMRange) = as_static(x, Val(last(x)))
+as_static(x::OneToMRange{T}, hint::Val{L}) where {T,L} = OneToSRange{T}(T(first(L)))
+
+
+as_static(x::StepSRangeLen) = x
+as_static(x::StepSRangeLen, hint::Val) = x
+
+as_static(x::StepRangeLen) = as_static(x, Val(length(x)))
+as_static(x::StepRangeLen, hint::Val{L}) where {L} = StepSRangeLen(x.ref, x.step, first(L), x.offset)
+
+as_static(x::StepMRangeLen) = as_static(x, Val(length(x)))
+as_static(x::StepMRangeLen, hint::Val{L}) where {L} = StepSRangeLen(x.ref, x.step, first(L), x.offset)
+
+as_static(x::StepSRange) = x
+as_static(x::StepSRange, hint::Val) = x
+
+# hints don't help without the rest of the parameters one these but these methods
+# are included so that the method can be generalized
+as_static(x::OrdinalRange) = StepSRange(first(x), step(x), last(x))
+as_static(x::OrdinalRange, hint::Val) = StepSRange(first(x), step(x), last(x))
+
+as_static(x::AbstractUnitRange) = UnitSRange(first(x), last(x))
+as_static(x::AbstractUnitRange, hint::Val{L}) where {L} = UnitSRange(first(x), last(x))
+
+as_static(x::LinSRange) = x
+as_static(x::LinRange) = as_static(x, Val(length(x)))
+as_static(x::LinRange, ::Val{L}) where {L} = LinSRange(x.start, x.stop, first(L))
+
+as_static(x::LinMRange) = as_static(x, Val(length(x)))
+as_static(x::LinMRange, ::Val{L}) where {L} = LinSRange(x.start, x.stop, first(L))
+
+function as_static(x::AbstractVector, hint::Val{S}) where {S}
     if is_static(x)
         return x
     else
-        return SArray{Tuple{S...}}(x)
+        return SizedVector{first(S)}(x)
     end
 end
-RangeInterface.is_static(::Type{T}) where {T<:SArray} = true
-RangeInterface.is_dynamic(::Type{T}) where {T<:SArray} = false
 
-@inline function RangeInterface.as_static(x::AbstractRange, hint::Val{S}) where {S}
+function as_static(x::AbstractArray, hint::Val{S}) where {S}
+    if is_static(x)
+        return x
+    else
+        return SizedArray{Tuple{S...}}(x)
+    end
+end
+
+# type unstable version
+@inline as_static(x::AbstractArray) = as_static(x, Val(size(x)))
+
+@inline function as_static(x::AbstractRange, hint::Val{S}) where {S}
     if x isa OneToUnion
         T = eltype(x)
         return OneToSRange{T,T(first(S))}()
@@ -172,4 +233,19 @@ RangeInterface.is_dynamic(::Type{T}) where {T<:SArray} = false
     end
 end
 
+"""
+    of_staticness(x, y)
+
+Convert `y` to be dynamic if `is_dynamic(x)`, to fixed if `is_fixed(x)`, or static if
+`is_static(x)`.
+"""
+@inline function of_staticness(x, y)
+    if is_static(x)
+        return as_static(y)
+    elseif is_fixed(x)
+        return as_fixed(y)
+    else
+        return as_dynamic(y)
+    end
+end
 

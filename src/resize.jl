@@ -290,7 +290,7 @@ julia>  StaticRanges.resize_last(x, 5)
 
 ```
 """
-@inline function resize_last(x, n::Integer)
+@inline function resize_last(x::X, n::Integer) where {X}
     d = n - length(x)
     if d > 0
         return grow_last(x, d)
@@ -380,7 +380,7 @@ julia> StaticRanges.resize_first(x, 5)
  5
 ```
 """
-@inline function resize_first(x, n::Integer)
+@inline function resize_first(x::X, n::Integer) where {X}
     d = n - length(x)
     if d > 0
         return grow_first(x, d)

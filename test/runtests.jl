@@ -55,6 +55,8 @@ to_vec(x) = x
 
 @test StaticRanges.ArrayInterface.ismutable(OneToMRange(10))
 
+include("./RangeInterface/RangeInterface.jl")
+
 @testset "checkindex" begin
     r = 1:5
     all_inbounds = 1:5
@@ -107,7 +109,6 @@ include("reverse.jl")
 
 include("steprangelen_test.jl")
 include("linrange_test.jl")
-include("offset_range_tests.jl")
 
 
 @testset "empty" begin
@@ -790,7 +791,6 @@ end
     include("resize_tests.jl")
 end
 
-include("./CoreVectors/CoreVectors.jl")
 #=
 #@test 1.0:(.3-.1)/.1 == 1.0:2.0
 =#
