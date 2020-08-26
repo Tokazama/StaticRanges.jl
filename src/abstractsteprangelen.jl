@@ -1,19 +1,5 @@
 
 """
-    gethi(x:: TwicePrecision{T}) -> T
-
-Returns the `hi` component of a twice precision number.
-"""
-gethi(x::TwicePrecision) = getfield(x, :hi)
-
-"""
-    getlo(x::TwicePrecision{T}) -> T
-
-Returns the `lo` component of a twice precision number.
-"""
-getlo(x::TwicePrecision) = getfield(x, :lo)
-
-"""
     AbstractStepRangeLen
 
 Supertype for `StepSRangeLen` and `StepMRangeLen`. It's subtypes should behave
@@ -37,7 +23,7 @@ alternatively you can supply it as the value of `r[offset]` for some other
 index `1 <= offset <= len`. In conjunction with `TwicePrecision` this can be
 used to implement ranges that are free of roundoff error.
 """
-struct StepSRangeLen{T,Tr,Ts,R,S,L,F} <: AbstractStepRangeLen{T,R,S}
+struct StepSRangeLen{T,Tr,Ts,R,S,L,F} <: AbstractStepRangeLen{T,Tr,Ts}
 
     function StepSRangeLen{T,R,S}(ref::R, step::S, len::Integer, offset::Integer = 1) where {T,R,S}
         len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
@@ -101,7 +87,6 @@ function Base.setproperty!(r::StepMRangeLen{T,R,S}, s::Symbol, val) where {T,R,S
 end
 
 const StepRangeLenUnion{T,R,S} = Union{StepRangeLen{T,R,S},AbstractStepRangeLen{T,R,S}}
-
 
 for (F,f) in ((:M,:m), (:S,:s))
     SR = Symbol(:Step, F, :RangeLen)
@@ -194,83 +179,4 @@ for (F,f) in ((:M,:m), (:S,:s))
         end
    end
 end
-
-#=
-StepSRangeLen{Float16,R,S}(r::AbstractRange) = _convertSSRL(StepSRangeLen{Float16,Float64,Float64}, r)
-StepSRangeLen{Float32,R,S}(r::AbstractRange) = _convertSSRL(StepSRangeLen{Float32,Float64,Float64}, r)
-StepSRangeLen{Float64,R,S}(r::AbstractRange) = _convertSSRL(StepSRangeLen{Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
-StepSRangeLen{Float64,R,S}(r::StepRangeLenUnion) = _convertSSRL(StepSRangeLen{Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
-
-StepMRangeLen{Float16,R,S}(r::AbstractRange) = _convertSMRL(StepMRangeLen{Float16,Float64,Float64}, r)
-StepMRangeLen{Float32,R,S}(r::AbstractRange) = _convertSMRL(StepMRangeLen{Float32,Float64,Float64}, r)
-StepMRangeLen{Float64,R,S}(r::AbstractRange) = _convertSMRL(StepMRangeLen{Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
-StepMRangeLen{Float64,R,S}(r::StepRangeLenUnion) = _convertSMRL(StepMRangeLen{Float64,TwicePrecision{Float64},TwicePrecision{Float64}}, r)
-=#
-###
-### Constructors
-###
-#=
-function StepMRangeLen{T,R,S}(r::StepRangeLenUnion{T,R,S}) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision}
-    if is_dynamic()
-    else
-    end
-end
-
-function StepMRangeLen{T,R,S}(r::StepRangeLenUnion{T,R,S}) where {T,R,S}
-    if is_dynamic(r)
-        return r
-    else
-        return StepMRangeLen(r.ref, r.step, r.len, r.offset)
-    end
-end
-
-function StepSRangeLen{T,R,S}(r::StepRangeLenUnion{T,R,S}) where {T,R,S}
-    if is_static(r)
-        return r
-    else
-        return StepSRangeLen(r.ref, r.step, r.len, r.offset)
-    end
-end
-
-function StepMRangeLen{T,R,S}(r::StepRangeLenUnion) where {T,R,S}
-    return StepMRangeLen{T,R,S}(R(r.ref), S(r.step), r.len, r.offset)
-end
-
-function StepSRangeLen{T,R,S}(r::StepRangeLenUnion) where {T,R,S}
-    return StepSRangeLen{T,R,S}(R(r.ref), S(r.step), r.len, r.offset)
-end
-
-
-function StepMRangeLen{T,R,S}(r::AbstractRange) where {T,R,S}
-end
-
-StepRangeLen{T,R,S}(r::StepRangeLen{T,R,S}) where {T,R,S} = r
-StepRangeLen{T,R,S}(r::StepRangeLen) where {T,R,S} = StepRangeLen{T,R,S}(convert(R, r.ref), convert(S, r.step), length(r), r.offset)
-
-StepRangeLen{T,R,S}(r::StepRangeLen{T,R,S}) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision} = r
-StepRangeLen{T,R,S}(r::StepRangeLen) where {T<:AbstractFloat,R<:TwicePrecision,S<:TwicePrecision} =
-=#
-
-RangeInterface.step_type(::Type{<:StepSRangeLen{T,R,S}}) where {T,R,S} = S
-RangeInterface.step_type(::Type{StepMRangeLen{T,R,S}}) where {T,R,S} = S
-
-RangeInterface.has_len_field(::Type{T}) where {T<:StepSRangeLen} = true
-RangeInterface.has_len_field(::Type{T}) where {T<:StepMRangeLen} = true
-
-RangeInterface.has_ref_field(::Type{T}) where {T<:StepSRangeLen} = true
-RangeInterface.has_ref_field(::Type{T}) where {T<:StepMRangeLen} = true
-
-RangeInterface.has_step_field(::Type{T}) where {T<:StepSRangeLen} = true
-RangeInterface.has_step_field(::Type{T}) where {T<:StepMRangeLen} = true
-
-RangeInterface.has_offset_field(::Type{T}) where {T<:StepSRangeLen} = true
-RangeInterface.has_offset_field(::Type{T}) where {T<:StepMRangeLen} = true
-
-RangeInterface.known_offset(::Type{StepSRangeLen{T,Tr,Ts,R,S,L,F}}) where {T,Tr,Ts,R,S,L,F} = F
-RangeInterface.known_ref(::Type{StepSRangeLen{T,Tr,Ts,R,S,L,F}}) where {T,Tr,Ts,R,S,L,F} = R
-RangeInterface.known_step(::Type{StepSRangeLen{T,Tr,Ts,R,S,L,F}}) where {T,Tr,Ts,R,S,L,F} = S
-RangeInterface.known_len(::Type{StepSRangeLen{T,Tr,Ts,R,S,L,F}}) where {T,Tr,Ts,R,S,L,F} = L
-
-Base.length(x::StepSRangeLen) = RangeInterface.get_length(x)
-Base.length(x::StepMRangeLen) = RangeInterface.get_length(x)
 

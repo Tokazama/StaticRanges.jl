@@ -92,12 +92,3 @@ function Base.in(x::Real, r::OneToRange{T}) where {T}
     end
 end
 
-ArrayInterface.known_first(::Type{<:OneToRange{T}}) where {T} = one(T)
-
-RangeInterface.has_stop_field(::Type{T}) where {T<:OneToSRange} = true
-RangeInterface.has_stop_field(::Type{T}) where {T<:OneToMRange} = true
-
-RangeInterface.known_last(::Type{OneToSRange{T,L}}) where {T,L} = L
-
-Base.length(x::OneToRange) = RangeInterface.get_length(x)
-

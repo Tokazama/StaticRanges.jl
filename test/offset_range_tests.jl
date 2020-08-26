@@ -8,15 +8,15 @@
 
     @test is_static(as_static(x))
     @test is_fixed(as_static(x))
-    @test !is_dynamic(as_static(x))
+    @test !can_change_size(as_static(x))
 
     @test !is_static(as_fixed(x))
     @test is_fixed(as_fixed(x))
-    @test !is_dynamic(as_fixed(x))
+    @test !can_change_size(as_fixed(x))
 
     @test !is_static(as_dynamic(x))
     @test !is_fixed(as_dynamic(x))
-    @test is_dynamic(as_dynamic(x))
+    @test can_change_size(as_dynamic(x))
 
     start = first(x)
     start_p1 = start + 1

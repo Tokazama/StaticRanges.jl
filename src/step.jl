@@ -1,58 +1,33 @@
 
+Base.step_hp(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts,R,S} = S
+Base.step_hp(r::StepMRangeLen) = getfield(r, :step)
+
+ArrayInterface.known_step(::Type{<:StepSRange{<:Any,<:Any,<:Any,S}}) where {S} = S
+ArrayInterface.known_step(::Type{<:LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = (L - B) / D
+ArrayInterface.known_step(::Type{<:StepSRangeLen{T,<:Any,<:Any,<:Any,S}}) where {T,S} = T(S)
+
+Base.step(r::StepSRange) = known_step(r)
+Base.step(r::StepMRange) = getfield(r, :step)
+Base.step(r::AbstractLinRange) = (last(r) - first(r)) / r.lendiv
+Base.step(r::AbstractStepRangeLen{T}) where {T} = T(step_hp(r))
+
+
 # TODO better error messages for set_step
 
 ### AbstractStepRangeLen
-Base.step(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr,Ts,R,S,L,F} = convert(T, S)
-Base.step_hp(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts<:TwicePrecision,R,S} = convert(Ts, S)
-Base.step_hp(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts,R,S} = S
-
-Base.step_hp(r::StepMRangeLen) = getfield(r, :step)
-Base.step(r::StepMRangeLen{T}) where {T} = T(step_hp(r))
-Base.step(r::AbstractLinRange) = (last(r)-first(r)) / lendiv(r)
-
-"""
-    stephi(x::AbstractStepRangeLen)
-
-Returns the `hi` component of a twice precision step.
-"""
-stephi(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts<:TwicePrecision,R,S} = gethi(S)
-stephi(r::StepMRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.hi
-stephi(r::StepRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.hi
-
-"""
-    steplo(x::AbstractStepRangeLen)
-
-Returns the `lo` component of a twice precision step.
-"""
-steplo(::StepSRangeLen{T,Tr,Ts,R,S}) where {T,Tr,Ts<:TwicePrecision,R,S} = getlo(S)
-steplo(r::StepMRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.lo
-steplo(r::StepRangeLen{T,R,S}) where {T,R,S<:TwicePrecision} = r.step.lo
-
-### AbstractStepRange
-Base.step(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = S
-Base.step(r::StepMRange) = getfield(r, :step)
-
-"""
-    has_step(x) -> Bool
-
-Returns `true` if type of `x` has `step` method defined.
-"""
-has_step(::T) where {T} = has_step(T)
-has_step(::Type{T}) where {T} = false
-has_step(::Type{T}) where {T<:AbstractRange} = true
 
 """
     can_set_step(x) -> Bool
 
 Returns `true` if type of `x` has `step` field that can be set.
 """
-can_set_step(::T) where {T} = can_set_step(T)
-can_set_step(::Type{T}) where {T} = false
-can_set_step(::Type{T}) where {T<:OrdinalRange} = is_dynamic(T)
-function can_set_step(::Type{T}) where {T<:AbstractRange}
-    return is_dynamic(T) && RangeInterface.has_offset_field(T)
+can_set_step(x) = can_set_step(typeof(x))
+function can_set_step(::Type{T}) where {T}
+    return can_change_size(T) && !(step_is_known_one(T))
 end
-can_set_step(::Type{T}) where {T<:AbstractUnitRange} = false
+# it's not clear what changing the step size for a linear range would do
+# - does stop or length change?
+can_set_step(::Type{T}) where {T<:LinMRange} = false
 
 """
     set_step!(x, st)
@@ -71,14 +46,14 @@ julia> step(mr)
 2
 ```
 """
-function set_step!(x::AbstractRange, st)
-    can_set_step(x) || throw(ArgumentError("cannot perform `set_step!` for type $x"))
-    if has_ref(x)
-        setfield!(x, :step, RangeInterface.step_type(x)(st))
-    else
-        setfield!(x, :step, RangeInterface.step_type(x)(st))
-        setfield!(x, :stop, Base.steprange_last(first(x), st, last(x)))
-    end
+function set_step!(x::StepMRangeLen{T,R,S}, st) where {T,R,S}
+    setfield!(x, :step, S(st))
+    return x
+end
+
+function set_step!(x::StepMRange{T,S}, st) where {T,S}
+    setfield!(x, :step, S(st))
+    setfield!(x, :stop, Base.steprange_last(first(x), st, last(x)))
     return x
 end
 
@@ -95,14 +70,15 @@ julia> set_step(1:1:10, 2)
 1:2:9
 ```
 """
-function set_step(x::AbstractRange, st)
-    if x isa AbstractUnitRange || RangeInterface.has_lendiv_field(x)
-        throw(ArgumentError("cannot set step for type $x"))
-    else
-        if has_ref(x)
-            return typeof(x)(x.ref, RangeInterface.step_type(x)(st), x.len, x.offset)
-        else
-            return typeof(x)(first(x), st, Base.steprange_last(first(x), st, last(x)))
-        end
-    end
+set_step(x::AbstractUnitRange) = throw(ArgumentError("cannot set step for type $x"))
+function set_step(x::OrdinalRange, st)
+    return typeof(x)(first(x), st, Base.steprange_last(first(x), st, last(x)))
 end
+
+function set_step(x::AbstractStepRangeLen{T,R,S}, st) where {T,R,S}
+    return typeof(x)(x.ref, S(st), x.len, x.offset)
+end
+function set_step(x::StepRangeLen{T,R,S}, st) where {T,R,S}
+    return typeof(x)(x.ref, S(st), x.len, x.offset)
+end
+

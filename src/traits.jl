@@ -34,7 +34,7 @@ as_dynamic(x::Union{LinRange,LinSRange}) = LinMRange(x.start, x.stop, x.len)
 as_dynamic(x::StepMRangeLen) = x
 as_dynamic(x::Union{StepRangeLen,StepSRangeLen}) = StepMRangeLen(x.ref, x.step, x.len, x.offset)
 function as_dynamic(A::AbstractArray)
-    if is_dynamic(A)
+    if can_change_size(A)
         return A
     else
         return Array(A)
@@ -78,37 +78,25 @@ function as_fixed(x::AbstractArray{T,N}) where {T,N}
     end
 end
 
-@inline function as_fixed(v::V) where {V<:AbstractVector}
-    if is_fixed(V)
-        return v
-    elseif is_range(V)
-        if RangeInterface.has_start_field(V)
-            if RangeInterface.has_step_field(V)
-                return StepRange(first(v), step(v), last(v))
+function as_fixed(x::AbstractRange)
+    if is_fixed(x)
+        return x
+    else
+        if known_step(x) === oneunit(eltype(x))
+            if known_first(x) === oneunit(eltype(x))
+                return OneTo(last(x))
             else
-                if RangeInterface.has_len_field(V)
-                    return LinRange(first(v), last(v), length(v))
-                else
-                    return UnitRange(first(v), last(v))
-                end
+                return UnitRange(first(x), last(x))
             end
         else
-            if RangeInterface.has_offset_field(V)
-                return StepRangeLen(
-                    RangeInterface.get_ref_field(v),
-                    RangeInterface.get_step_field(v),
-                    RangeInterface.get_len_field(v),
-                    RangeInterface.get_offset_field(v)
-                )
-            else
-                return OneTo(last(v))
-            end
+            return StepRange(first(x), step(x), last(x))
         end
-    else
-        return v
-        #return view(v, :)
     end
 end
+
+as_fixed(x::LinMRange) = LinRange(first(x), last(x), length(x))
+
+as_fixed(x::StepMRangeLen) = StepRangeLen(x.ref, x.step, x.len, x.offset)
 
 """
     as_static(x)
@@ -236,7 +224,7 @@ end
 """
     of_staticness(x, y)
 
-Convert `y` to be dynamic if `is_dynamic(x)`, to fixed if `is_fixed(x)`, or static if
+Convert `y` to be dynamic if `can_change_size(x)`, to fixed if `is_fixed(x)`, or static if
 `is_static(x)`.
 """
 @inline function of_staticness(x, y)

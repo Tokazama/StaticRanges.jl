@@ -24,9 +24,13 @@ struct LinSRange{T,B,E,L,D} <: AbstractLinRange{T}
         end
         return new{T, T(start), T(stop), len, max(len-1,1)}()
     end
-end
 
-LinSRange(start, stop, len::Integer) = LinSRange{typeof((stop-start)/len)}(start, stop, len)
+    LinSRange{T}(r::AbstractRange) where {T} = LinSRange{T}(first(r), last(r), length(r))
+
+    function LinSRange(start, stop, len::Integer)
+        return LinSRange{typeof((stop-start)/len)}(start, stop, len)
+    end
+end
 
 function Base.getproperty(r::LinSRange, s::Symbol)
     if s === :start
@@ -42,7 +46,6 @@ function Base.getproperty(r::LinSRange, s::Symbol)
     end
 end
 
-LinSRange{T}(r::AbstractRange) where {T} = LinSRange{T}(first(r), last(r), length(r))
 
 
 """
@@ -58,12 +61,19 @@ mutable struct LinMRange{T} <: AbstractLinRange{T}
     lendiv::Int
 
     function LinMRange{T}(start, stop, len) where T
-        len >= 0 || throw(ArgumentError("mrange($start, stop=$stop, length=$len): negative length"))
-        if len == 1
-            start == stop || throw(ArgumentError("mrange($start, stop=$stop, length=$len): endpoints differ"))
-            return new(start, stop, 1, 1)
+        if len >= 0
+            if len == 1
+                if start == stop
+                    return new(start, stop, 1, 1)
+                else
+                    throw(ArgumentError("mrange($start, stop=$stop, length=$len): endpoints differ"))
+                end
+            else
+                return new(start, stop, len, max(len-1,1))
+            end
+        else
+            throw(ArgumentError("mrange($start, stop=$stop, length=$len): negative length"))
         end
-        return new(start, stop, len, max(len-1,1))
     end
 end
 
@@ -119,25 +129,4 @@ for (F,f) in ((:M,:m), (:S,:s))
         end
     end
 end
-
-RangeInterface.has_start_field(::Type{T}) where {T<:LinSRange} = true
-RangeInterface.has_start_field(::Type{T}) where {T<:LinMRange} = true
-
-RangeInterface.has_stop_field(::Type{T}) where {T<:LinSRange} = true
-RangeInterface.has_stop_field(::Type{T}) where {T<:LinMRange} = true
-
-RangeInterface.has_len_field(::Type{T}) where {T<:LinSRange} = true
-RangeInterface.has_len_field(::Type{T}) where {T<:LinMRange} = true
-
-RangeInterface.has_lendiv_field(::Type{T}) where {T<:LinSRange} = true
-RangeInterface.has_lendiv_field(::Type{T}) where {T<:LinMRange} = true
-
-RangeInterface.known_first(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = B
-RangeInterface.known_last(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = E
-RangeInterface.known_len(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = L
-RangeInterface.known_lendiv(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = D
-
-Base.length(x::LinSRange) = RangeInterface.get_length(x)
-Base.length(x::LinMRange) = RangeInterface.get_length(x)
-
 

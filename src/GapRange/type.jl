@@ -163,3 +163,5 @@ function _isequal(x, y)
     return out
 end
 
+Base.size(gr::GapRange) = (length(gr),)
+

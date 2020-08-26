@@ -11,9 +11,9 @@
             i2 = @inferred(as_dynamic(i))
             m2 = @inferred(as_dynamic(m))
             s2 = @inferred(as_dynamic(s))
-            @test @inferred(is_dynamic(i2))
-            @test @inferred(is_dynamic(m2))
-            @test @inferred(is_dynamic(s2))
+            @test @inferred(can_change_size(i2))
+            @test @inferred(can_change_size(m2))
+            @test @inferred(can_change_size(s2))
             @test i2 == m2 == s2
         end
 
@@ -41,17 +41,17 @@
     x = @inferred(as_static(SVector(1)))
     @test @inferred(is_static(x))
     @test @inferred(is_fixed(x))
-    @test !@inferred(is_dynamic(x))
+    @test !@inferred(can_change_size(x))
 
     x = @inferred(as_dynamic(x))
     @test !@inferred(is_static(x))
     @test !@inferred(is_fixed(x))
-    @test @inferred(is_dynamic(x))
+    @test @inferred(can_change_size(x))
 
     x = @inferred(as_static(x, Val((1,))))
     @test @inferred(is_static(x))
     @test @inferred(is_fixed(x))
-    @test !@inferred(is_dynamic(x))
+    @test !@inferred(can_change_size(x))
 
     x = OneTo(10)
     s1 = @inferred(as_static(x, Val((10,))))

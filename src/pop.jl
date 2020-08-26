@@ -49,10 +49,17 @@ function Base.pop!(r::StepMRange{T}) where {T}
 end
 
 function Base.pop!(r::Union{UnitMRange{T},OneToMRange{T}}) where {T}
-    isempty(r) && error("array must be non-empty")
-    l = last(r)
-    length(r) == 1 ? empty!(r) : set_last!(r, l - one(T))
-    return l
+    if isempty(r)
+        error("array must be non-empty")
+    else
+        lst = last(r)
+        if length(r) == 1
+            empty!(r)
+        else
+            set_last!(r, lst - oneunit(T))
+        end
+        return lst
+    end
 end
 
 ###

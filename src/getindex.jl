@@ -135,6 +135,7 @@ end
     @boundscheck ((i > 0) & (i <= last(v))) || throw(BoundsError(v, i))
     return T(i)
 end
+
 #=
 function getindex(v::OneTo{T}, i::Integer) where T
     @_inline_meta
@@ -142,24 +143,13 @@ function getindex(v::OneTo{T}, i::Integer) where T
     convert(T, i)
 end
 =#
+
 for R in (:OneToMRange, :OneToSRange)
     @eval begin
-
         @inline function Base.getindex(r::StaticRanges.$R{T}, s::OneToUnion) where T
             @boundscheck checkbounds(r, s)
             return similar_type(r)(T(last(s)))
         end
-
-        #=
-        @inline function Base.getindex(r::StaticRanges.$R, s::AbstractUnitRange{Integer})
-            @boundscheck checkbounds(r, s)
-            f = first(r)
-            st = oftype(f, f + first(s)-1)
-            f = first(r)
-            st = oftype(f, f + first(s)-1)
-            return range(st, length=length(s))
-        end
-        =#
     end
 end
 

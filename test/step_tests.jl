@@ -6,15 +6,6 @@
         @test @inferred(can_set_step(StepMRangeLen)) == true
     end
     @testset "set_step!" begin
-        @testset "has_step" begin
-            @test @inferred(has_step(OneToMRange{Int})) == true
-            @test @inferred(has_step([])) == false
-            @test @inferred(has_step(Vector)) == false
-        end
-        @test_throws ArgumentError set_step!(OneToMRange(10), 2)
-        @test_throws ArgumentError set_step!(UnitMRange(1, 10), 2)
-
-
         for (r1,b,v,r2) in ((UnitMRange(1,3), false, nothing, nothing),
                             (StepMRange(1,1,4), true, 2, StepMRange(1,2,4)),
                             (StepMRange(1,1,4), true, UInt32(2), StepMRange(1,2,4)),

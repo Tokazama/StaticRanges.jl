@@ -70,5 +70,8 @@
         @test_throws ErrorException GapRange(5:-1:1, 6:10)
         @test_throws ErrorException GapRange{Int,UnitRange{Int},UnitRange{Float64}}(1:3,UnitRange(4.0, 6.0))
     end
+
+    @test size(GapRange(1:3, 7:10)) == (7,)
+    @test size(GapRange(1:5, 6:10)) == (10,)
 end
 

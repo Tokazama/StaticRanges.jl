@@ -259,11 +259,11 @@ end
 
     r = @inferred(find_all(in(OneTo(10)), UnitMRange(1, 8)))
     @test r == OneTo(8)
-    @test isa(r, UnitMRange) == true
+    @test isa(r, UnitRange) == true
 
     r = @inferred(find_all(in(UnitSRange(1, 8)), UnitSRange(1, 10)))
     @test r == UnitSRange(1, 8)
-    @test isa(r, UnitSRange)
+    @test isa(r, OneToSRange)  # b/c one is known at compile time we can change OneToSRange
 
     @test find_all(in(collect(1:10)), 1:20) == find_all(in(1:10), 1:20)
     @test find_all(in(1:10), collect(1:20)) == 1:10

@@ -1,43 +1,5 @@
 
 """
-    is_dynamic(x) -> Bool
-
-Returns true if the size of `x` is dynamic/can change.
-
-## Examples
-```jldoctest
-julia> using StaticRanges
-
-julia> is_dynamic(UnitSRange(1, 10))
-false
-
-julia> is_dynamic(StepRange(1, 2, 20))
-false
-
-julia> is_dynamic(StepMRange(1, 2, 20))
-true
-```
-"""
-is_dynamic(x) = is_dynamic(typeof(x))
-is_dynamic(::Type{T}) where {T} = false
-is_dynamic(::Type{T}) where {T<:AbstractVector} = true
-is_dynamic(::Type{T}) where {T<:SubArray{<:Any,1}} = false
-is_dynamic(::Type{T}) where {T<:AbstractRange} = false
-is_dynamic(::Type{T}) where {T<:AbstractDict} = true
-is_dynamic(::Type{T}) where {T<:SArray} = false
-is_dynamic(::Type{T}) where {T<:MArray} = false
-is_dynamic(::Type{T}) where {T<:SizedArray} = false
-is_dynamic(::Type{T}) where {T<:SOneTo} = false
-is_dynamic(::Type{T}) where {T<:StaticArrays.SUnitRange} = false
-@inline function is_dynamic(::Type{T}) where {T<:AbstractArray}
-    for i in 1:ndims(T)
-        is_dynamic(axes_type(T, i)) && return true
-    end
-    return false
-end
-
-
-"""
     is_static(x) -> Bool
 
 Returns `true` if `x` is static.
@@ -112,7 +74,7 @@ is_fixed(::Type{T}) where {T<:AbstractVector} = !ArrayInterface.ismutable(T)
 is_fixed(::Type{T}) where {T<:SubArray{<:Any,1}} = true
 @inline function is_fixed(::Type{T}) where {T<:AbstractArray}
     for i in 1:ndims(T)
-        is_dynamic(axes_type(T, i)) && return false
+        can_change_size(axes_type(T, i)) && return false
     end
     return true
 end

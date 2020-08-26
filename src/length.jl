@@ -1,15 +1,69 @@
-
-Length(::Type{OneToSRange{T,L}}) where {T,L} = Length{Int(L)}()
-
-Length(::Type{LinSRange{T,B,E,L,D}}) where {T,B,E,L,D} = Length{L}()
-
-function Length(::Type{UnitSRange{T,F,L}})  where {T<:Union{UInt,UInt64,UInt128},F,L}
-    return Length{L < F ? 0 : Int(Base.Checked.checked_add(L - F, one(T)))}()
+###
+### length
+###
+@inline function _unit_range_length(start::T, stop::T) where {T<:Union{Int,Int64,Int128}}
+    if stop < start
+        return zero(T)
+    else
+        return Int(Base.checked_add(stop - start, one(T)))
+    end
+end
+@inline function _unit_range_length(start::T, stop::T) where {T<:Union{UInt,UInt64,UInt128}}
+    if stop < start
+        return 0
+    else
+        return Int(Base.checked_add(Base.checked_sub(stop, start), one(T)))
+    end
+end
+@inline function _unit_range_length(start::T, stop::T) where {T}
+    if stop < start
+        return 0
+    else
+        return Int(stop - start + 1)
+    end
 end
 
-function Length(::Type{UnitSRange{T,F,L}}) where {T<:Union{Int,Int64,Int128},F,L}
-    return Length{Int(Base.Checked.checked_add(Base.Checked.checked_sub(L, F), one(T)))}()
+@inline function _step_range_length(start::T, step, stop::T) where {T}
+    if (start != stop) & ((step > zero(step)) != (stop > start))
+        return 0
+    else
+        return Int(div((stop - start) + step, step))
+    end
 end
+@inline function _step_range_length(start::T, step, stop::T) where {T<:Union{Int,UInt,Int64,UInt64,Int128,UInt128}}
+    if (start != stop) & ((step > zero(step)) != (stop > start))
+        return 0
+    elseif step > 1
+        return Int(Base.checked_add(convert(T, div(unsigned(stop - start), step)), one(T)))
+    elseif step < -1
+        return Int(Base.checked_add(convert(T, div(unsigned(start - stop), -step)), one(T)))
+    elseif step > 0
+        return Int(Base.checked_add(div(Base.checked_sub(stop, start), step), one(T)))
+    else
+        return Int(Base.checked_add(div(Base.checked_sub(start, stop), -step), one(T)))
+    end
+end
+
+ArrayInterface.known_length(::Type{T}) where {T<:OneToSRange} = known_last(T)
+function ArrayInterface.known_length(::Type{T}) where {T<:UnitSRange}
+    return _unit_range_length(known_first(T), known_last(T))
+end
+function ArrayInterface.known_length(::Type{T}) where {T<:StepSRange}
+    return _step_range_length(known_first(T), known_step(T), known_last(T))
+end
+ArrayInterface.known_length(::Type{<:LinSRange{<:Any,<:Any,<:Any,L}}) where {L} = L
+ArrayInterface.known_length(::Type{<:StepSRangeLen{<:Any,<:Any,<:Any,<:Any,<:Any,L}}) where {L} = L
+
+Base.length(x::OneToRange) = last(x)
+Base.length(x::UnitSRange) = known_length(x)
+Base.length(x::UnitMRange) = _unit_range_length(first(x), last(x))
+Base.length(x::StepSRange) = known_length(x)
+Base.length(x::StepMRange) = _step_range_length(first(x), step(x), last(x))
+Base.length(x::LinSRange) = known_length(x)
+Base.length(x::LinMRange) = getfield(x, :len)
+Base.length(x::StepSRangeLen) = known_length(x)
+Base.length(x::StepMRangeLen) = getfield(x, :len)
+
 
 lendiv(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = D
 
@@ -26,7 +80,7 @@ its first or last position.
 """
 can_set_length(::T) where {T} = can_set_length(T)
 can_set_length(::Type{T}) where {T} = false
-can_set_length(::Type{T}) where {T<:AbstractRange} = is_dynamic(T)
+can_set_length(::Type{T}) where {T<:AbstractRange} = can_change_size(T)
 
 """
     set_length!(x, len)
@@ -45,22 +99,23 @@ julia> length(mr)
 20
 ```
 """
-function set_length!(x::AbstractRange{T}, len) where {T}
-    if has_ref(x)
-        len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
-        1 <= x.offset <= max(1,len) || throw(ArgumentError("StepMRangeLen: offset must be in [1,$len], got $offset"))
-        setfield!(x, :len, Int(len))
+function set_length!(x::LinMRange{T}, len) where {T}
+    len >= 0 || throw(ArgumentError("set_length!($x, $len): negative length"))
+    if len == 1
+        x.start == x.stop || throw(ArgumentError("set_length!($x, $len): endpoints differ"))
+        setfield!(x, :len, 1)
+        setfield!(x, :lendiv, 1)
     else
-        len >= 0 || throw(ArgumentError("set_length!($x, $len): negative length"))
-        if len == 1
-            x.start == x.stop || throw(ArgumentError("set_length!($x, $len): endpoints differ"))
-            setfield!(x, :len, 1)
-            setfield!(x, :lendiv, 1)
-        else
-            setfield!(x, :len, Int(len))
-            setfield!(x, :lendiv, Int(max(len - 1, 1)))
-        end
+        setfield!(x, :len, Int(len))
+        setfield!(x, :lendiv, Int(max(len - 1, 1)))
     end
+    return x
+end
+
+function set_length!(x::StepMRangeLen, len)
+    len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
+    1 <= x.offset <= max(1,len) || throw(ArgumentError("StepMRangeLen: offset must be in [1,$len], got $offset"))
+    setfield!(x, :len, Int(len))
     return x
 end
 
@@ -93,14 +148,10 @@ julia> set_length(1:10, 20)
 1:20
 ```
 """
-function set_length(x::AbstractRange, len)
-    if has_ref(x)
-        return typeof(x)(x.ref, x.step, len, x.offset)
-    else
-        return typeof(x)(first(x), last(x), len)
-    end
-end
-
+set_length(x::AbstractStepRangeLen, len) = typeof(x)(x.ref, x.step, len, x.offset)
+set_length(x::StepRangeLen, len) = typeof(x)(x.ref, x.step, len, x.offset)
+set_length(x::LinRange, len) = typeof(x)(first(x), last(x), len)
+set_length(x::AbstractLinRange, len) = typeof(x)(first(x), last(x), len)
 
 function set_length(x::AbstractUnitRange{T}, len) where {T}
     if known_first(x) === oneunit(T)
@@ -136,3 +187,4 @@ function set_lendiv!(r::LinMRange, d::Int)
     setfield!(r, :lendiv, d)
     return r
 end
+

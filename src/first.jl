@@ -1,49 +1,18 @@
 
+ArrayInterface.known_first(::Type{<:OneToRange{T}}) where {T} = one(T)
+ArrayInterface.known_first(::Type{<:UnitSRange{<:Any,F}}) where {F} = F
+ArrayInterface.known_first(::Type{<:StepSRange{<:Any,<:Any,F}}) where {F} = F
+ArrayInterface.known_first(::Type{<:LinSRange{<:Any,B}}) where {B} = B
+
 # TODO move this first(x)
 Base.first(::OneToRange{T}) where {T} = one(T)
-
-Base.first(::UnitSRange{T,F,L}) where {T,F,L} = F
-
+Base.first(r::UnitSRange) = known_first(r)
 Base.first(r::UnitMRange) = getfield(r, :start)
-
-Base.first(r::StepSRange{T,Ts,F,S,L}) where {T,Ts,F,S,L} = F
-
+Base.first(r::StepSRange) = known_first(r)
 Base.first(r::StepMRange) = getfield(r, :start)
-
-Base.first(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = B
-
+Base.first(r::LinSRange) = known_first(r)
 Base.first(r::LinMRange) = getfield(r, :start)
-
 Base.first(r::AbstractStepRangeLen) = unsafe_getindex(r, 1)
-
-has_ref(x) = has_ref(typeof(x))
-has_ref(::Type{T}) where {T} = false
-has_ref(::Type{StepRangeLen{T,R,S}}) where {T,R,S} = true
-has_ref(::Type{StepMRangeLen{T,R,S}}) where {T,R,S} = true
-has_ref(::Type{<:StepSRangeLen{T,R,S}}) where {T,R,S} = true
-
-ref_type(x) = ref_type(typeof(x))
-ref_type(::Type{StepRangeLen{T,R,S}}) where {T,R,S} = R
-ref_type(::Type{StepMRangeLen{T,R,S}}) where {T,R,S} = R
-ref_type(::Type{<:StepSRangeLen{T,R,S}}) where {T,R,S} = R
-
-"""
-    refhi(x::AbstractStepRangeLen)
-
-Returns the `hi` component of a twice precision ref.
-"""
-refhi(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr<:TwicePrecision,Ts,R,S,L,F} = gethi(R)
-refhi(r::StepMRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.hi
-refhi(r::StepRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.hi
-
-"""
-    reflo(x::AbstractStepRangeLen)
-
-Returns the `lo` component of a twice precision ref.
-"""
-reflo(::StepSRangeLen{T,Tr,Ts,R,S,L,F}) where {T,Tr<:TwicePrecision,Ts,R,S,L,F} = getlo(R)
-reflo(r::StepMRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.lo
-reflo(r::StepRangeLen{T,R,S}) where {T,R<:TwicePrecision,S} = r.ref.lo
 
 """
     can_set_first(x) -> Bool
@@ -53,9 +22,8 @@ changing the first element will also change the length of `x`.
 """
 can_set_first(x) = can_set_first(typeof(x))
 can_set_first(::Type{T}) where {T} = can_setindex(T)
-can_set_first(::Type{T}) where {T<:AbstractRange} = is_dynamic(T)
-function can_set_first(::Type{T}) where {T<:AbstractUnitRange}
-    return is_dynamic(T) && known_first(T) === nothing
+function can_set_first(::Type{T}) where {T<:AbstractRange}
+    return can_change_size(T) && known_first(T) === nothing
 end
 
 """
@@ -95,14 +63,10 @@ function set_first!(x::OrdinalRange{T,S}, val) where {T,S}
     return x
 end
 
-function set_first!(x::AbstractRange{T}, val) where {T}
-    if has_ref(x)
-        setfield!(x, :ref, ref_type(x)(val) - (1 - x.offset) * step_hp(x))
-    else
-        setfield!(x, :start, T(val))
-    end
-    return x
+function set_first!(x::StepMRangeLen{T,R}, val) where {T,R}
+    return setfield!(x, :ref, R(val) - (1 - x.offset) * step_hp(x))
 end
+set_first!(x::LinMRange{T}, val) where {T} = (setfield!(x, :start, T(val)); x)
 
 """
     set_first(x, val)
@@ -131,13 +95,12 @@ set_first(x::OrdinalRange, val) = typeof(x)(val, step(x), last(x))
 
 set_first(x::AbstractUnitRange{T}, val) where {T} = typeof(x)(T(val), last(x))
 
-function set_first(x::AbstractRange, val)
-    if has_ref(x)
-        return typeof(x)(val, step(x), x.len, x.offset)
-    else
-        return typeof(x)(val, last(x), x.len)
-    end
-end
+set_first(x::AbstractStepRangeLen, val) = typeof(x)(val, step(x), x.len, x.offset)
+set_first(x::StepRangeLen, val) = typeof(x)(val, step(x), x.len, x.offset)
+
+set_first(x::LinRange, val) = typeof(x)(val, last(x), x.len)
+set_first(x::AbstractLinRange, val) = typeof(x)(val, last(x), x.len)
+
 #= FIXME
   MethodError: no method matching StepSRangeLen{Int64,Int64,Int64,1,1,3,1}(::Int64, ::Int64, ::Int64, ::Int64)
   Stacktrace:

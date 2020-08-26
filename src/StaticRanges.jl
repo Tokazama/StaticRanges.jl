@@ -1,5 +1,7 @@
+
 module StaticRanges
 
+using LinearAlgebra
 using SparseArrays
 using SparseArrays: AbstractSparseMatrixCSC
 
@@ -14,12 +16,9 @@ using StaticArrays
 import StaticArrays: Length, pop, popfirst
 
 using ArrayInterface
-using ArrayInterface: can_setindex, parent_type, known_first, known_step, known_last
-
-# TODO remove these when new release of ArrayInterface
-ArrayInterface.known_first(x::AbstractRange) = known_first(typeof(x))
-ArrayInterface.known_last(x::AbstractRange) = known_last(typeof(x))
-ArrayInterface.known_step(x::AbstractRange) = known_step(typeof(x))
+using ArrayInterface: can_change_size, can_setindex, parent_type
+using ArrayInterface: known_first, known_step, known_last, known_length
+using ArrayInterface: OptionallyStaticUnitRange
 
 using IntervalSets
 using Requires
@@ -72,7 +71,6 @@ export
     as_dynamic,
     as_fixed,
     as_static,
-    is_dynamic,
     is_fixed,
     is_static,
     of_staticness,
@@ -111,6 +109,8 @@ export
     popfirst,
     vcat_sort
 
+include("utils.jl")
+
 include("./RangeInterface/RangeInterface.jl")
 using .RangeInterface
 
@@ -138,7 +138,6 @@ for R in RANGE_LIST
     end
 end
 
-
 const SRange{T} = Union{OneToSRange{T},UnitSRange{T},StepSRange{T},LinSRange{T},StepSRangeLen{T}}
 const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},StepMRangeLen{T}}
 const UnionRange{T} = Union{SRange{T},MRange{T}}
@@ -146,7 +145,23 @@ const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRang
 
 ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = true
 
-include("iterate.jl")
+###
+### can_change_size
+###
+ArrayInterface.can_change_size(::Type{T}) where {T<:OneToMRange} = true
+ArrayInterface.can_change_size(::Type{T}) where {T<:UnitMRange} = true
+ArrayInterface.can_change_size(::Type{T}) where {T<:StepMRange} = true
+ArrayInterface.can_change_size(::Type{T}) where {T<:LinMRange} = true
+ArrayInterface.can_change_size(::Type{T}) where {T<:StepMRangeLen} = true
+
+@defiterate OneToRange
+@defiterate UnitSRange
+@defiterate UnitMRange
+@defiterate StepSRange
+@defiterate StepMRange
+@defiterate AbstractLinRange
+@defiterate AbstractStepRangeLen
+
 include("traits.jl")
 include("checkindex.jl")
 include("filter.jl")
@@ -154,7 +169,6 @@ include("first.jl")
 include("last.jl")
 include("step.jl")
 include("length.jl")
-include("size.jl")
 include("promotion.jl")
 include("range.jl")
 include("merge.jl")
@@ -175,10 +189,5 @@ RangeInterface.is_static(::Type{T}) where {T<:StepSRange} = true
 RangeInterface.is_static(::Type{T}) where {T<:UnitSRange} = true
 RangeInterface.is_static(::Type{T}) where {T<:LinSRange} = true
 
-RangeInterface.is_dynamic(::Type{T}) where {T<:OneToMRange} = true
-RangeInterface.is_dynamic(::Type{T}) where {T<:StepMRangeLen} = true
-RangeInterface.is_dynamic(::Type{T}) where {T<:StepMRange} = true
-RangeInterface.is_dynamic(::Type{T}) where {T<:UnitMRange} = true
-RangeInterface.is_dynamic(::Type{T}) where {T<:LinMRange} = true
-
 end
+

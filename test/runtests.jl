@@ -1,7 +1,7 @@
 
 using StaticArrays
 using Test, StaticRanges, Dates, Documenter, IntervalSets
-using StaticRanges: can_set_first, can_set_last, can_set_step, has_step, can_set_length,
+using StaticRanges: can_set_first, can_set_last, can_set_step, can_set_length,
     stephi, steplo, refhi, reflo, eqmax, eqmin, ltmax, ltmin, gtmax, gtmin, group_max,
     group_min, min_of_group_max, max_of_group_min, ordmin, ordmax,
     Unordered, set_offset!, set_lendiv!, Size, Length
@@ -13,6 +13,8 @@ using StaticRanges: prev_type, next_type, grow_first, grow_first!, grow_last, gr
 using OffsetArrays
 using OffsetArrays: IdOffsetRange
 
+using ArrayInterface
+using ArrayInterface: can_change_size, known_first, known_last, known_step
 # Uniqueness methods
 using StaticRanges: ArrayInterface.ismutable
 
@@ -55,8 +57,6 @@ to_vec(x) = x
 
 @test StaticRanges.ArrayInterface.ismutable(OneToMRange(10))
 
-include("./RangeInterface/RangeInterface.jl")
-
 @testset "checkindex" begin
     r = 1:5
     all_inbounds = 1:5
@@ -79,7 +79,6 @@ end
 
 include("length_tests.jl")
 include("find.jl")
-include("count_tests.jl")
 include("gaprange_tests.jl")
 
 include("vcat_tests.jl")
@@ -96,7 +95,6 @@ include("mutate.jl")
 include("first_tests.jl")
 include("step_tests.jl")
 include("last_tests.jl")
-include("size_tests.jl")
 
 include("staticness_tests.jl")
 include("range_interface.jl")
@@ -123,7 +121,7 @@ include("linrange_test.jl")
               LinMRange(1.5, 5.5, 9),
               LinSRange(1.5, 5.5, 9))
         @test isempty(empty(r))
-        if is_dynamic(r)
+        if can_change_size(r)
             empty!(r)
             @test isempty(r)
         end
@@ -790,6 +788,8 @@ end
 @testset "resize tests" begin
     include("resize_tests.jl")
 end
+
+include("count_tests.jl")
 
 #=
 #@test 1.0:(.3-.1)/.1 == 1.0:2.0

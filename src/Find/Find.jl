@@ -92,20 +92,18 @@ _empty_ur(::Type{T}) where {T} = one(T):zero(T)
 
 _empty(x::X, y::Y) where {X,Y} = Vector{Int}()
 @inline function _empty(x::X, y::Y) where {X<:AbstractRange,Y<:AbstractRange}
-    R = similar_type(promote_type(typeof(x), typeof(y)), Int)
-    T = eltype(R)
-    if RangeInterface.has_step_field(R)
-        return one(T):one(T):zero(T)
-    else
-        if RangeInterface.has_start_field(R)
-            if RangeInterface.has_len_field(R)
-                return one(T):one(T):zero(T)
+    if step_is_known_one(x) && step_is_known_one(y)
+        if first_is_known_one(x) && first_is_known_one(y)
+            if known_last(x) isa Nothing || known_last(y) isa Nothing
+                return OneTo(0)
             else
-                R(x, y)
+                return OneToSRange(0)
             end
         else
-            return R(0)
+            return UnitRange(1, 0)
         end
+    else
+        return 1:1:0
     end
 end
 

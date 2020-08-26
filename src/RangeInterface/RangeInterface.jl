@@ -1,5 +1,6 @@
 module RangeInterface
 
+using LinearAlgebra
 using ArrayInterface
 using ArrayInterface: parent_type
 using ArrayInterface: known_first, known_step, known_last
@@ -7,35 +8,17 @@ using StaticArrays
 
 using Base: OneTo
 
-export 
+export
     axes_type,
     has_parent,
-    has_len_field,
-    has_lendiv_field,
-    has_offset_field,
-    has_offset_start,
-    has_offset_stop,
-    has_step_field,
-    known_first,
-    known_last,
-    known_length,
     known_size,
-    known_len,
-    known_lendiv,
-    known_offset,
-    parent_type,
     has_offset_axes,
-    first_is_known_one,
-    is_dynamic,
     is_fixed,
-    is_static,
-    is_range,
-    step_is_known_one
+    is_static
 
-include("range_fields.jl")
-include("known.jl")
+#include("range_fields.jl")
+#include("known.jl")
 include("staticness.jl")
-include("length.jl")
 
 ###
 ### Generic array traits
@@ -66,37 +49,10 @@ has_parent(x) = has_parent(typeof(x))
     end
 end
 
-is_range(x) = is_range(typeof(x))
-is_range(::Type{T}) where {T<:AbstractRange} = true
-function is_range(::Type{T}) where {T}
-    if has_parent(T)
-        return is_range(parent_type(T))
-    else
-        return false
-    end
-end
+###
+###
+###
 
-###
-###
-###
-first_is_known_one(x) = first_is_known_one(typeof(x))
-function first_is_known_one(::Type{<:AbstractVector{T}}) where {T}
-    if T <: Number
-        return known_first(T) === oneunit(T)
-    else
-        return false
-    end
-end
-
-step_is_known_one(x) = step_is_known_one(typeof(x))
-function step_is_known_one(::Type{T}) where {T<:AbstractRange}
-    S = step_type(T)
-    if S <: Number
-        return known_step(T) === oneunit(S)
-    else
-        return false
-    end
-end
 
 """
     axes_type(::T) = axes_type(T)
@@ -135,7 +91,24 @@ Base.OneTo{Int64}
 ```
 """
 axes_type(::T, i::Int) where {T} = axes_type(T, i)
-axes_type(::Type{T}, i::Int) where {T<:AbstractArray} = OneTo{Int}
+axes_type(::Type{T}, i::Int) where {T<:Array} = OneTo{Int}
+function axes_type(::Type{T}, i::Int) where {T<:AbstractArray}
+    if parent_type(T) <: T
+        return OneTo{Int}
+    else
+        return axes_type(parent_type(T), i)
+    end
+end
+function axes_type(::Type{T}, i::Int) where {T<:Union{Adjoint,Transpose}}
+    if i === 1
+        return axes_type(parent_type(T), 2)
+    elseif i === 2
+        return axes_type(parent_type(T), 1)
+    else
+        # let parent type throw error or choose automatic type
+        return axes_type(parent_type(T), i)
+    end
+end
 axes_type(::Type{T}, i::Int) where {T} = axes_type(T).parameters[i]
 @inline function axes_type(::Type{<:StaticArray{S}}, i::Int) where {S}
     if S.parameters[i] isa Int
@@ -144,7 +117,8 @@ axes_type(::Type{T}, i::Int) where {T} = axes_type(T).parameters[i]
         OneTo{Int}
     end
 end
-
-
+function axes_type(::Type{<:PermutedDimsArray{<:Any,<:Any,I1,<:Any,A}}, i::Int) where {I1,A}
+    return parent_type(A, I1[i])
+end
 
 end

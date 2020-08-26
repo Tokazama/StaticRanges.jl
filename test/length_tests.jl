@@ -1,16 +1,17 @@
 @testset "length - tests" begin
-    @testset "length(r)" begin
-        for (r,b) in ((OneToMRange(10), OneTo(10)),
-                      (OneToSRange(UInt(10)), OneTo(UInt(10))),
-                      (UnitMRange(1, 10), UnitRange(1, 10)),
-                      (UnitSRange(1.,10.), UnitRange(1.0, 10.0)),
-                      (UnitMRange(UInt(1), UInt(10)), UnitRange(UInt(1), UInt(10))),
-                      (UnitSRange(UInt(1), UInt(10)), UnitRange(UInt(1), UInt(10))),
-                      (StepMRange(1, 2, 10), StepRange(1, 2, 10)),
-                      (StepSRange(UInt32(1), UInt32(2), UInt32(10)), StepRange(UInt32(1), UInt32(2), UInt32(10))),
-                      (mrange(1.0, step=2.0, stop=10.0), 1.0:2.0:10.0),
-                      (srange(UInt32(1), step=UInt32(2), stop=UInt32(10)), UInt32(1):UInt32(2):UInt32(10)),
-                     )
+    for (r,b) in ((OneToMRange(10), OneTo(10)),
+                  (OneToSRange(UInt(10)), OneTo(UInt(10))),
+                  (UnitMRange(1, 10), UnitRange(1, 10)),
+                  (UnitSRange(1.,10.), UnitRange(1.0, 10.0)),
+                  (UnitMRange(UInt(1), UInt(10)), UnitRange(UInt(1), UInt(10))),
+                  (UnitSRange(UInt(1), UInt(10)), UnitRange(UInt(1), UInt(10))),
+                  (StepMRange(1, 2, 10), StepRange(1, 2, 10)),
+                  (StepSRange(UInt32(1), UInt32(2), UInt32(10)), StepRange(UInt32(1), UInt32(2), UInt32(10))),
+                  (mrange(1.0, step=2.0, stop=10.0), 1.0:2.0:10.0),
+                  (srange(UInt32(1), step=UInt32(2), stop=UInt32(10)), UInt32(1):UInt32(2):UInt32(10)),
+                 )
+
+        @testset "length($r)" begin
             @test @inferred(length(r)) == length(b)
             @test @inferred(length(r)) == length(b)
             if b isa StepRangeLen
@@ -138,4 +139,7 @@
     @test length(StepSRange(UInt8(1), UInt8(2), UInt8(10))) == 5
     @test length(StepSRange(UInt8(1), UInt8(1), UInt8(0))) == 0
     @test length(OneToMRange(UInt8(10))) == 10
+
+    @test !can_change_size(UnitSRange(1, 10))
+
 end

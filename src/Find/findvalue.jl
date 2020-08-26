@@ -35,18 +35,23 @@ function _unsafe_findvalue(idx::TwicePrecision{T}, rounding_mode) where {T}
     return round(Integer, T(idx), rounding_mode)
 end
 
-function unsafe_findvalue(x, collection, rounding_mode=RoundToZero)
-    if RangeInterface.first_is_known_one(collection)
-        return unsafe_find_value_oneto(x, collection)
-    elseif RangeInterface.step_is_known_one(collection)
-        return unsafe_find_value_unitrange(x, collection)
-    elseif RangeInterface.has_offset_field(collection)
-        return unsafe_find_value_steprangelen(x, collection)
-    elseif RangeInterface.has_len_field(collection)
-        return unsafe_find_value_linrange(x, collection)
+function unsafe_findvalue(val, r::OrdinalRange{T,S}, rounding_mode=RoundToZero) where {T,S}
+    if known_step(r) === oneunit(S)
+        if known_first(r) === oneunit(T)
+            return unsafe_find_value_oneto(val, r)
+        else
+            unsafe_find_value_unitrange(val, r)
+        end
     else
-        return unsafe_find_value_steprange(x, collection)
+        return unsafe_find_value_steprange(val, r)
     end
+end
+function unsafe_findvalue(val, r::Union{<:LinRange,<:LinSRange,<:LinMRange}, rounding_mode=RoundToZero)
+    return unsafe_find_value_linrange(val, r)
+end
+
+function unsafe_findvalue(val, r::Union{<:StepRangeLen,<:StepSRangeLen,<:StepMRangeLen}, rounding_mode=RoundToZero)
+    return unsafe_find_value_steprangelen(val, r)
 end
 
 unsafe_find_value_oneto(x, collection) = _unsafe_findvalue(x, RoundToZero)

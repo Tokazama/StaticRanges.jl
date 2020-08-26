@@ -37,9 +37,7 @@ function Base.reverse!(r::LinMRange)
     return r
 end
 
-function  Base.isempty(x::Union{AbstractLinRange,AbstractStepRangeLen})
-    return RangeInterface.get_len_field(x) === 0
-end
+Base.isempty(x::Union{AbstractLinRange,AbstractStepRangeLen}) = length(x) === 0
 
 ###
 ### ==(r1, r2)
@@ -237,6 +235,10 @@ for (frange,R) in ((mrange, :StepMRange), (srange, :StepSRange))
     end
 end
 
+function Base.isempty(r::AbstractStepRange)
+    return (first(r) != last(r)) & ((step(r) > zero(step(r))) != (last(r) > first(r)))
+end
+
 #= TODO
 float(r::StepRange) = float(r.start):float(r.step):float(last(r))
 float(r::UnitRange) = float(r.start):float(last(r))
@@ -257,6 +259,7 @@ function Base.empty!(r::StepMRange{T}) where {T}
 end
 Base.empty!(r::UnitMRange{T}) where {T} = (setfield!(r, :stop, first(r) - one(T)); r)
 Base.empty!(r::OneToMRange{T}) where {T} = (setfield!(r, :stop, zero(T)); r)
+
 
 Base.empty(r::LinSRange) = LinSRange(first(r), last(r), 0)
 Base.empty(r::LinMRange) = LinMRange(first(r), last(r), 0)

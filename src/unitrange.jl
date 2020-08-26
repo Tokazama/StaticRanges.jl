@@ -82,16 +82,6 @@ function Base.setproperty!(r::UnitMRange, s::Symbol, val)
 end
 
 Base.AbstractUnitRange{T}(r::UnitSRange) where {T} = UnitSRange{T}(r)
+
 Base.AbstractUnitRange{T}(r::UnitMRange) where {T} = UnitMRange{T}(r)
 
-RangeInterface.has_start_field(::Type{T}) where {T<:UnitSRange} = true
-RangeInterface.has_start_field(::Type{T}) where {T<:UnitMRange} = true
-
-RangeInterface.has_stop_field(::Type{T}) where {T<:UnitSRange} = true
-RangeInterface.has_stop_field(::Type{T}) where {T<:UnitMRange} = true
-
-RangeInterface.known_first(::Type{UnitSRange{T,F,L}}) where {T,F,L} = F
-RangeInterface.known_last(::Type{UnitSRange{T,F,L}}) where {T,F,L} = L
-
-Base.length(x::UnitSRange) = RangeInterface.get_length(x)
-Base.length(x::UnitMRange) = RangeInterface.get_length(x)
