@@ -228,12 +228,31 @@ Convert `y` to be dynamic if `can_change_size(x)`, to fixed if `is_fixed(x)`, or
 `is_static(x)`.
 """
 @inline function of_staticness(x, y)
-    if is_static(x)
+    if !isa(known_length(x), Nothing)
         return as_static(y)
-    elseif is_fixed(x)
-        return as_fixed(y)
+    elseif can_change_size(x)
+        as_dynamic(x)
     else
-        return as_dynamic(y)
+        return as_fixed(y)
     end
 end
+
+
+"""
+    is_static(x) -> Bool
+
+Returns `true` if `x` is static.
+"""
+is_static(x) = is_static(typeof(x))
+is_static(::Type{T}) where {T} = !isa(known_length(T), Nothing)
+
+
+"""
+    is_fixed(x) -> Bool
+
+Returns `true` if the size of `x` is fixed.
+
+"""
+is_fixed(x) = is_fixed(typeof(x))
+is_fixed(::Type{T}) where {T} = !can_change_size(T)
 

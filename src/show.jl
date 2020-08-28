@@ -28,10 +28,10 @@ function Base.show(io::IO, r::UnitMRange)
 end
 
 function Base.show(io::IO, r::AbstractLinRange)
-    if is_static(r)
-        print(io, "LinSRange(")
-    else
+    if can_change_size(r)
         print(io, "LinMRange(")
+    else
+        print(io, "LinSRange(")
     end
     show(io, first(r))
     print(io, ", stop=")

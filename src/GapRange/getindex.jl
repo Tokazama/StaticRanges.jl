@@ -62,3 +62,10 @@ function unsafe_spanning_getindex(gr, v)
            )
     end
 end
+
+Base.checkbounds(::Type{Bool}, gr::GapRange, i::Integer) = checkindex(Bool, gr, i)
+
+function Base.checkindex(::Type{Bool}, gr::GapRange, i::Integer)
+    return checkindexlo(gr, i) & checkindexhi(gr, i)
+end
+

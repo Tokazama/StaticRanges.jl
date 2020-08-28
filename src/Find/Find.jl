@@ -35,8 +35,6 @@ export
 drop_unit(x) = x / oneunit(x)
 drop_unit(x::Real) = x
 
-
-
 """
     find_max(x)
 

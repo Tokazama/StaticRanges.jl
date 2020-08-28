@@ -1,3 +1,12 @@
+
+using StaticRanges: gtmax, gtmin
+using StaticRanges: group_max, group_min
+using StaticRanges: eqmin, eqmax
+using StaticRanges: ltmin, ltmax
+using StaticRanges: ordmax, ordmin
+using StaticRanges: cmpmax, cmpmin
+using StaticRanges: min_of_group_max, max_of_group_min
+
 @testset "Order tests" begin
     @testset "gtmax" begin
         @test @inferred(gtmax(1:10, 1:11)) == false

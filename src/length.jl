@@ -1,46 +1,54 @@
-###
-### length
-###
-@inline function _unit_range_length(start::T, stop::T) where {T<:Union{Int,Int64,Int128}}
-    if stop < start
-        return zero(T)
-    else
-        return Int(Base.checked_add(stop - start, one(T)))
-    end
-end
-@inline function _unit_range_length(start::T, stop::T) where {T<:Union{UInt,UInt64,UInt128}}
-    if stop < start
+
+function _unit_range_length(start::T, stop::T) where {T<:Union{Int,Int64,Int128}}
+    if start > stop
         return 0
     else
         return Int(Base.checked_add(Base.checked_sub(stop, start), one(T)))
     end
 end
-@inline function _unit_range_length(start::T, stop::T) where {T}
-    if stop < start
+function _unit_range_length(start::T, stop::T) where {T<:Union{UInt,UInt64,UInt128}}
+    if start > stop
         return 0
     else
-        return Int(stop - start + 1)
+        return Int(Base.checked_add(stop - start, one(T)))
+    end
+end
+function _unit_range_length(start::T, stop::T) where {T}
+    if start > stop
+        return 0
+    else
+        return Int(stop) - Int(start) + 1
     end
 end
 
-@inline function _step_range_length(start::T, step, stop::T) where {T}
+function _step_range_length(start::T, step, stop::T) where T<:Union{Int,UInt,Int64,UInt64,Int128,UInt128}
     if (start != stop) & ((step > zero(step)) != (stop > start))
-        return 0
+        return zero(T)
+    elseif step > 1
+        return Base.checked_add(convert(T, div(unsigned(stop - start), step)), one(T))
+    elseif step < -1
+        return Base.checked_add(convert(T, div(unsigned(start - stop), -step)), one(T))
+    elseif step > 0
+        return Base.checked_add(div(Base.checked_sub(stop, start), step), one(T))
     else
-        return Int(div((stop - start) + step, step))
+        return Base.checked_add(div(Base.checked_sub(start, stop), -step), one(T))
     end
 end
-@inline function _step_range_length(start::T, step, stop::T) where {T<:Union{Int,UInt,Int64,UInt64,Int128,UInt128}}
+
+# some special cases to favor small Int type
+function _step_range_length(start::T, step, stop::T) where T<:Union{Int8,UInt8,Int16,UInt16,Int32,UInt32}
     if (start != stop) & ((step > zero(step)) != (stop > start))
         return 0
-    elseif step > 1
-        return Int(Base.checked_add(convert(T, div(unsigned(stop - start), step)), one(T)))
-    elseif step < -1
-        return Int(Base.checked_add(convert(T, div(unsigned(start - stop), -step)), one(T)))
-    elseif step > 0
-        return Int(Base.checked_add(div(Base.checked_sub(stop, start), step), one(T)))
     else
-        return Int(Base.checked_add(div(Base.checked_sub(start, stop), -step), one(T)))
+        return Int(div(Int(stop) + Int(step) - Int(start), Int(step)))
+    end
+end
+
+function _step_range_length(start::T, step, stop::T) where T
+    if (start != stop) & ((step > zero(step)) != (stop > start))
+        return 0
+    else
+        return Integer(div((stop - start) + step, step))
     end
 end
 
@@ -64,10 +72,13 @@ Base.length(x::LinMRange) = getfield(x, :len)
 Base.length(x::StepSRangeLen) = known_length(x)
 Base.length(x::StepMRangeLen) = getfield(x, :len)
 
-
 lendiv(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = D
 
 lendiv(r::LinMRange) = getfield(r, :lendiv)
+
+
+# TODO remoe this once it's defined in ArrayInterface
+ArrayInterface.known_length(::Type{T}) where {T} = nothing
 
 # some special cases to favor default Int type
 

@@ -52,27 +52,11 @@ export
     srange,
     # interface
     order,
-    ordmax,
-    ordmin,
-    gtmax,
-    ltmax,
-    eqmax,
-    gtmin,
-    ltmin,
-    eqmin,
-    group_max,
-    group_min,
-    cmpmax,
-    cmpmin,
-    min_of_group_max,
-    max_of_group_min,
     # traits
     axes_type,
     as_dynamic,
     as_fixed,
     as_static,
-    is_fixed,
-    is_static,
     of_staticness,
     is_forward,
     is_reverse,
@@ -86,7 +70,6 @@ export
     is_forward,
     is_reverse,
     is_ordered,
-    is_static,
     is_within,
     merge_sort,
     push,
@@ -100,9 +83,7 @@ export
     set_length!,
     set_length,
     order,
-    Continuity,
-    Continuous,
-    Discrete,
+
     # reexports
     similar_type,
     pop,
@@ -110,12 +91,7 @@ export
     vcat_sort
 
 include("utils.jl")
-
-include("./RangeInterface/RangeInterface.jl")
-using .RangeInterface
-
 include("./GapRange/GapRange.jl")
-
 include("continuity.jl")
 include("order.jl")
 include("onetorange.jl")
@@ -163,7 +139,6 @@ ArrayInterface.can_change_size(::Type{T}) where {T<:StepMRangeLen} = true
 @defiterate AbstractStepRangeLen
 
 include("traits.jl")
-include("checkindex.jl")
 include("filter.jl")
 include("first.jl")
 include("last.jl")
@@ -182,12 +157,6 @@ include("show.jl")
 include("vcat.jl")
 include("resize.jl")
 include("./Find/Find.jl")
-
-RangeInterface.is_static(::Type{T}) where {T<:OneToSRange} = true
-RangeInterface.is_static(::Type{T}) where {T<:StepSRangeLen} = true
-RangeInterface.is_static(::Type{T}) where {T<:StepSRange} = true
-RangeInterface.is_static(::Type{T}) where {T<:UnitSRange} = true
-RangeInterface.is_static(::Type{T}) where {T<:LinSRange} = true
 
 end
 

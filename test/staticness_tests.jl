@@ -38,28 +38,14 @@
         end
     end
 
-    x = @inferred(as_static(SVector(1)))
-    @test @inferred(is_static(x))
-    @test @inferred(is_fixed(x))
-    @test !@inferred(can_change_size(x))
-
-    x = @inferred(as_dynamic(x))
-    @test !@inferred(is_static(x))
-    @test !@inferred(is_fixed(x))
-    @test @inferred(can_change_size(x))
-
-    x = @inferred(as_static(x, Val((1,))))
-    @test @inferred(is_static(x))
-    @test @inferred(is_fixed(x))
-    @test !@inferred(can_change_size(x))
-
     x = OneTo(10)
     s1 = @inferred(as_static(x, Val((10,))))
     s2 = as_static(x)
     @test is_static(s1)
     @test is_static(s2)
 
-    @test @inferred(axes_type(SVector(1))) <: Tuple{SOneTo{1}}
+    # TODO get rid of all static array stuff and just use traits
+    #@test @inferred(axes_type(SVector(1))) <: Tuple{SOneTo{1}}
 
     @test !@inferred(StaticRanges.has_offset_axes(1:10))
     @test !@inferred(StaticRanges.has_offset_axes(ones(2,2)))

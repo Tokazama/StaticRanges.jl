@@ -26,7 +26,7 @@ _lin_intersect(x::AbstractRange{T}, y::Real) where {T} = _el_instersect(x, T(y))
 _steplen_intersect(x::AbstractRange{T}, y::Real) where {T} = _el_instersect(x, T(y))
 
 function _el_instersect(x::AbstractRange{T}, y::T) where {T}
-    if is_static(x)
+    if !isa(known_length(x), Nothing)
         if y in x
             return srange(y, stop=y, length=1)
         else
@@ -104,3 +104,4 @@ function _step_intersect(r, s::OrdinalRange)
     n = min(stop1 - mod(stop1 - b, a), stop2 - mod(stop2 - b, a))
     range(m, step=a, stop=n)
 end
+

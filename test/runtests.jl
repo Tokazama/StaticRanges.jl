@@ -2,13 +2,15 @@
 using StaticArrays
 using Test, StaticRanges, Dates, Documenter, IntervalSets
 using StaticRanges: can_set_first, can_set_last, can_set_step, can_set_length,
-    stephi, steplo, refhi, reflo, eqmax, eqmin, ltmax, ltmin, gtmax, gtmin, group_max,
-    group_min, min_of_group_max, max_of_group_min, ordmin, ordmax,
+    stephi, steplo, refhi, reflo, eqmax, eqmin,
     Unordered, set_offset!, set_lendiv!, Size, Length
 
 using StaticRanges: prev_type, next_type, grow_first, grow_first!, grow_last, grow_last!,
     shrink_first, shrink_first!, shrink_last, shrink_last!, resize_first, resize_first!,
     resize_last, resize_last!
+
+using StaticRanges: Continuity, Continuous, Discrete
+using StaticRanges: is_static, is_fixed
 
 using OffsetArrays
 using OffsetArrays: IdOffsetRange

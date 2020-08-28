@@ -117,7 +117,9 @@ end
                     LinMRange(5, 1, 10),
                     mrange(1.0, step=0.25, stop=10),
                     mrange(10.0, step=-0.25, stop=1.0))
-        for x in (first(collection) - step(collection),
+
+        @testset "$collection" begin
+            for x in (first(collection) - step(collection),
                 first(collection) - step(collection) / 2,
                 first(collection),
                 first(collection) + step(collection) / 2,
@@ -127,16 +129,17 @@ end
                 last(collection),
                 last(collection) + step(collection) / 2,
                 last(collection) + step(collection))
-            find_first_tests(x, collection)
-            find_last_tests(x, collection)
-            find_all_tests(x, collection)
-            # FIXME - filter AbstractLinRange doesn't come out as
-            # expected because getindex results in inexact values
-            # in both base and AbstractLinRange.
-            if !isa(collection, LinMRange)
-                filter_tests(x, collection)
+                find_first_tests(x, collection)
+                find_last_tests(x, collection)
+                find_all_tests(x, collection)
+                # FIXME - filter AbstractLinRange doesn't come out as
+                # expected because getindex results in inexact values
+                # in both base and AbstractLinRange.
+                if !isa(collection, LinMRange)
+                    filter_tests(x, collection)
+                end
+                count_tests(x, collection)
             end
-            count_tests(x, collection)
         end
     end
 
