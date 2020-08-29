@@ -1,4 +1,7 @@
 
+###
+### reverse
+###
 Base.reverse(r::StepSRange) = srange(last(r), step=-step(r), stop=first(r))
 Base.reverse(r::StepMRange) = mrange(last(r), step=-step(r), stop=first(r))
 Base.reverse(r::AbstractLinRange) = similar_type(r)(last(r), first(r), length(r))
@@ -107,6 +110,12 @@ end
 
 #_add(r1::StepSRangeLen{T,R,S}, r2::Union{OneToSRange,UnitSRange,StepSRange,LinSRange}) where {T,R,S} = +(r1, StepSRangeLen{T,R,S}(r2))
 #_add(r2::Union{OneToSRange,UnitSRange,StepSRange,LinSRange}, r1::StepSRangeLen{T,R,S}) where {T,R,S} = +(r1, StepSRangeLen{T,R,S}(r2))
+
+###
+### -
+###
+Base.:(-)(r::StepMRangeLen) = mrange(-first(r), step=-step(r), length=length(r))
+Base.:(-)(r::StepSRangeLen) = srange(-first(r), step=-step(r), length=length(r))
 
 ###
 ### sum
@@ -235,10 +244,6 @@ for (frange,R) in ((mrange, :StepMRange), (srange, :StepSRange))
     end
 end
 
-function Base.isempty(r::AbstractStepRange)
-    return (first(r) != last(r)) & ((step(r) > zero(step(r))) != (last(r) > first(r)))
-end
-
 #= TODO
 float(r::StepRange) = float(r.start):float(r.step):float(last(r))
 float(r::UnitRange) = float(r.start):float(last(r))
@@ -251,12 +256,16 @@ end
 mr, br, sr = (StepMRange(1, 1, 10),    StepRange(1, 1, 10),    StepSRange(1, 1, 10))
 =#
 
+###
+### isempty
+###
+function Base.isempty(r::AbstractStepRange)
+    return (first(r) != last(r)) & ((step(r) > zero(step(r))) != (last(r) > first(r)))
+end
+
 Base.empty!(r::LinMRange{T}) where {T} = (setfield!(r, :len, 0); r)
 Base.empty!(r::StepMRangeLen{T}) where {T} = (setfield!(r, :len, 0); r)
-function Base.empty!(r::StepMRange{T}) where {T}
-    setfield!(r, :stop, first(r) - step(r))
-    return r
-end
+Base.empty!(r::StepMRange{T}) where {T} = (setfield!(r, :stop, first(r) - step(r)); r)
 Base.empty!(r::UnitMRange{T}) where {T} = (setfield!(r, :stop, first(r) - one(T)); r)
 Base.empty!(r::OneToMRange{T}) where {T} = (setfield!(r, :stop, zero(T)); r)
 
@@ -271,4 +280,19 @@ Base.empty(r::UnitSRange{T}) where {T} = UnitSRange(first(r), first(r) - one(T))
 Base.empty(r::UnitMRange{T}) where {T} = UnitMRange(first(r), first(r) - one(T))
 Base.empty(r::OneToSRange{T}) where {T} = OneToSRange(zero(T))
 Base.empty(r::OneToMRange{T}) where {T} = OneToMRange(zero(T))
+
+###
+### in
+###
+
+Base.in(x::Integer, r::OneToRange{<:Integer}) = !(1 > x) & !(x > last(r))
+
+function Base.in(x::Real, r::OneToRange{T}) where {T}
+    val = round(Integer, x)
+    if in(val, r)
+        return @inbounds(getindex(r, val)) == x
+    else
+        return false
+    end
+end
 

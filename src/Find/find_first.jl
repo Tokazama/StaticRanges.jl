@@ -77,9 +77,9 @@ end
     end
 end
 
-function find_firstlt(x, a)
-    for (i, a_i) in pairs(a)
-        a_i < x && return i
+function find_firstlt(x, collection)
+    for (i, collection_i) in pairs(collection)
+        collection_i < x && return i
     end
     return nothing
 end

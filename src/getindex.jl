@@ -136,14 +136,6 @@ end
     return T(i)
 end
 
-#=
-function getindex(v::OneTo{T}, i::Integer) where T
-    @_inline_meta
-    @boundscheck ((i > 0) & (i <= v.stop)) || throw_boundserror(v, i)
-    convert(T, i)
-end
-=#
-
 for R in (:OneToMRange, :OneToSRange)
     @eval begin
         @inline function Base.getindex(r::StaticRanges.$R{T}, s::OneToUnion) where T

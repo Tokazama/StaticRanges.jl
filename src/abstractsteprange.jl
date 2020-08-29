@@ -25,6 +25,17 @@ struct StepSRange{T,Ts,F,S,L} <: AbstractStepRange{T,Ts}
         return new{T,Ts,start,step,Base.steprange_last(start, step, stop)}()
     end
 
+    StepSRange(start::T, step::S, stop::T) where {T,S} = StepSRange{T,S}(start, step, stop)
+
+    function StepSRange{T1,T2}(r::AbstractRange) where {T1,T2}
+        return StepSRange{T1,T2}(T1(first(r)), T2(step(r)), T1(last(r)))
+    end
+
+    StepSRange{T1,T2}(r::StepSRange{T1,T2}) where {T1,T2} = r
+
+    function StepSRange(r::AbstractUnitRange{T}) where {T}
+        return StepSRange{T,T}(first(r), step(r), last(r))
+    end
 end
 
 function Base.getproperty(r::StepSRange, s::Symbol)
@@ -59,6 +70,20 @@ mutable struct StepMRange{T,S} <: AbstractStepRange{T,S}
     function StepMRange{T,S}(start, st, stop) where {T,S}
         return StepMRange{T,S}(T(start), S(st), T(stop))
     end
+
+    StepMRange(start::T, step::S, stop::T) where {T,S} = StepMRange{T,S}(start, step, stop)
+
+    function StepMRange{T1,T2}(r::AbstractRange) where {T1,T2}
+        return StepMRange{T1,T2}(T1(first(r)), T2(step(r)), T1(last(r)))
+    end
+
+    function StepMRange{T1,T2}(r::StepMRange{T1,T2}) where {T1,T2}
+        return StepMRange{T1,T2}(first(r), step(r), last(r))
+    end
+
+    function StepMRange(r::AbstractUnitRange{T}) where {T}
+        return StepMRange{T,T}(first(r), step(r), last(r))
+    end
 end
 
 function Base.setproperty!(r::StepMRange, s::Symbol, val)
@@ -82,21 +107,6 @@ for (F,f) in ((:M,:m), (:S,:s))
             st = oftype(first(r), first(r) + (first(s)-1)*step(r))
             return $(frange)(st, step=step(r)*step(s), length=length(s))
         end
-
-        $(SR)(r::AbstractUnitRange{T}) where {T} = $(SR){T,T}(first(r), step(r), last(r))
-
-        $(SR)(start::T, step::S, stop::T) where {T,S} = $(SR){T,S}(start, step, stop)
-
-        $(SR){T1,T2}(r::$(SR){T1,T2}) where {T1,T2} = r
-        function $(SR){T1,T2}(r::AbstractRange) where {T1,T2}
-            return $(SR){T1,T2}(
-                convert(T1, first(r)),
-                convert(T2, step(r)),
-                convert(T1, last(r))
-               )
-        end
-
-        Base.:(-)(r::$(SR)) = $(frange)(-first(r), step=-step(r), length=length(r))
     end
 end
 

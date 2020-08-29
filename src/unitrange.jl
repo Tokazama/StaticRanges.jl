@@ -48,6 +48,8 @@ function Base.getproperty(r::UnitSRange, s::Symbol)
     end
 end
 
+Base.AbstractUnitRange{T}(r::UnitSRange) where {T} = UnitSRange{T}(r)
+
 """
     UnitMRange
 
@@ -80,8 +82,6 @@ function Base.setproperty!(r::UnitMRange, s::Symbol, val)
         error("type $(typeof(r)) has no property $s")
     end
 end
-
-Base.AbstractUnitRange{T}(r::UnitSRange) where {T} = UnitSRange{T}(r)
 
 Base.AbstractUnitRange{T}(r::UnitMRange) where {T} = UnitMRange{T}(r)
 

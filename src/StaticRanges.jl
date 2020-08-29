@@ -6,8 +6,6 @@ using SparseArrays
 using SparseArrays: AbstractSparseMatrixCSC
 
 
-using Base.Broadcast: DefaultArrayStyle
-
 using Dates
 using ChainedFixes
 using Reexport
@@ -23,6 +21,7 @@ using ArrayInterface: OptionallyStaticUnitRange
 using IntervalSets
 using Requires
 
+using Base.Broadcast: DefaultArrayStyle
 import Base: OneTo, TwicePrecision, el_same, unsafe_getindex, nbitslen, rat,
              IEEEFloat, floatrange, sumpair, add12, twiceprecision, step_hp,
              truncbits, Fix1, Fix2, tail, front, to_index, unsafe_length
@@ -50,8 +49,6 @@ export
     # methods
     mrange,
     srange,
-    # interface
-    order,
     # traits
     axes_type,
     as_dynamic,
@@ -62,15 +59,10 @@ export
     is_reverse,
     is_ordered,
     is_within,
-    # traits
     is_after,
     is_before,
     is_contiguous,
     # Traits
-    is_forward,
-    is_reverse,
-    is_ordered,
-    is_within,
     merge_sort,
     push,
     pushfirst,
@@ -83,9 +75,7 @@ export
     set_length!,
     set_length,
     order,
-
     # reexports
-    similar_type,
     pop,
     popfirst,
     vcat_sort
@@ -114,10 +104,12 @@ for R in RANGE_LIST
     end
 end
 
+const OneToUnion{T} = Union{OneTo{T},OneToRange{T}}
 const SRange{T} = Union{OneToSRange{T},UnitSRange{T},StepSRange{T},LinSRange{T},StepSRangeLen{T}}
 const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},StepMRangeLen{T}}
 const UnionRange{T} = Union{SRange{T},MRange{T}}
 const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRangeLen{T}}
+
 
 ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = true
 
@@ -138,8 +130,21 @@ ArrayInterface.can_change_size(::Type{T}) where {T<:StepMRangeLen} = true
 @defiterate AbstractLinRange
 @defiterate AbstractStepRangeLen
 
+
+# Notes on implementation:
+# Currently Base Julia reutrns an empty vector on empty(::AbstractRange)
+# We want the appropriate variant of the range that returns true when isempty(::AbstractRange)
+# We index by OneToSRange(0) in order to force this.
+# Using the static version also ensures that it doesn't accidently "promote down" the type
+
+
+# FIXME specify Bit operator filters here to <,<=,>=,>,==,isequal,isless
+# Currently will return incorrect order or repeated results otherwise
+Base.filter(f::Function, r::UnionRange)  = r[find_all(f, r)]
+
+Base.filter(f::ChainedFix, r::UnionRange) = r[findall(f, r)]
+
 include("traits.jl")
-include("filter.jl")
 include("first.jl")
 include("last.jl")
 include("step.jl")

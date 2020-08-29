@@ -5,7 +5,7 @@
             b = StepRange(1, 1, 10)
             @test R(1:10) == 1:1:10
             @test eltype(R(UInt(1), UInt(1), UInt(10))) == UInt
-            @test R{Int,Int}(r) === r
+            @test R{Int,Int}(r) == r
             @test eltype(R{UInt,UInt}(r)) == UInt
             @test first(r) == r.start
             @test last(r) == r.stop
