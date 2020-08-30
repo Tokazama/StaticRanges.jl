@@ -89,11 +89,13 @@ julia> set_last(1:10, 5)
 """
 function set_last(x::AbstractVector, val)
     if isempty(x)
-        return push(x, val)
+        # TODO when this is in ArrayInterface
+        # return push(x, val)
+        return vcat(x, val)
     elseif length(x) == 1
-        return similar_type(x)([val])
+        return vcat(empty(x), val)
     else
-        return push(@inbounds(x[1:end-1]), val)
+        return vcat(@inbounds(x[1:end-1]), val)
     end
 end
 

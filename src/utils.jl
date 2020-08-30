@@ -138,46 +138,13 @@ has_parent(x) = has_parent(typeof(x))
 end
 
 ###
+### axes_type
 ###
-###
-
-
-"""
-    axes_type(::T) = axes_type(T)
-    axes_type(::Type{T})
-
-Returns the equivalent output of `typeof(axes(x))` but derives this directly
-from the type of x (e.g., parametric typing).
-
-## Examples
-```jldoctest
-julia> using StaticRanges
-
-julia> axes_type([1 2; 3 4])
-Tuple{Base.OneTo{Int64},Base.OneTo{Int64}}
-```
-"""
 axes_type(x) = axes_type(typeof(x))
-
 @inline function axes_type(::Type{T}) where {T<:AbstractArray}
     return Tuple{ntuple(i -> axes_type(T, i), Val(ndims(T)))...}
 end
 
-"""
-    axes_type(::T, i) = axes_type(T, i)
-    axes_type(::Type{T}, i)
-
-Returns the equivalent output of `typeof(axes(x, i))` but derives this directly
-from the type of x (e.g., parametric typing).
-
-## Examples
-```jldoctest
-julia> using StaticRanges
-
-julia> axes_type([1 2; 3 4], 1)
-Base.OneTo{Int64}
-```
-"""
 axes_type(::T, i::Int) where {T} = axes_type(T, i)
 axes_type(::Type{T}, i::Int) where {T<:Array} = OneTo{Int}
 function axes_type(::Type{T}, i::Int) where {T<:AbstractArray}
@@ -198,13 +165,6 @@ function axes_type(::Type{T}, i::Int) where {T<:Union{Adjoint,Transpose}}
     end
 end
 axes_type(::Type{T}, i::Int) where {T} = axes_type(T).parameters[i]
-@inline function axes_type(::Type{<:StaticArray{S}}, i::Int) where {S}
-    if S.parameters[i] isa Int
-        SOneTo{S.parameters[i]}
-    else
-        OneTo{Int}
-    end
-end
 function axes_type(::Type{<:PermutedDimsArray{<:Any,<:Any,I1,<:Any,A}}, i::Int) where {I1,A}
     return parent_type(A, I1[i])
 end

@@ -15,6 +15,7 @@ StaticRanges.as_fixed
 ## Order traits
 
 The following traits are used to conveniently characterize the order of ranges.
+They are not exported and are primarily intended for internal use.
 ```@docs
 StaticRanges.is_forward
 StaticRanges.is_reverse

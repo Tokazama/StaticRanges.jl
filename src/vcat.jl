@@ -68,10 +68,10 @@ Returns a sorted concatenation of `x` and `y`.
 ```jldoctest
 julia> using StaticRanges
 
-julia> vcat_sort(1:10)  # it's already sorted, nothing happens
+julia> StaticRanges.vcat_sort(1:10)  # it's already sorted, nothing happens
 1:10
 
-julia> vcat_sort([3, 1, 2, 5])  # sort unordered collection
+julia> StaticRanges.vcat_sort([3, 1, 2, 5])  # sort unordered collection
 4-element Array{Int64,1}:
  1
  2
@@ -79,7 +79,7 @@ julia> vcat_sort([3, 1, 2, 5])  # sort unordered collection
  5
 
 
-julia> vcat_sort([3, 4, 5], [1, 2, 5])
+julia> StaticRanges.vcat_sort([3, 4, 5], [1, 2, 5])
 6-element Array{Int64,1}:
  1
  2

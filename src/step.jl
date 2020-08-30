@@ -11,11 +11,6 @@ Base.step(r::StepMRange) = getfield(r, :step)
 Base.step(r::AbstractLinRange) = (last(r) - first(r)) / r.lendiv
 Base.step(r::AbstractStepRangeLen{T}) where {T} = T(step_hp(r))
 
-
-# TODO better error messages for set_step
-
-### AbstractStepRangeLen
-
 """
     can_set_step(x) -> Bool
 

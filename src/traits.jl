@@ -111,8 +111,8 @@ julia> using StaticRanges, StaticArrays
 julia> as_static(Base.OneTo(10))
 OneToSRange(10)
 
-julia> as_static(UnitRange(1, 10))
-UnitSRange(1:10)
+julia> as_static(UnitRange(2, 10))
+UnitSRange(2:10)
 
 julia> as_static(StepRange(1, 2, 20))
 StepSRange(1:2:19)
@@ -122,12 +122,6 @@ StepSRangeLen(1.0:2.0:19.0)
 
 julia> as_static(LinRange(1, 20, 10))
 LinSRange(1.0, stop=20.0, length=10)
-
-julia> as_static(reshape(1:12, (3, 4)))
-3×4 SizedArray{Tuple{3,4},Int64,2,2} with indices SOneTo(3)×SOneTo(4):
- 1  4  7  10
- 2  5  8  11
- 3  6  9  12
 
 ```
 """
@@ -139,32 +133,21 @@ as_static(x) = x
 If `x` is static then returns `x`, otherwise returns a comparable but static size
 type to `x`. `hint` provides the option of passing along a statically defined
 tuple representing the size `S` of `x`.
-
-## Examples
-```jldoctest
-julia> using StaticRanges, StaticArrays
-
-julia> x = as_static([1], Val((1,)))
-1-element SizedArray{Tuple{1},Int64,1,1} with indices SOneTo(1):
- 1
-
-```
 """
-as_static(x::OneToSRange, hint::Val) = x
-as_static(x::OneToSRange) = x
+function as_static(x::AbstractUnitRange{<:Integer}, ::Val{L}) where {L}
+    if known_first(x) === oneunit(eltype(x))
+        return OneToSRange{eltype(x)}(first(L))
+    else
+        return UnitSRange{eltype(x)}(first(x), last(x))
+    end
+end
 
-as_static(::SOneTo{L}) where {L} = OneToSRange{Int,L}()
-as_static(::SOneTo{L}, hint::Val) where {L} = OneToSRange{Int,first(L)}()
+as_static(x::AbstractUnitRange, ::Val) = UnitSRange{eltype(x)}(first(x), last(x))
 
-as_static(x::StaticArrays.SUnitRange{F,L}) where {F,L} = UnitSRange{Int,F,L}()
-as_static(x::StaticArrays.SUnitRange{F,L}, hint::Val) where {F,L} = UnitSRange{Int,F,L}()
+as_static(x::AbstractUnitRange) = as_static(x, Val(last(x)))
 
-as_static(x::OneTo) = as_static(x, Val(last(x)))
-as_static(x::OneTo{T}, hint::Val{L}) where {T,L} = OneToSRange{T}(T(first(L)))
-
-as_static(x::OneToMRange) = as_static(x, Val(last(x)))
-as_static(x::OneToMRange{T}, hint::Val{L}) where {T,L} = OneToSRange{T}(T(first(L)))
-
+as_static(x::UnitSRange, ::Val) = x
+as_static(x::UnitSRange) = x
 
 as_static(x::StepSRangeLen) = x
 as_static(x::StepSRangeLen, hint::Val) = x
@@ -183,9 +166,6 @@ as_static(x::StepSRange, hint::Val) = x
 as_static(x::OrdinalRange) = StepSRange(first(x), step(x), last(x))
 as_static(x::OrdinalRange, hint::Val) = StepSRange(first(x), step(x), last(x))
 
-as_static(x::AbstractUnitRange) = UnitSRange(first(x), last(x))
-as_static(x::AbstractUnitRange, hint::Val{L}) where {L} = UnitSRange(first(x), last(x))
-
 as_static(x::LinSRange) = x
 as_static(x::LinRange) = as_static(x, Val(length(x)))
 as_static(x::LinRange, ::Val{L}) where {L} = LinSRange(x.start, x.stop, first(L))
@@ -193,21 +173,7 @@ as_static(x::LinRange, ::Val{L}) where {L} = LinSRange(x.start, x.stop, first(L)
 as_static(x::LinMRange) = as_static(x, Val(length(x)))
 as_static(x::LinMRange, ::Val{L}) where {L} = LinSRange(x.start, x.stop, first(L))
 
-function as_static(x::AbstractVector, hint::Val{S}) where {S}
-    if is_static(x)
-        return x
-    else
-        return SizedVector{first(S)}(x)
-    end
-end
-
-function as_static(x::AbstractArray, hint::Val{S}) where {S}
-    if is_static(x)
-        return x
-    else
-        return SizedArray{Tuple{S...}}(x)
-    end
-end
+as_static(x::AbstractArray, hint::Val{S}) where {S} = x
 
 # type unstable version
 @inline as_static(x::AbstractArray) = as_static(x, Val(size(x)))

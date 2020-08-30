@@ -10,9 +10,6 @@ using Dates
 using ChainedFixes
 using Reexport
 
-using StaticArrays
-import StaticArrays: Length, pop, popfirst
-
 using ArrayInterface
 using ArrayInterface: can_change_size, can_setindex, parent_type
 using ArrayInterface: known_first, known_step, known_last, known_length
@@ -49,23 +46,10 @@ export
     # methods
     mrange,
     srange,
-    # traits
-    axes_type,
     as_dynamic,
     as_fixed,
     as_static,
     of_staticness,
-    is_forward,
-    is_reverse,
-    is_ordered,
-    is_within,
-    is_after,
-    is_before,
-    is_contiguous,
-    # Traits
-    merge_sort,
-    push,
-    pushfirst,
     set_first!,
     set_first,
     set_step!,
@@ -73,16 +57,10 @@ export
     set_last!,
     set_last,
     set_length!,
-    set_length,
-    order,
-    # reexports
-    pop,
-    popfirst,
-    vcat_sort
+    set_length
 
 include("utils.jl")
 include("./GapRange/GapRange.jl")
-include("continuity.jl")
 include("order.jl")
 include("onetorange.jl")
 include("unitrange.jl")
@@ -157,7 +135,6 @@ include("broadcast.jl")
 include("operators.jl")
 include("getindex.jl")
 include("pop.jl")
-include("push.jl")
 include("show.jl")
 include("vcat.jl")
 include("resize.jl")

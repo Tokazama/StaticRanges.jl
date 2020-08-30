@@ -1,4 +1,16 @@
 
+abstract type Continuity end
+
+struct ContinuousTrait <: Continuity end
+const Continuous = ContinuousTrait()
+
+struct DiscreteTrait <: Continuity end
+const Discrete = DiscreteTrait()
+
+Continuity(::T) where {T} = Continuity(T)
+Continuity(::Type{T}) where {T} = Discrete
+Continuity(::Type{T}) where {T<:AbstractRange} = Continuous
+
 "UnorderedOrdering - Indicates that a collection's is not forward or reverse ordered."
 struct UnorderedOrdering <: Ordering end
 const Unordered = UnorderedOrdering()
@@ -22,10 +34,10 @@ julia> fr = 1:2:10
 julia> rr = 10:-2:1
 10:-2:2
 
-julia> is_forward(fr)
+julia> StaticRanges.is_forward(fr)
 true
 
-julia> is_forward(rr)
+julia> StaticRanges.is_forward(rr)
 false
 ```
 """
@@ -50,10 +62,10 @@ julia> fr = 1:2:10
 julia> rr = 10:-2:1
 10:-2:2
 
-julia> is_reverse(fr)
+julia> StaticRanges.is_reverse(fr)
 false
 
-julia> is_reverse(rr)
+julia> StaticRanges.is_reverse(rr)
 true
 ```
 """
@@ -276,10 +288,10 @@ julia> r1 = 1:5
 julia> r2 = 6:10
 6:10
 
-julia> is_before(r2, r1)
+julia> StaticRanges.is_before(r2, r1)
 false
 
-julia> is_before(r1, r2)
+julia> StaticRanges.is_before(r1, r2)
 true
 ```
 """
@@ -312,10 +324,10 @@ julia> r1 = 1:5
 julia> r2 = 6:10
 6:10
 
-julia> is_after(r2, r1)
+julia> StaticRanges.is_after(r2, r1)
 true
 
-julia> is_after(r1, r2)
+julia> StaticRanges.is_after(r1, r2)
 false
 ```
 """
@@ -333,19 +345,19 @@ end of `y`.
 ```jldoctest
 julia> using StaticRanges
 
-julia> is_contiguous(1:3, 3:4)
+julia> StaticRanges.is_contiguous(1:3, 3:4)
 true
 
-julia> is_contiguous(3:-1:1, 3:4)
+julia> StaticRanges.is_contiguous(3:-1:1, 3:4)
 true
 
-julia> is_contiguous(3:-1:1, 4:-1:3)
+julia> StaticRanges.is_contiguous(3:-1:1, 4:-1:3)
 true
 
-julia> is_contiguous(1:3, 4:-1:3)
+julia> StaticRanges.is_contiguous(1:3, 4:-1:3)
 true
 
-julia> is_contiguous(1:3, 2:4)
+julia> StaticRanges.is_contiguous(1:3, 2:4)
 false
 ```
 """

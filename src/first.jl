@@ -83,11 +83,11 @@ julia> r = set_first(1:10, 2)
 """
 function set_first(x::AbstractVector, val)
     if isempty(x)
-        return pushfirst(x, val)
+        return vcat(x, val)
     elseif length(x) == 1
-        return similar_type(x)([val])
+        return vcat(empty(x), val)
     else
-        return pushfirst(@inbounds(x[2:end]), val)
+        return vcat(val, @inbounds(x[2:end]))
     end
 end
 
