@@ -26,6 +26,29 @@ julia> find_first(iseven, [1 4; 2 2])
 CartesianIndex(2, 1)
 ```
 """
+function find_first(f, collection)
+    if isempty(collection)
+        return nothing
+    else
+        return unsafe_find_first(f, collection)
+    end
+end
+
+
+@inline unsafe_find_first(f::Equal,              x) = unsafe_find_firsteq(f.x,   x)
+@inline unsafe_find_first(f::Less,               x) = unsafe_find_firstlt(f.x,   x)
+@inline unsafe_find_first(f::LessThanOrEqual,    x) = unsafe_find_firstlteq(f.x, x)
+@inline unsafe_find_first(f::Greater,            x) = unsafe_find_firstgt(f.x,   x)
+@inline unsafe_find_first(f::GreaterThanOrEqual, x) = unsafe_find_firstgteq(f.x, x)
+@inline function unsafe_find_first(f, x)
+    for (i, x_i) in pairs(x)
+        f(x_i) && return i
+    end
+    return nothing
+end
+
+#=
+
 @inline find_first(f::Equal,              x) = find_firsteq(f.x,   x)
 @inline find_first(f::Less,               x) = find_firstlt(f.x,   x)
 @inline find_first(f::LessThanOrEqual,    x) = find_firstlteq(f.x, x)
@@ -39,23 +62,10 @@ CartesianIndex(2, 1)
     return nothing
 end
 
-
-"""
-    find_firstlt(val, collection)
-
-Return the first index of `collection` where the element is less than `val`.
-If no element of `collection` is less than `val`, `nothing` is returned.
-"""
-@inline function find_firstlt(x, collection::AbstractRange)
-    if isempty(collection)
-        return nothing
-    elseif drop_unit(step(collection)) > 0
-        return unsafe_find_firstlt_forward(x, collection)
-    else  # drop_unit(step(collection)) < 0
-        return unsafe_find_firstlt_reverse(x, collection)
-    end
-end
-
+=#
+###
+### find_firstlt(val, collection)
+###
 @inline function unsafe_find_firstlt_forward(x, collection)
     if first(collection) >= x
         return nothing
@@ -77,29 +87,9 @@ end
     end
 end
 
-function find_firstlt(x, collection)
-    for (i, collection_i) in pairs(collection)
-        collection_i < x && return i
-    end
-    return nothing
-end
-
-"""
-    find_firstlteq(val, collection)
-
-Return the first index of `collection` where the element is less than or equal to
-`val`. If no element of `collection` is less than or equal to `val`, `nothing`
-is returned.
-"""
-@inline function find_firstlteq(x, collection::AbstractRange)
-    if isempty(collection)
-        return nothing
-    elseif drop_unit(step(collection)) > 0
-        return unsafe_find_firstlteq_forward(x, collection)
-    else  # drop_unit(step(collection)) < 0
-        return unsafe_find_firstlteq_reverse(x, collection)
-    end
-end
+###
+### find_firstlteq(val, collection)
+###
 
 @inline function unsafe_find_firstlteq_forward(x, collection)
     if first(collection) > x
@@ -124,29 +114,9 @@ end
     end
 end
 
-function find_firstlteq(x, a)
-    for (i, a_i) in pairs(a)
-        a_i <= x && return i
-    end
-    return nothing
-end
-
-"""
-    find_firstgt(val, collection)
-
-Return the first index of `collection` where the element is greater than `val`.
-If no element of `collection` is greater than `val`, `nothing` is returned.
-"""
-@inline function find_firstgt(x, collection::AbstractRange)
-    if isempty(collection)
-        return nothing
-    elseif drop_unit(step(collection)) > 0
-        return unsafe_find_firstgt_forward(x, collection)
-    else  # drop_unit(step(collection)) < 0
-        return unsafe_find_firstgt_reverse(x, collection)
-    end
-end
-
+###
+### find_firstgt
+###
 @inline function unsafe_find_firstgt_forward(x, collection)
     if last(collection) <= x
         return nothing
@@ -172,30 +142,9 @@ end
     end
 end
 
-function find_firstgt(x, a)
-    for (i, a_i) in pairs(a)
-        a_i > x && return i
-    end
-    return nothing
-end
-
-"""
-    find_firstgteq(val, collection)
-
-Return the first index of `collection` where the element is greater than or equal
-to `val`. If no element of `collection` is greater than or equal to `val`, `nothing`
-is returned.
-"""
-@inline function find_firstgteq(x, collection::AbstractRange)
-    if isempty(collection)
-        return nothing
-    elseif drop_unit(step(collection)) > 0
-        return unsafe_find_firstgteq_forward(x, collection)
-    else  # drop_unit(step(collection)) < 0
-        return unsafe_find_firstgteq_reverse(x, collection)
-    end
-end
-
+###
+### find_firstgteq
+###
 @inline function unsafe_find_firstgteq_forward(x, collection)
     if last(collection) < x
         return nothing
@@ -219,20 +168,11 @@ end
     end
 end
 
-function find_firstgteq(x, a)
-    for (i, a_i) in pairs(a)
-        a_i >= x && return i
-    end
-    return nothing
-end
+###
+### find_firsteq
+###
 
-"""
-    find_firsteq(val, collection)
-
-Return the first index of `collection` where the element is equal to `val`.
-If no element of `collection` is equal to `val`, `nothing` is returned.
-"""
-function find_firsteq(x, collection::AbstractRange)
+function find_firsteq(x, collection)
     if isempty(collection)
         return nothing
     else
@@ -240,7 +180,7 @@ function find_firsteq(x, collection::AbstractRange)
     end
 end
 
-function unsafe_find_firsteq(x, collection)
+function unsafe_find_firsteq(x, collection::AbstractRange)
     if minimum(collection) > x || maximum(collection) < x
         return nothing
     else
@@ -253,31 +193,9 @@ function unsafe_find_firsteq(x, collection)
     end
 end
 
-#=
-
-find_firsteq(x, r::OneToUnion) = _find_firsteq_oneto(x, r)
-
-function _find_firsteq_oneto(x::Integer, r)
-    if (x < 1) | (x > last(r))
-        return nothing
-    else
-        return x
-    end
-end
-
-function _find_firsteq_oneto(x, r)
-    idx = round(Integer, x)
-    if idx == x
-        return _find_firsteq_oneto(idx, r)
-    else
-        return nothing
-    end
-end
-=#
-
-function find_firsteq(x, a)
-    for (i, a_i) in pairs(a)
-        x == a_i && return i
+function unsafe_find_firsteq(x, collection)
+    for (index, collection_i) in pairs(collection)
+        x == collection_i && return index
     end
     return nothing
 end

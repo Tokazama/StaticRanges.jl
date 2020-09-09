@@ -24,6 +24,28 @@ julia> find_last(iseven, [1 4; 2 2])
 CartesianIndex(2, 2)
 ```
 """
+function find_last(f, x)
+    if isempty(x)
+        return nothing
+    else
+        return unsafe_find_last(f, x)
+    end
+end
+
+@inline unsafe_find_last(f::Equal,              x) = unsafe_find_lasteq(f.x,   x)
+@inline unsafe_find_last(f::Less,               x) = unsafe_find_lastlt(f.x,   x)
+@inline unsafe_find_last(f::LessThanOrEqual,    x) = unsafe_find_lastlteq(f.x, x)
+@inline unsafe_find_last(f::Greater,            x) = unsafe_find_lastgt(f.x,   x)
+@inline unsafe_find_last(f::GreaterThanOrEqual, x) = unsafe_find_lastgteq(f.x, x)
+
+@inline function unsafe_find_last(f, collection)
+    for (i, collection_i) in Iterators.reverse(pairs(collection))
+        f(collection_i) && return i
+    end
+    return nothing
+end
+
+#=
 @inline find_last(f::Equal,              x) = find_lasteq(f.x,   x)
 @inline find_last(f::Less,               x) = find_lastlt(f.x,   x)
 @inline find_last(f::LessThanOrEqual,    x) = find_lastlteq(f.x, x)
@@ -35,24 +57,11 @@ CartesianIndex(2, 2)
     end
     return nothing
 end
+=#
 
-
-"""
-    find_lastgt(val, collection)
-
-Return the last index of `collection` where the element is greater than `val`.
-If no element of `collection` is greater than `val`, `nothing` is returned.
-"""
-@inline function find_lastgt(x, collection::AbstractRange)
-    if isempty(collection)
-        return nothing
-    elseif drop_unit(step(collection)) > 0
-        return unsafe_find_lastgt_forward(x, collection)
-    else  # drop_unit(step(collection)) < 0
-        return unsafe_find_lastgt_reverse(x, collection)
-    end
-end
-
+###
+### find_lastgt(val, collection)
+###
 function unsafe_find_lastgt_forward(x, collection)
     if last(collection) <= x
         return nothing
@@ -76,30 +85,9 @@ function unsafe_find_lastgt_reverse(x, collection)
     end
 end
 
-@inline function find_lastgt(x, a)
-    for (i, a_i) in Iterators.reverse(pairs(a))
-        a_i > x && return i
-    end
-    return nothing
-end
-
-"""
-    find_lastgteq(val, collection)
-
-Return the last index of `collection` where the element is greater than or equal
-to `val`. If no element of `collection` is greater than or equal to `val`, `nothing`
-is returned.
-"""
-@inline function find_lastgteq(x, collection::AbstractRange)
-    if isempty(collection)
-        return nothing
-    elseif drop_unit(step(collection)) > 0
-        return unsafe_find_lastgteq_forward(x, collection)
-    else  # drop_unit(step(collection)) < 0
-        return unsafe_find_lastgteq_reverse(x, collection)
-    end
-end
-
+###
+### find_lastgteq(val, collection)
+###
 function unsafe_find_lastgteq_forward(x, collection)
     if last(collection) < x
         return nothing
@@ -121,29 +109,9 @@ function unsafe_find_lastgteq_reverse(x, collection)
     end
 end
 
-function find_lastgteq(x, a)
-    for (i, a_i) in Iterators.reverse(pairs(a))
-        a_i >= x && return i
-    end
-    return nothing
-end
-
-"""
-    find_lastlt(val, collection)
-
-Return the last index of `collection` where the element is less than `val`.
-If no element of `collection` is less than `val`, `nothing` is returned.
-"""
-@inline function find_lastlt(x, collection::AbstractRange)
-    if isempty(collection)
-        return nothing
-    elseif drop_unit(step(collection)) > 0
-        return unsafe_find_lastlt_forward(x, collection)
-    else  # drop_unit(step(collection)) < 0
-        return unsafe_find_lastlt_reverse(x, collection)
-    end
-end
-
+###
+### find_lastlt(val, collection)
+###
 @inline function unsafe_find_lastlt_forward(x, collection)
     index = unsafe_find_value(x, collection)
     if firstindex(collection) > index
@@ -169,31 +137,9 @@ end
     end
 end
 
-function find_lastlt(x, a)
-    for (i, a_i) in Iterators.reverse(pairs(a))
-        a_i < x && return i
-    end
-    return nothing
-end
-
-
-"""
-    find_lastlteq(val, collection)
-
-Return the last index of `collection` where the element is less than or equal to
-`val`. If no element of `collection` is less than or equal to`val`, `nothing` is
-returned.
-"""
-@inline function find_lastlteq(x, collection::AbstractRange)
-    if isempty(collection)
-        return nothing
-    elseif drop_unit(step(collection)) > 0
-        return unsafe_find_lastlteq_forward(x, collection)
-    else  # drop_unit(step(collection)) < 0
-        return unsafe_find_lastlteq_reverse(x, collection)
-    end
-end
-
+###
+### find_lastlteq(val, collection)
+###
 @inline function unsafe_find_lastlteq_forward(x, collection)
     if last(collection) <= x
         return lastindex(collection)
@@ -219,27 +165,23 @@ end
     end
 end
 
-function find_lastlteq(x, a)
-    for (i, a_i) in Iterators.reverse(pairs(a))
-        a_i <= x && return i
+###
+### find_lasteq
+###
+# should be the same for unique sorted vectors like ranges
+function find_lasteq(x, collection)
+    if isempty(collection)
+        return nothing
+    else
+        return unsafe_find_lasteq(x, collection)
     end
-    return nothing
 end
 
-"""
-    find_lasteq(val, collection)
+unsafe_find_lasteq(x, collection::AbstractRange) = unsafe_find_firsteq(x, collection)
 
-Return the last index of `collection` where the element is equal to `val`.
-If no element of `collection` is equal to `val`, `nothing` is returned.
-"""
-function find_lasteq end
-
-# should be the same for unique sorted vectors like ranges
-find_lasteq(x, r::AbstractRange) = find_firsteq(x, r)
-
-function find_lasteq(x, a)
-    for (i, a_i) in Iterators.reverse(pairs(a))
-        x == a_i && return i
+function unsafe_find_lasteq(x, collection)
+    for (i, collection_i) in Iterators.reverse(pairs(collection))
+        x == collection_i && return i
     end
     return nothing
 end

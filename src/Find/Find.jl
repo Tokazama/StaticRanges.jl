@@ -35,6 +35,12 @@ export
 drop_unit(x) = x / oneunit(x)
 drop_unit(x::Real) = x
 
+
+# assume non empty
+_is_forward(x::AbstractRange) = step(x) > zero(eltype(x))
+_is_forward(x::AbstractUnitRange) = true
+_is_forward(x::Union{<:LinRange,<:LinSRange,<:LinMRange}) = last(x) > first(x)
+
 """
     find_max(x)
 
@@ -143,6 +149,76 @@ unsafe_find_value_steprange(x, r) = _add1(_int((x - first(r)) / step(r)))
 unsafe_find_value_linrange(x, r) = _add1(_int((x - r.start) / (r.stop - r.start) * r.lendiv))
 
 unsafe_find_value_steprangelen(x, r) = _int(((x - r.ref) / step_hp(r)) + r.offset)
+
+for (sym, f) in ((:lt, <), (:lteq, <=), (:gt, >), (:gteq, >=))
+    for ord in (:first, :last)
+        for kv in (:value_, Symbol(""))
+            find_name = Symbol(:find_, ord, kv, sym)
+            unsafe_find_name = Symbol(:unsafe_find_, ord, kv, sym)
+            unsafe_find_name_forward = Symbol(:unsafe_find_, ord, kv, sym, :_forward)
+            unsafe_find_name_reverse = Symbol(:unsafe_find_, ord, kv, sym, :_reverse)
+            @eval begin
+                function $find_name(x, collection)
+                    if isempty(collection)
+                        return nothing
+                    else
+                        return $unsafe_find_name(x, collection)
+                    end
+                end
+
+                function $unsafe_find_name(x, collection::AbstractRange)
+                    if _is_forward(collection)
+                        return $unsafe_find_name_forward(x, collection)
+                    else
+                        return $unsafe_find_name_reverse(x, collection)
+                    end
+                end
+            end
+
+            if kv === :value
+                if ord === :first
+                    @eval begin
+                        function $unsafe_find_name(x, collection)
+                            for collection_i in collection
+                                $f(x, collection_i) && return collection_i
+                            end
+                            return nothing
+                        end
+                    end
+                else
+                    @eval begin
+                        function $unsafe_find_name(x, collection)
+                            for collection_i in Iterators.reverse(collection)
+                                $f(x, collection_i) && return collection_i
+                            end
+                            return nothing
+                        end
+                    end
+                end
+            else
+                if ord === :first
+                    @eval begin
+                        function $unsafe_find_name(x, collection)
+                            for (index, collection_i) in pairs(collection)
+                                $f(collection_i, x) && return index
+                            end
+                            return nothing
+                        end
+                    end
+                else
+                    @eval begin
+                        function $unsafe_find_name(x, collection)
+                            for (index, collection_i) in Iterators.reverse(pairs(collection))
+                                $f(collection_i, x) && return index
+                            end
+                            return nothing
+                        end
+                    end
+               end
+            end
+        end
+    end
+end
 
 include("find_all_in.jl")
 include("find_first.jl")
