@@ -62,7 +62,7 @@ function set_last!(x::OrdinalRange{T}, val) where {T}
 end
 
 function set_last!(x::StepMRangeLen{T}, val) where {T}
-    len = unsafe_findvalue(val, x) # FIXME should not use unsafe_findvalue at this point
+    len = unsafe_find_value(val, x) # FIXME should not use unsafe_find_value at this point
     len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
     1 <= x.offset <= max(1, len) || throw(ArgumentError("StepSRangeLen: offset must be in [1,$len], got $(x.offset)"))
     setfield!(x, :len, len)
@@ -106,6 +106,6 @@ set_last(x::OneToSRange, val) = typeof(x)(val)
 set_last(x::OneToMRange, val) = typeof(x)(val)
 set_last(x::Union{<:LinRange,<:LinMRange,<:LinSRange}, val) = typeof(x)(first(x), val, x.len)
 function set_last(x::Union{<:StepRangeLen,<:StepMRangeLen,<:StepSRangeLen}, val)
-    return typeof(x)(x.ref, x.step, unsafe_findvalue(val, x), x.offset)
+    return typeof(x)(x.ref, x.step, unsafe_find_value(val, x), x.offset)
 end
 

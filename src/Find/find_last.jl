@@ -67,7 +67,7 @@ function unsafe_find_lastgt_reverse(x, collection)
     elseif last(collection) > x
         return lastindex(collection)
     else
-        index = unsafe_findvalue(x, collection)
+        index = unsafe_find_value(x, collection)
         if (@inbounds(collection[index]) == x) & (index != firstindex(collection))
             return index - oneunit(index)
         else
@@ -109,7 +109,7 @@ function unsafe_find_lastgteq_forward(x, collection)
 end
 
 function unsafe_find_lastgteq_reverse(x, collection)
-    index = unsafe_findvalue(x, collection)
+    index = unsafe_find_value(x, collection)
     if firstindex(collection) > index
         return nothing
     elseif lastindex(collection) <= index
@@ -145,7 +145,7 @@ If no element of `collection` is less than `val`, `nothing` is returned.
 end
 
 @inline function unsafe_find_lastlt_forward(x, collection)
-    index = unsafe_findvalue(x, collection)
+    index = unsafe_find_value(x, collection)
     if firstindex(collection) > index
         return nothing
     elseif lastindex(collection) < index
@@ -200,7 +200,7 @@ end
     elseif first(collection) > x
         return nothing
     else
-        index = unsafe_findvalue(x, collection)
+        index = unsafe_find_value(x, collection)
         if @inbounds(collection[index]) <= x
             return index
         elseif index != firstindex(collection)

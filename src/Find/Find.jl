@@ -105,9 +105,46 @@ _empty(x::X, y::Y) where {X,Y} = Vector{Int}()
     end
 end
 
+###
+### unsafe_find_value
+###
+
+_add1(x::T) where {T} = x + oneunit(T)
+_int(idx) = round(Integer, idx, RoundToZero)
+_int(idx::Integer) = idx
+_int(idx::TwicePrecision{T}) where {T} = round(Integer, T(idx), RoundToZero)
+
+function unsafe_find_value(val, r::OrdinalRange{T,S}, rounding_mode=RoundToZero) where {T,S}
+    if known_step(r) === oneunit(S)
+        if known_first(r) === oneunit(T)
+            return unsafe_find_value_oneto(val, r)
+        else
+            unsafe_find_value_unitrange(val, r)
+        end
+    else
+        return unsafe_find_value_steprange(val, r)
+    end
+end
+
+function unsafe_find_value(val, r::Union{<:LinRange,<:LinSRange,<:LinMRange})
+    return unsafe_find_value_linrange(val, r)
+end
+
+function unsafe_find_value(val, r::Union{<:StepRangeLen,<:StepSRangeLen,<:StepMRangeLen})
+    return unsafe_find_value_steprangelen(val, r)
+end
+
+unsafe_find_value_oneto(x, r) = _int(x)
+
+unsafe_find_value_unitrange(x, r) = _add1(_int(x - first(r)))
+
+unsafe_find_value_steprange(x, r) = _add1(_int((x - first(r)) / step(r)))
+
+unsafe_find_value_linrange(x, r) = _add1(_int((x - r.start) / (r.stop - r.start) * r.lendiv))
+
+unsafe_find_value_steprangelen(x, r) = _int(((x - r.ref) / step_hp(r)) + r.offset)
 
 include("find_all_in.jl")
-include("findvalue.jl")
 include("find_first.jl")
 include("find_last.jl")
 include("find_all.jl")

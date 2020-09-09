@@ -65,7 +65,7 @@ end
 end
 
 @inline function unsafe_find_firstlt_reverse(x, collection)
-    index = unsafe_findvalue(x, collection)
+    index = unsafe_find_value(x, collection)
     if lastindex(collection) <= index
         return nothing
     elseif firstindex(collection) > index
@@ -115,7 +115,7 @@ end
     elseif last(collection) > x
         return nothing
     else
-        index = unsafe_findvalue(x, collection)
+        index = unsafe_find_value(x, collection)
         if @inbounds(collection[index]) <= x
             return index
         else
@@ -153,7 +153,7 @@ end
     elseif first(collection) > x
         return firstindex(collection)
     else
-        index = unsafe_findvalue(x, collection)
+        index = unsafe_find_value(x, collection)
         if @inbounds(collection[index]) > x
             return index
         else
@@ -168,7 +168,7 @@ end
     elseif last(collection) < x
         return nothing
     else
-        return unsafe_findvalue(x, collection, RoundUp)
+        return unsafe_find_value(x, collection, RoundUp)
     end
 end
 
@@ -202,7 +202,7 @@ end
     elseif first(collection) >= x
         return firstindex(collection)
     else
-        index = unsafe_findvalue(x, collection)
+        index = unsafe_find_value(x, collection)
         if @inbounds(collection[index]) >= x
             return index
         else
@@ -244,7 +244,7 @@ function unsafe_find_firsteq(x, collection)
     if minimum(collection) > x || maximum(collection) < x
         return nothing
     else
-        index = unsafe_findvalue(x, collection)
+        index = unsafe_find_value(x, collection)
         if @inbounds(collection[index]) == x
             return index
         else
@@ -281,3 +281,4 @@ function find_firsteq(x, a)
     end
     return nothing
 end
+
