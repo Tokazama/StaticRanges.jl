@@ -13,6 +13,7 @@ function _unit_range_length(start::T, stop::T) where {T<:Union{UInt,UInt64,UInt1
         return Int(Base.checked_add(stop - start, one(T)))
     end
 end
+
 function _unit_range_length(start::T, stop::T) where {T}
     if start > stop
         return 0
@@ -75,13 +76,6 @@ Base.length(x::StepMRangeLen) = getfield(x, :len)
 lendiv(::LinSRange{T,B,E,L,D}) where {T,B,E,L,D} = D
 
 lendiv(r::LinMRange) = getfield(r, :lendiv)
-
-
-# TODO remoe this once it's defined in ArrayInterface
-ArrayInterface.known_length(::Type{T}) where {T} = nothing
-
-# some special cases to favor default Int type
-
 
 """
     can_set_length(x) -> Bool
