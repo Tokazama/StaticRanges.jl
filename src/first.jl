@@ -49,14 +49,12 @@ function set_first!(x::AbstractVector{T}, val) where {T}
     return x
 end
 
-function set_first!(x::AbstractUnitRange{T}, val) where {T}
-    can_set_first(x) || throw(MethodError(set_first!, (x, val)))
+function set_first!(x::UnitMRange{T}, val) where {T}
     setfield!(x, :start, T(val))
     return x
 end
 
-function set_first!(x::OrdinalRange{T,S}, val) where {T,S}
-    can_set_first(x) || throw(MethodError(set_first!, (x, val)))
+function set_first!(x::StepMRange{T,S}, val) where {T,S}
     val2 = T(val)
     setfield!(x, :start, val2)
     setfield!(x, :stop, Base.steprange_last(val2, step(x), last(x)))
@@ -67,6 +65,15 @@ function set_first!(x::StepMRangeLen{T,R}, val) where {T,R}
     return setfield!(x, :ref, R(val) - (1 - x.offset) * step_hp(x))
 end
 set_first!(x::LinMRange{T}, val) where {T} = (setfield!(x, :start, T(val)); x)
+function set_first!(x::AbstractRange, val)
+    if parent_type(x) <: typeof(x)
+        throw(MethodError(set_first!, (x, val)))
+    else
+        set_first!(parent(x), val)
+        return x
+    end
+end
+
 
 """
     set_first(x, val)
@@ -90,14 +97,18 @@ function set_first(x::AbstractVector, val)
         return vcat(val, @inbounds(x[2:end]))
     end
 end
-
-set_first(x::OrdinalRange, val) = typeof(x)(val, step(x), last(x))
-
-set_first(x::AbstractUnitRange{T}, val) where {T} = typeof(x)(T(val), last(x))
-
+set_first(x::OptionallyStaticRange, val) = val:ArrayInterface.static_step(x):static_last(x)
+function set_first(x::AbstractRange{T}, val) where {T}
+    if parent_type(x) <: typeof(x)
+        throw(MethodError(set_first, (x, val)))
+    else
+        return ArrayInterface.unsafe_reconstruct(x, set_first(parent(x), val))
+    end
+end
+set_first(x::Union{<:StepRange,<:StepSRange,<:StepMRange}, val) = typeof(x)(val, step(x), last(x))
+set_first(x::Union{<:UnitRange,<:UnitSRange,<:UnitMRange}, val) = typeof(x)(val, last(x))
 set_first(x::AbstractStepRangeLen, val) = typeof(x)(val, step(x), x.len, x.offset)
 set_first(x::StepRangeLen, val) = typeof(x)(val, step(x), x.len, x.offset)
-
 set_first(x::LinRange, val) = typeof(x)(val, last(x), x.len)
 set_first(x::AbstractLinRange, val) = typeof(x)(val, last(x), x.len)
 

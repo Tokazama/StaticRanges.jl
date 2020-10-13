@@ -18,6 +18,9 @@ struct UnitSRange{T,F,L} <: AbstractUnitRange{T}
         return new{T,start,Base.unitrange_last(start,stop)}()
     end
 
+    function UnitSRange{T,F,L}(r::AbstractRange) where {T<:Real,F,L}
+        return UnitSRange{T}(r)
+    end
     function UnitSRange{T,F,L}(start, stop) where {T<:Real,F,L}
         return UnitSRange{T,T(start),T(stop)}()
     end
@@ -62,7 +65,7 @@ mutable struct UnitMRange{T<:Real} <: AbstractUnitRange{T}
     stop::T
 
     function UnitMRange{T}(start, stop) where {T<:Real}
-        return new(start, Base.unitrange_last(start,stop))
+        return new(start, Base.unitrange_last(T(start), T(stop)))
     end
 
     UnitMRange{T}(r::AbstractUnitRange) where {T<:Real} = UnitMRange{T}(first(r), last(r))

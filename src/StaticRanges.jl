@@ -13,7 +13,8 @@ using Reexport
 using ArrayInterface
 using ArrayInterface: can_change_size, can_setindex, parent_type
 using ArrayInterface: known_first, known_step, known_last, known_length
-using ArrayInterface: OptionallyStaticUnitRange
+using ArrayInterface: static_first, static_last
+using ArrayInterface: OptionallyStaticUnitRange, unsafe_reconstruct, StaticInt, OptionallyStaticRange
 
 using IntervalSets
 using Requires

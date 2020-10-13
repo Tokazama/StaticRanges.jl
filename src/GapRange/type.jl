@@ -1,3 +1,4 @@
+
 """
     GapRange{T,F,L}
 
@@ -172,4 +173,10 @@ first_lastindex(gr) = lastindex(first_range(gr))
 Base.lastindex(gr::GapRange) = length(gr)
 
 last_firstindex(gr::GapRange) = lastindex(first_range(gr)) + 1
+
+function Base.AbstractArray{T}(gr::GapRange) where {T}
+    fr = AbstractRange{T}(gr.first_range)
+    lr = AbstractRange{T}(gr.last_range)
+    return GapRange{T,typeof(fr),typeof(lr)}(fr, lr)
+end
 

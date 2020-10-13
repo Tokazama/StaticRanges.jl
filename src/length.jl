@@ -124,21 +124,28 @@ function set_length!(x::StepMRangeLen, len)
     return x
 end
 
-function set_length!(x::OrdinalRange{T}, len) where {T}
+function set_length!(x::StepMRange{T}, len) where {T}
     can_set_length(x) || throw(MethodError(set_length!, (x, len)))
     setfield!(x, :stop, convert(T, first(x) + step(x) * (len - 1)))
     return x
 end
-
-function set_length!(x::AbstractUnitRange{T}, len) where {T}
-    can_set_length(x) || throw(MethodError(set_length!, (x, len)))
-    if known_first(x) === one(T)
-        set_last!(x, len)
-    else
-        set_last!(x, T(first(x)+len-1))
-    end
+function set_length!(x::OneToMRange{T}, len) where {T}
+    set_last!(x, T(max(zero(T), len)))
     return x
 end
+function set_length!(x::UnitMRange{T}, len) where {T}
+    set_last!(x, T(first(x)+len-1))
+    return x
+end
+function set_length!(x::AbstractRange, len)
+    if parent_type(x) <: typeof(x)
+        error("Cannot use set_length! for instances of typeof $(typeof(x)).")
+    else
+        set_length!(parent(x), len)
+        return x 
+    end
+end
+
 
 """
     set_length(x, len)
@@ -157,15 +164,13 @@ set_length(x::AbstractStepRangeLen, len) = typeof(x)(x.ref, x.step, len, x.offse
 set_length(x::StepRangeLen, len) = typeof(x)(x.ref, x.step, len, x.offset)
 set_length(x::LinRange, len) = typeof(x)(first(x), last(x), len)
 set_length(x::AbstractLinRange, len) = typeof(x)(first(x), last(x), len)
-
 function set_length(x::AbstractUnitRange{T}, len) where {T}
     if known_first(x) === oneunit(T)
         return set_last(x, len)
     else
-        return set_last(x, T(first(x)+len-1))
+        return set_last(x, static_first(x) + len - one(len))
     end
 end
-
 function set_length(x::OrdinalRange{T}, len) where {T}
     return set_last(x, convert(T, first(x) + step(x) * (len - 1)))
 end

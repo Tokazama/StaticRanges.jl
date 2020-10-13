@@ -80,6 +80,7 @@ prev_type(x::Symbol) = Symbol(prev_type(string(x)))
 prev_type(x::AbstractChar) = x - 1
 prev_type(x::T) where {T<:AbstractFloat} = prevfloat(x)
 prev_type(x::T) where {T} = x - one(T)
+
 """
     grow_last(x, n)
 
@@ -98,10 +99,10 @@ UnitMRange(1:12)
 """
 @inline function grow_last(x::AbstractVector, n::Integer)
     i = last(x)
-
     return vcat(x, nnext_type(i, n))
 end
 grow_last(x::AbstractRange, n::Integer) = set_last(x, last(x) + step(x) * n)
+grow_last(x::AbstractRange, n::AbstractUnitRange) = unsafe_reconstruct(x, n)
 
 """
     grow_last!(x, n)
@@ -126,6 +127,7 @@ function grow_last!(x::AbstractVector, n::Integer)
     return append!(x, nnext_type(i, n))
 end
 grow_last!(x::AbstractRange, n::Integer) = set_last!(x, last(x) + step(x) * n)
+
 """
     grow_first(x, n)
 
@@ -147,6 +149,7 @@ function grow_first(x::AbstractVector, n::Integer)
     return vcat(reverse!(nprev_type(i, n)), x)
 end
 grow_first(x::AbstractRange, n::Integer) = set_first(x, first(x) - step(x) * n)
+grow_first(x::AbstractRange, n::AbstractUnitRange) = unsafe_reconstruct(x, n)
 
 """
     grow_first!(x, n)
@@ -216,6 +219,7 @@ UnitMRange(1:8)
 """
 @propagate_inbounds shrink_last(x::AbstractVector, n::Integer) = x[firstindex(x):end - n]
 shrink_last(x::AbstractRange, n::Integer) = set_last(x, last(x) - step(x) * n)
+shrink_last(x::AbstractRange, n::AbstractUnitRange) = unsafe_reconstruct(x, n)
 
 """
     shrink_first(x, n)
@@ -238,6 +242,7 @@ shrink_first(x::AbstractRange, n::Integer) = set_first(x, first(x) + step(x) * n
 shrink_first(x::OneTo{T}, n::Integer) where {T} = UnitRange{T}(1 + n, last(x))
 shrink_first(x::OneToMRange{T}, n::Integer) where {T} = UnitMRange{T}(1 + n, last(x))
 shrink_first(x::OneToSRange{T}, n::Integer) where {T} = UnitSRange{T}(1 + n, last(x))
+shrink_first(x::AbstractRange, n::AbstractUnitRange) = unsafe_reconstruct(x, n)
 
 """
     shrink_first!(x, n)
@@ -300,6 +305,7 @@ julia>  StaticRanges.resize_last(x, 5)
         return x
     end
 end
+resize_last(x, n::AbstractUnitRange) = unsafe_reconstruct(x, n)
 
 """
     resize_last!(x, n::Integer)
@@ -390,6 +396,7 @@ julia> StaticRanges.resize_first(x, 5)
         return copy(x)
     end
 end
+resize_first(x, n::AbstractUnitRange) = unsafe_reconstruct(x, n)
 
 """
     resize_first!(x, n::Integer)

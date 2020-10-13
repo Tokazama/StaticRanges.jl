@@ -46,21 +46,6 @@ function set_last!(x::AbstractVector, val)
     setindex!(x, val, lastindex(x))
     return x
 end
-
-function set_last!(x::OrdinalRange{T}, val) where {T}
-    can_set_last(x) || throw(MethodError(set_last!, (x, val)))
-    if known_step(x) === oneunit(eltype(x))
-        if known_first(x) === oneunit(T)
-            setfield!(x, :stop, max(zero(T), T(val)))
-        else
-            setfield!(x, :stop, T(val))
-        end
-    else
-        setfield!(x, :stop, T(Base.steprange_last(first(x), step(x), val)))
-    end
-    return x
-end
-
 function set_last!(x::StepMRangeLen{T}, val) where {T}
     len = unsafe_find_value(val, x) # FIXME should not use unsafe_find_value at this point
     len >= 0 || throw(ArgumentError("length cannot be negative, got $len"))
@@ -68,10 +53,29 @@ function set_last!(x::StepMRangeLen{T}, val) where {T}
     setfield!(x, :len, len)
     return x
 end
-
 function set_last!(x::LinMRange{T}, val) where {T}
     setfield!(x, :stop, T(val))
     return x
+end
+function set_last!(x::StepMRange{T}, val) where {T}
+    setfield!(x, :stop, T(Base.steprange_last(first(x), step(x), val)))
+    return x
+end
+function set_last!(x::UnitMRange{T}, val) where {T}
+    setfield!(x, :stop, T(val))
+    return x
+end
+function set_last!(x::OneToMRange{T}, val) where {T}
+    setfield!(x, :stop, max(zero(T), T(val)))
+    return x
+end
+function set_last!(x::AbstractRange, val)
+    if parent_type(x) <: typeof(x)
+        throw(MethodError(set_last!, (x, val)))
+    else
+        set_last!(parent(x), val)
+        return x
+    end
 end
 
 """
@@ -98,14 +102,25 @@ function set_last(x::AbstractVector, val)
         return vcat(@inbounds(x[1:end-1]), val)
     end
 end
-
-set_last(x::OrdinalRange, val) = typeof(x)(first(x), step(x), val)
-set_last(x::AbstractUnitRange, val) = typeof(x)(first(x), val)
-set_last(x::OneTo, val) = typeof(x)(val)
-set_last(x::OneToSRange, val) = typeof(x)(val)
-set_last(x::OneToMRange, val) = typeof(x)(val)
+set_last(x::OptionallyStaticRange, val) = static_first(x):ArrayInterface.static_step(x):val
+function set_last(x::AbstractRange{T}, val) where {T}
+    if parent_type(x) <: typeof(x)
+        throw(MethodError(set_last, (x, val)))
+    else
+        return ArrayInterface.unsafe_reconstruct(x, set_last(parent(x), val))
+    end
+end
+set_last(x::Union{<:StepRange,<:StepSRange,<:StepMRange}, val) = typeof(x)(first(x), step(x), val)
+set_last(x::Union{<:UnitRange,<:UnitSRange,<:UnitMRange}, val) = typeof(x)(first(x), val)
 set_last(x::Union{<:LinRange,<:LinMRange,<:LinSRange}, val) = typeof(x)(first(x), val, x.len)
 function set_last(x::Union{<:StepRangeLen,<:StepMRangeLen,<:StepSRangeLen}, val)
     return typeof(x)(x.ref, x.step, unsafe_find_value(val, x), x.offset)
+end
+@inline function set_last(x::Union{<:OneTo,<:OneToSRange,<:OneToMRange}, val)
+    if val isa StaticInt
+        return One():val
+    else
+        typeof(x)(val)
+    end
 end
 

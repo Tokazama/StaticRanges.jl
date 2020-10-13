@@ -30,6 +30,9 @@ struct OneToSRange{T<:Integer,E} <: OneToRange{T}
 
     OneToSRange{T,L}(stop) where {T<:Integer,L} = OneToSRange{T,T(stop)}()
 
+    OneToSRange{T,L}(r::AbstractRange) where {T<:Integer,L} = OneToSRange{T}(r)
+
+
     function OneToSRange{T}(r::AbstractRange) where {T<:Integer}
         first(r) == 1 || (Base.@_noinline_meta; throw(ArgumentError("first element must be 1, got $(first(r))")))
         step(r)  == 1 || (Base.@_noinline_meta; throw(ArgumentError("step must be 1, got $(step(r))")))
