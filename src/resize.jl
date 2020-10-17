@@ -1,5 +1,4 @@
 
-
 function nprev_type(x::T, n) where {T}
     return [x = prev_type(x) for _ in 1:n]::Vector{T}
 end
@@ -101,7 +100,13 @@ UnitMRange(1:12)
     i = last(x)
     return vcat(x, nnext_type(i, n))
 end
-grow_last(x::AbstractRange, n::Integer) = set_last(x, last(x) + step(x) * n)
+function grow_last(x::AbstractRange, n::Integer)
+    if parent_type(x) <: typeof(x)
+        return set_last(x, last(x) + step(x) * n)
+    else
+        return unsafe_reconstruct(x, grow_last(parent(x), n))
+    end
+end
 grow_last(x::AbstractRange, n::AbstractUnitRange) = unsafe_reconstruct(x, n)
 
 """
@@ -126,7 +131,14 @@ function grow_last!(x::AbstractVector, n::Integer)
     i = last(x)
     return append!(x, nnext_type(i, n))
 end
-grow_last!(x::AbstractRange, n::Integer) = set_last!(x, last(x) + step(x) * n)
+function grow_last!(x::AbstractRange, n::Integer)
+    if parent_type(x) <: typeof(x)
+        set_last!(x, last(x) + step(x) * n)
+    else
+        grow_last!(parent(x), n)
+    end
+    return x
+end
 
 """
     grow_first(x, n)
@@ -148,7 +160,13 @@ function grow_first(x::AbstractVector, n::Integer)
     i = first(x)
     return vcat(reverse!(nprev_type(i, n)), x)
 end
-grow_first(x::AbstractRange, n::Integer) = set_first(x, first(x) - step(x) * n)
+function grow_first(x::AbstractRange, n::Integer)
+    if parent_type(x) <: typeof(x)
+        return set_first(x, first(x) - step(x) * n)
+    else
+        return unsafe_reconstruct(x, grow_first(parent(x), n))
+    end
+end
 grow_first(x::AbstractRange, n::AbstractUnitRange) = unsafe_reconstruct(x, n)
 
 """
@@ -173,7 +191,14 @@ function grow_first!(x::AbstractVector, n::Integer)
     i = first(x)
     return prepend!(x, reverse!(nprev_type(i, n)))
 end
-grow_first!(x::AbstractRange, n::Integer) = set_first!(x, first(x) - step(x) * n)
+function grow_first!(x::AbstractRange, n::Integer)
+    if parent_type(x) <: typeof(x)
+        set_first!(x, first(x) - step(x) * n)
+    else
+        grow_first!(parent(x), n)
+    end
+    return x
+end
 
 """
     shrink_last!(x, n)
@@ -199,7 +224,15 @@ function shrink_last!(x::AbstractVector, n::Integer)
     end
     return x
 end
-shrink_last!(x::AbstractRange, n::Integer) = set_last!(x, last(x) - step(x) * n)
+function shrink_last!(x::AbstractRange, n::Integer)
+    if parent_type(x) <: typeof(x)
+        set_last!(x, last(x) - step(x) * n)
+    else
+        shrink_last!(parent(x), n)
+    end
+    return x
+end
+
 
 """
     shrink_last(x, n)
@@ -218,7 +251,13 @@ UnitMRange(1:8)
 ```
 """
 @propagate_inbounds shrink_last(x::AbstractVector, n::Integer) = x[firstindex(x):end - n]
-shrink_last(x::AbstractRange, n::Integer) = set_last(x, last(x) - step(x) * n)
+function shrink_last(x::AbstractRange, n::Integer)
+    if parent_type(x) <: typeof(x)
+        return set_last(x, last(x) - step(x) * n)
+    else
+        return unsafe_reconstruct(x, shrink_last(parent(x), n))
+    end
+end
 shrink_last(x::AbstractRange, n::AbstractUnitRange) = unsafe_reconstruct(x, n)
 
 """
@@ -238,11 +277,17 @@ UnitMRange(3:10)
 ```
 """
 @propagate_inbounds shrink_first(x::AbstractVector, n::Integer) = x[(firstindex(x) + n):end]
-shrink_first(x::AbstractRange, n::Integer) = set_first(x, first(x) + step(x) * n)
 shrink_first(x::OneTo{T}, n::Integer) where {T} = UnitRange{T}(1 + n, last(x))
 shrink_first(x::OneToMRange{T}, n::Integer) where {T} = UnitMRange{T}(1 + n, last(x))
 shrink_first(x::OneToSRange{T}, n::Integer) where {T} = UnitSRange{T}(1 + n, last(x))
 shrink_first(x::AbstractRange, n::AbstractUnitRange) = unsafe_reconstruct(x, n)
+function shrink_first(x::AbstractRange, n::Integer)
+    if parent_type(x) <: typeof(x)
+        return set_first(x, first(x) + (step(x) * n))
+    else
+        return unsafe_reconstruct(x, shrink_first(parent(x), n))
+    end
+end
 
 """
     shrink_first!(x, n)
@@ -255,7 +300,14 @@ function shrink_first!(x::AbstractVector, n::Integer)
     end
     return x
 end
-shrink_first!(x::AbstractRange, n::Integer) = set_first!(x, first(x) + step(x) * n)
+function shrink_first!(x::AbstractRange, n::Integer)
+    if parent_type(x) <: typeof(x)
+        set_first!(x, first(x) + step(x) * n)
+    else
+        shrink_first!(parent(x), n)
+    end
+    return x
+end
 
 """
     resize_last(x, n::Integer)
