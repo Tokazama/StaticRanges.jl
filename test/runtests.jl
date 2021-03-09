@@ -71,7 +71,7 @@ to_vec(x) = x
 end
 
 include("length_tests.jl")
-# FIXME include("find.jl")
+include("find.jl")
 include("gaprange_tests.jl")
 
 include("vcat_tests.jl")

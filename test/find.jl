@@ -216,7 +216,7 @@ end
 end
 
 for (m,s,b) in ((OneToMRange(5), static(OneTo(5)), OneTo(5)),
-                (as_dyanimc(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
+                (as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
                 (as_dynamic(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
                )
     for i in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))

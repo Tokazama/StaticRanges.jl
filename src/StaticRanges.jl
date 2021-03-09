@@ -294,6 +294,9 @@ ArrayInterface.known_length(::Type{StaticRange{T,R}}) where {T,R} = length(R)
 Base.length(x::OneToMRange) = last(x)
 
 as_dynamic(x) = MutableRange(x)
+as_fixed(x) = x
+as_fixed(x::MutableRange) = parent(x)
+as_fixed(x::StaticRange) = parent(x)
 
 # although these should technically not need to be completely typed for
 # each, dispatch ignores TwicePrecision on the static version and only

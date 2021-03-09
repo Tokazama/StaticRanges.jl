@@ -1,6 +1,6 @@
 
 @testset "cont" begin
-    for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
+    for (m,s,b) in ((OneToMRange(5), static(OneTo(5)), OneTo(5)),
                    )
         @testset "Type: $(typeof(b))" begin
             for i1 in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
@@ -26,7 +26,7 @@
         for i in (0, 1)
             @testset "Number: $i" begin
                 for f in (<, >, <=, >=, ==)
-                    m, s, b = LinMRange(1, 1, 0), LinSRange(1, 1, 0), LinRange(1, 1, 0)
+                    m, s, b = MutableRange(LinRange(1, 1, 0)), static(LinRange(1, 1, 0)), LinRange(1, 1, 0)
                     @testset "count" begin
                         @test count(f(i), m) == count(f(i), b)
                         @test count(f(i), s) == count(f(i), b)
