@@ -110,11 +110,11 @@ end
                     #IdOffsetRange(OneTo(10), 2),
                     1:10,
                     #IdOffsetRange(1:10, 2),
-                    UnitMRange(1.0, 10.0),
-                    StepMRange(1, 2, 10),
-                    StepMRange(10, -2, 1),
-                    LinMRange(1, 5, 10),
-                    LinMRange(5, 1, 10),
+                    as_dynamic(UnitRange(1.0, 10.0)),
+                    StepRange(1, 2, 10),
+                    StepRange(10, -2, 1),
+                    LinRange(1, 5, 10),
+                    LinRange(5, 1, 10),
                     mrange(1.0, step=0.25, stop=10),
                     mrange(10.0, step=-0.25, stop=1.0))
 
@@ -135,7 +135,7 @@ end
                 # FIXME - filter AbstractLinRange doesn't come out as
                 # expected because getindex results in inexact values
                 # in both base and AbstractLinRange.
-                if !isa(collection, LinMRange)
+                if !isa(collection, LinRange)
                     filter_tests(x, collection)
                 end
                 count_tests(x, collection)
@@ -158,12 +158,9 @@ end
     end
 
 
-    for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
-                    (UnitMRange(2, 6), UnitSRange(2, 6), UnitRange(2, 6)),
-                    (StepMRange(1, 2, 11), StepSRange(1, 2, 11), StepRange(1, 2, 11)),
-                    (StepMRange(11, -2, 1), StepSRange(11, -2, 1), StepRange(11, -2, 1)),
-                    (LinMRange(1, 10, 5), LinSRange(1, 10, 5), LinRange(1, 10, 5)),
-                    (StepMRangeLen(1, 3, 5), StepSRangeLen(1, 3, 5), StepRangeLen(1, 3, 5))
+    for (m,s,b) in ((OneToMRange(5), static(OneTo(5)), OneTo(5)),
+                    (as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
+                    (as_dynamic(StepRange(1, 2, 11)), static(StepRange(1, 2, 11)), StepRange(1, 2, 11)),
                    )
         @testset "Type: $(typeof(b))" begin
             for i1 in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
@@ -197,12 +194,10 @@ end
 end
 
 @testset "findall(::ChainedFix,...)" begin
-    for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
-                    (UnitMRange(2, 6), UnitSRange(2, 6), UnitRange(2, 6)),
-                    (StepMRange(1, 2, 11), StepSRange(1, 2, 11), StepRange(1, 2, 11)),
-                    (StepMRange(11, -2, 1), StepSRange(11, -2, 1), StepRange(11, -2, 1)),
-                    (LinMRange(1, 10, 5), LinSRange(1, 10, 5), LinRange(1, 10, 5)),
-                    (StepMRangeLen(1, 3, 5), StepSRangeLen(1, 3, 5), StepRangeLen(1, 3, 5)))
+    for (m,s,b) in ((OneToMRange(5), static(OneTo(5)), OneTo(5)),
+                    (as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
+                    (as_dynamic(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
+                   )
         for i1 in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
             for i2 in (m[2], m[3], m[5], m[5] + step(m))
                 for f in (<, >, <=, >=, ==)
@@ -220,12 +215,10 @@ end
     end
 end
 
-for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
-                (UnitMRange(2, 6), UnitSRange(2, 6), UnitRange(2, 6)),
-                (StepMRange(1, 2, 11), StepSRange(1, 2, 11), StepRange(1, 2, 11)),
-                (StepMRange(11, -2, 1), StepSRange(11, -2, 1), StepRange(11, -2, 1)),
-                (LinMRange(1, 10, 5), LinSRange(1, 10, 5), LinRange(1, 10, 5)),
-                (StepMRangeLen(1, 3, 5), StepSRangeLen(1, 3, 5), StepRangeLen(1, 3, 5)))
+for (m,s,b) in ((OneToMRange(5), static(OneTo(5)), OneTo(5)),
+                (as_dyanimc(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
+                (as_dynamic(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
+               )
     for i in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
         @testset "find_all(!=($i), $b)" begin
             @test @inferred(findall(!=(i), m)) == @inferred(findall(!=(i), b))
@@ -244,29 +237,25 @@ end
 end
 
 @testset "find_all(in(x), r)" begin
-    r = @inferred(find_all(in(OneTo(10)), OneToSRange(8)))
+    r = @inferred(find_all(in(OneTo(10)), static(OneTo(8))))
     @test r == 1:8
-    @test isa(r, StaticRanges.OneToUnion)
 
     r = @inferred(find_all(in(OneTo(10)), OneToMRange(8)))
     @test r == 1:8
-    @test isa(r, StaticRanges.OneToUnion)
 
-    r = @inferred(find_all(in(OneToSRange(8)), OneToSRange(10)))
+    r = @inferred(find_all(in(static(OneTo(8))), static(OneTo(10))))
     @test r == 1:8
-    @test isa(r, OneToSRange)
 
-    r = @inferred(find_all(in(UnitRange(1,10)), UnitSRange(1,8)))
+    r = @inferred(find_all(in(UnitRange(1,10)), static(UnitRange(1,8))))
     @test r == 1:8
     @test isa(r, UnitRange)
 
-    r = @inferred(find_all(in(OneTo(10)), UnitMRange(1, 8)))
+    r = @inferred(find_all(in(OneTo(10)), as_dynamic(UnitRange(1, 8))))
     @test r == OneTo(8)
     @test isa(r, UnitRange) == true
 
-    r = @inferred(find_all(in(UnitSRange(1, 8)), UnitSRange(1, 10)))
-    @test r == UnitSRange(1, 8)
-    @test isa(r, OneToSRange)  # b/c one is known at compile time we can change OneToSRange
+    r = @inferred(find_all(in(static(UnitRange(1, 8))), static(UnitRange(1, 10))))
+    @test r == static(UnitRange(1, 8))
 
     @test find_all(in(collect(1:10)), 1:20) == find_all(in(1:10), 1:20)
     @test find_all(in(1:10), collect(1:20)) == 1:10
@@ -302,11 +291,12 @@ end
 end
 
 @testset "filter" begin
-    for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
-                    (UnitMRange(2, 6), UnitSRange(2, 6), UnitRange(2, 6)),
-                    (StepMRange(1, 2, 11), StepSRange(1, 2, 11), StepRange(1, 2, 11)),
-                    (StepMRange(11, -2, 1), StepSRange(11, -2, 1), StepRange(11, -2, 1)),
-                    (StepMRangeLen(1, 3, 5), StepSRangeLen(1, 3, 5), StepRangeLen(1, 3, 5))
+    for (m,s,b) in ((OneToMRange(5), static(OneTo(5)), OneTo(5)),
+                    (as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
+                    (as_dynamic(StepRange(1, 2, 11)), static(StepRange(1, 2, 11)), StepRange(1, 2, 11)),
+                    (as_dynamic(StepRange(11, -2, 1)), static(StepRange(11, -2, 1)), StepRange(11, -2, 1)),
+                    (as_dynamicLinRange(1, 10, 5)), static(LinRange(1, 10, 5)), LinRange(1, 10, 5)),
+                    (as_dynamic(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
                    )
         @testset "Type: $(typeof(b))" begin
             for i1 in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
@@ -333,12 +323,10 @@ end
         end
     end
 
-    # TODO (LinMRange(1, 10, 5), LinSRange(1, 10, 5), LinRange(1, 10, 5)),
     @testset "Filter with empty range" begin
         for i in (0, 1)
             @testset "Number: $i" begin
                 for f in (<, >, <=, >=, ==)
-                    m, s, b = LinMRange(1, 1, 0), LinSRange(1, 1, 0), LinRange(1, 1, 0)
                     # FIXME - filter AbstractLinRange doesn't come out as
                     # expected because getindex results in inexact values
                     # in both base and AbstractLinRange.
@@ -351,12 +339,12 @@ end
         end
     end
 
-    for (m,s,b) in ((OneToMRange(5), OneToSRange(5), OneTo(5)),
-                    (UnitMRange(2, 6), UnitSRange(2, 6), UnitRange(2, 6)),
-                    (StepMRange(1, 2, 11), StepSRange(1, 2, 11), StepRange(1, 2, 11)),
-                    (StepMRange(11, -2, 1), StepSRange(11, -2, 1), StepRange(11, -2, 1)),
-                    (LinMRange(1, 10, 5), LinSRange(1, 10, 5), LinRange(1, 10, 5)),
-                    (StepMRangeLen(1, 3, 5), StepSRangeLen(1, 3, 5), StepRangeLen(1, 3, 5))
+    for (m,s,b) in ((OneToMRange(5), static(OneTo(5)), OneTo(5)),
+                    (as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
+                    (as_dynamic(StepRange(1, 2, 11)), static(StepRange(1, 2, 11)), StepRange(1, 2, 11)),
+                    (as_dynamic(StepRange(11, -2, 1)), static(StepRange(11, -2, 1)), StepRange(11, -2, 1)),
+                    (as_dynamic(LinRange(1, 10, 5)), static(LinRange(1, 10, 5)), LinRange(1, 10, 5)),
+                    (as_dynamic(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
                    )
         for i in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
             @testset "filter(!=($i), $b)" begin

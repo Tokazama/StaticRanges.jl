@@ -25,14 +25,14 @@ end
 
 function unsafe_find_all_in(x, y)
     if is_range(x)
-        if step_is_known_one(x)
+        if known_step(x) === nothing
+            return _unsafe_find_all_in_range(x, y)
+        else
             if first_is_known_one(x)
                 return _unsafe_find_all_in_one_to(x, y)
             else
                 return _unsafe_find_all_in_unit_range(x, y)
             end
-        else
-            return _unsafe_find_all_in_range(x, y)
         end
     else
         return unsafe_find_all_in_vector(x, y)
@@ -83,14 +83,14 @@ end
 ### AbstractRange
 ###
 @inline function _unsafe_find_all_in(x, y)
-    if step_is_known_one(x)
+    if known_step(x) === nothing
+        return _unsafe_find_all_in_range(x, y)
+    else
         if first_is_known_one(x)
             return _unsafe_find_all_in_one_to(x, y)
         else
             return _unsafe_find_all_in_unit_range(x, y)
         end
-    else
-        return _unsafe_find_all_in_range(x, y)
     end
 end
 
@@ -113,26 +113,26 @@ end
 =#
 
 @inline function _unsafe_find_all_in_one_to(x, y)
-    if step_is_known_one(y)
+    if known_step(x) === nothing
+        return unsafe_find_all_range_in_range(x, y)
+    else
         if first_is_known_one(y)
             if known_last(x) isa Nothing || known_last(y) isa Nothing
-                return  OneTo{Int}(min(last(x), last(y)))
+                return  static(1):(min(last(x), last(y)))
             else
-                return OneToSRange(min(last(x), last(y)))
+                return static(1):static(min(last(x), last(y)))
             end
         else
             return _unsafe_find_all_unit_range_in_unit_range(x, y)
         end
-    else
-        return unsafe_find_all_range_in_range(x, y)
     end
 end
 
 @inline function _unsafe_find_all_in_unit_range(x::X, y::Y) where {X,Y}
-    if step_is_known_one(y)
-        return _unsafe_find_all_unit_range_in_unit_range(x, y)
-    else
+    if known_step(x) === nothing
         return _unsafe_find_all_in_range(x, y)
+    else
+        return _unsafe_find_all_unit_range_in_unit_range(x, y)
     end
 end
 
@@ -143,7 +143,7 @@ function _unsafe_find_all_unit_range_in_unit_range(x::AbstractRange{<:Integer}, 
        known_first(y) === nothing || known_last(y) === nothing
        return UnitRange(_find_first_in(x, y), _find_last_in(x, y))
     else
-        return UnitSRange(_find_first_in(x, y), _find_last_in(x, y))
+        return static(_find_first_in(x, y)):static(_find_last_in(x, y))
     end
 end
 
@@ -159,7 +159,7 @@ function _unsafe_find_all_unit_range_in_unit_range(x::AbstractRange, y::Abstract
        known_first(y) === nothing || known_last(y) === nothing
         return UnitRange(fst, lst)
     else
-        return UnitSRange(fst, lst)
+        return static(fst):static(lst)
     end
 end
 

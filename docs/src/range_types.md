@@ -13,32 +13,11 @@ Mutable ranges may be helpful when referring to a range that is accessed rarely 
 However, this package is intentionally built without many assumptions of how it should be used.
 For example, safe methods for mutating ranges without violating the same assumptions of their original construction are provided but access to their fields are not obfuscated beyond overloading the `setproperty!` method
 
-## Static Ranges
-```@docs
-StaticRanges.OneToSRange
-StaticRanges.UnitSRange
-StaticRanges.LinSRange
-StaticRanges.StepSRange
-StaticRanges.StepSRangeLen
-```
-
 ## Mutable Ranges
 
 ```@docs
 StaticRanges.OneToMRange
 StaticRanges.UnitMRange
-StaticRanges.LinMRange
-StaticRanges.StepMRange
-StaticRanges.StepMRangeLen
-```
-
-## Abstract Ranges
-
-```@docs
-StaticRanges.OneToRange
-StaticRanges.AbstractLinRange
-StaticRanges.AbstractStepRangeLen
-StaticRanges.AbstractStepRange
 ```
 
 ## Special Ranges

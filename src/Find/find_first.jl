@@ -180,6 +180,7 @@ function find_firsteq(x, collection)
     end
 end
 
+
 function unsafe_find_firsteq(x, collection::AbstractRange)
     if minimum(collection) > x || maximum(collection) < x
         return nothing

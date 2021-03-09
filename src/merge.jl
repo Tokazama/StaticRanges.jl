@@ -64,7 +64,7 @@ function _merge_sort(x, xo, y, yo)
 end
 
 function _weave_sort(x::AbstractUnitRange{<:Integer}, xo, y::AbstractUnitRange{<:Integer}, yo)
-    return similar_type(x)(_group_min(x, xo, y, yo), _group_max(x, xo, y, yo))
+    return _group_min(x, xo, y, yo):_group_max(x, xo, y, yo)
 end
 
 function _weave_sort(x::AbstractRange, xo, y::AbstractRange, yo)

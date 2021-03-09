@@ -155,13 +155,11 @@ using StaticRanges: min_of_group_max, max_of_group_min
         @test @inferred(is_forward([1, 2, 3])) == true
         @test @inferred(is_forward(Forward)) == true
         @test @inferred(is_forward(Reverse)) == false
-        @test @inferred(is_forward(UnitSRange(1, 10))) == true
     end
     @testset "is_reverse" begin
         @test @inferred(is_reverse([1, 2, 3])) == false
         @test @inferred(is_reverse(Forward)) == false
         @test @inferred(is_reverse(Reverse)) == true
-        @test @inferred(is_reverse(UnitSRange(1, 10))) == false
     end
 end
 

@@ -35,11 +35,15 @@ export
 drop_unit(x) = x / oneunit(x)
 drop_unit(x::Real) = x
 
+unsafe_find_value(x, r::AbstractRange) = _int(_add1(div(x - static_first(r), static_step(r))))
+_add1(x::T) where {T} = x + oneunit(T)
+_int(idx) = round(Integer, idx, RoundToZero)
+_int(idx::Integer) = idx
+_int(idx::TwicePrecision{T}) where {T} = round(Integer, T(idx), RoundToZero)
 
 # assume non empty
 _is_forward(x::AbstractRange) = step(x) > zero(eltype(x))
 _is_forward(x::AbstractUnitRange) = true
-_is_forward(x::Union{<:LinRange,<:LinSRange,<:LinMRange}) = last(x) > first(x)
 
 """
     find_max(x)
@@ -96,59 +100,20 @@ _empty_ur(::Type{T}) where {T} = one(T):zero(T)
 
 _empty(x::X, y::Y) where {X,Y} = Vector{Int}()
 @inline function _empty(x::X, y::Y) where {X<:AbstractRange,Y<:AbstractRange}
-    if step_is_known_one(x) && step_is_known_one(y)
+    if known_step(X) === nothing || known_step(Y) === nothing
+        return 1:1:0
+    else
         if first_is_known_one(x) && first_is_known_one(y)
             if known_last(x) isa Nothing || known_last(y) isa Nothing
-                return OneTo(0)
+                return static(1):0
             else
-                return OneToSRange(0)
+                return static(1):static(0)
             end
         else
-            return UnitRange(1, 0)
+            return 1:0
         end
-    else
-        return 1:1:0
     end
 end
-
-###
-### unsafe_find_value
-###
-
-_add1(x::T) where {T} = x + oneunit(T)
-_int(idx) = round(Integer, idx, RoundToZero)
-_int(idx::Integer) = idx
-_int(idx::TwicePrecision{T}) where {T} = round(Integer, T(idx), RoundToZero)
-
-function unsafe_find_value(val, r::OrdinalRange{T,S}, rounding_mode=RoundToZero) where {T,S}
-    if known_step(r) === oneunit(S)
-        if known_first(r) === oneunit(T)
-            return unsafe_find_value_oneto(val, r)
-        else
-            unsafe_find_value_unitrange(val, r)
-        end
-    else
-        return unsafe_find_value_steprange(val, r)
-    end
-end
-
-function unsafe_find_value(val, r::Union{<:LinRange,<:LinSRange,<:LinMRange})
-    return unsafe_find_value_linrange(val, r)
-end
-
-function unsafe_find_value(val, r::Union{<:StepRangeLen,<:StepSRangeLen,<:StepMRangeLen})
-    return unsafe_find_value_steprangelen(val, r)
-end
-
-unsafe_find_value_oneto(x, r) = _int(x)
-
-unsafe_find_value_unitrange(x, r) = _add1(_int(x - first(r)))
-
-unsafe_find_value_steprange(x, r) = _add1(_int((x - first(r)) / step(r)))
-
-unsafe_find_value_linrange(x, r) = _add1(_int((x - r.start) / (r.stop - r.start) * r.lendiv))
-
-unsafe_find_value_steprangelen(x, r) = _int(((x - r.ref) / step_hp(r)) + r.offset)
 
 for (sym, f) in ((:lt, <), (:lteq, <=), (:gt, >), (:gteq, >=))
     for ord in (:first, :last)

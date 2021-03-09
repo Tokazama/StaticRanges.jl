@@ -8,9 +8,6 @@ benefits to all types of ranges, some minor syntactic differences are used here.
 
 Starting with `findall`, there's a difference in the type that is returned.
 ```julia
-julia> mr = StepMRange(1, 2, 19)
-StepMRange(1:2:19)
-
 julia> @btime findall(<(5), $fr)
   142.072 ns (3 allocations: 208 bytes)
 2-element Array{Int64,1}:

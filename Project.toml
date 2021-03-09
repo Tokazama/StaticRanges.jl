@@ -14,7 +14,7 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
-ArrayInterface = "2"
+ArrayInterface = "3"
 ChainedFixes = "0.2"
 IntervalSets = "0.5"
 Reexport = "0.2"
