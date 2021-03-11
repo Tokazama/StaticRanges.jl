@@ -51,18 +51,18 @@ end
 
 GapRange(f::T, l::T) where {T} = GapRange{T,T,T}(f, l)
 function GapRange(f::T, l::AbstractVector{T}) where {T<:Real}
-    if is_forward(l)
-        if is_before(f, l)
+    if step(l) > 0
+        if f < first(l)
             return GapRange{T,T,typeof(l)}(f, l)
-        elseif is_after(f, l)
+        elseif f > last(l)
             return GapRange{T,typeof(l),T}(l, f)
         else
             error("The two ranges composing a GapRange can't overlap.")
         end
-    else  # is_reverse(f)
-        if is_after(f, l)
+    else
+        if f > first(l)
             return GapRange{T,T,typeof(l)}(f, l)
-        elseif is_after(l, f)
+        elseif f < last(l)
             return GapRange{T,typeof(l),T}(l, f)
         else
             error("The two ranges composing a GapRange can't overlap.")
@@ -71,18 +71,18 @@ function GapRange(f::T, l::AbstractVector{T}) where {T<:Real}
 end
 
 function GapRange(f::AbstractVector{T}, l::T) where {T<:Real}
-    if is_forward(f)
-        if is_before(f, l)
+    if step(f) > 0
+        if last(f) < l
             return GapRange{T,typeof(f),T}(f, l)
-        elseif is_before(l, f)
+        elseif l < first(f)
             return GapRange{T,T,typeof(f)}(l, f)
         else
             error("The two ranges composing a GapRange can't overlap.")
         end
-    else  # is_reverse(f)
-        if is_after(f, l)
+    else
+        if l > first(f)
             return GapRange{T,typeof(f),T}(f, l)
-        elseif is_after(l, f)
+        elseif l < last(f)
             return GapRange{T,T,typeof(f)}(l, f)
         else
             error("The two ranges composing a GapRange can't overlap.")
@@ -91,11 +91,11 @@ function GapRange(f::AbstractVector{T}, l::T) where {T<:Real}
 end
 
 function GapRange(f::AbstractVector{T}, l::AbstractVector{T}) where {T}
-    if is_forward(f)
-        if is_forward(l)
-            if is_before(f, l)
+    if step(f) > 0
+        if step(l) > 0
+            if last(f) < first(l)
                 return GapRange{T,typeof(f),typeof(l)}(f, l)
-            elseif is_before(l, f)
+            elseif last(l) < first(f)
                 return GapRange{T,typeof(l),typeof(f)}(l, f)
             else
                 error("The two ranges composing a GapRange can't overlap.")
@@ -103,13 +103,13 @@ function GapRange(f::AbstractVector{T}, l::AbstractVector{T}) where {T}
         else
             error("Both arguments to GapRange must have the same sorting, got forward and reverse ordered ranges.")
         end
-    else  # is_reverse(f)
-        if is_forward(l)
+    else
+        if step(l) > 0
             error("Both arguments to GapRange must have the same sorting, got reverse and forward ordered ranges.")
         else
-            if is_after(f, l)
+            if last(f) > first(l)
                 return GapRange{T,typeof(f),typeof(l)}(f, l)
-            elseif is_after(l, f)
+            elseif last(l) > first(f)
                 return GapRange{T,typeof(l),typeof(f)}(l, f)
             else
                 error("The two ranges composing a GapRange can't overlap.")
@@ -137,16 +137,6 @@ Base.length(gr::GapRange{T,T,T}) where {T} = 2
 # bypasses order checking
 _unsafe_gaprange(f, l) = GapRange{eltype(f),typeof(f),typeof(l)}(f, l)
 
-is_reverse(x::GapRange) = is_reverse(first_range(x))
-is_forward(x::GapRange) = is_forward(first_range(x))
-
-is_forward(x::GapRange{T,T,L}) where {T,L} = is_forward(last_range(x))
-is_forward(x::GapRange{T,F,T}) where {T,F} = is_forward(first_range(x))
-is_forward(x::GapRange{T,T,T}) where {T} = first_range(x) < last_range(x)
-
-is_reverse(x::GapRange{T,T,L}) where {T,L} = is_reverse(last_range(x))
-is_reverse(x::GapRange{T,F,T}) where {T,F} = is_reverse(first_range(x))
-is_reverse(x::GapRange{T,T,T}) where {T} = first_range(x) > last_range(x)
 
 #Base.:(==)(x::GapRange, y::GapRange) = _isequal(x, y)
 Base.:(==)(x::AbstractArray, y::GapRange) = _isequal(x, y)
@@ -178,5 +168,60 @@ function Base.AbstractArray{T}(gr::GapRange) where {T}
     fr = AbstractRange{T}(gr.first_range)
     lr = AbstractRange{T}(gr.last_range)
     return GapRange{T,typeof(fr),typeof(lr)}(fr, lr)
+end
+# GapRange
+unsafe_index_first(gr::GapRange, i) = @inbounds(getindex(first_range(gr), i))
+function unsafe_index_last(gr::GapRange, i)
+    return @inbounds(getindex(last_range(gr), i .- first_length(gr)))
+end
+
+function Base.getindex(gr::GapRange, i::Integer)
+    @boundscheck checkbounds(gr, i)
+    return i <= first_length(gr) ? unsafe_index_first(gr, i) : unsafe_index_last(gr, i)
+end
+
+@propagate_inbounds function Base.getindex(r::AbstractRange, gr::GapRange)
+    fr = r[gr.first_range]
+    lr = r[gr.last_range]
+    return GapRange{eltype(r),typeof(fr),typeof(lr)}(fr, lr)
+end
+
+@propagate_inbounds function Base.getindex(gr::GapRange, v::AbstractRange)
+    @boundscheck checkbounds(gr, v)
+    fr = first_range(gr)
+    lr = last_range(gr)
+    if checkindexhi(fr, minimum(v))
+        if checkindexlo(lr, maximum(v))
+            return unsafe_spanning_getindex(gr, v)
+        else
+            # largest value of `v` is not found in last segment so only index first segment
+            return unsafe_index_first(gr, v)
+        end
+    else
+        # smallest value of `v` is not found in first segment so only index last segment
+        return unsafe_index_last(gr, v)
+    end
+end
+
+function unsafe_spanning_getindex(gr, v)
+    ltfli = find_all(<=(first_lastindex(gr)), v)
+    gtlfi = find_all(>=(last_firstindex(gr)), v)
+    if step(v) > 0
+        return _unsafe_gaprange(
+            unsafe_index_first(gr, @inbounds(v[ltfli])),
+            unsafe_index_last(gr, @inbounds(v[gtlfi]))
+           )
+    else
+        return _unsafe_gaprange(
+            unsafe_index_last(gr, @inbounds(v[gtlfi])),
+            unsafe_index_first(gr, @inbounds(v[ltfli]))
+        )
+    end
+end
+
+Base.checkbounds(::Type{Bool}, gr::GapRange, i::Integer) = checkindex(Bool, gr, i)
+
+function Base.checkindex(::Type{Bool}, gr::GapRange, i::Integer)
+    return checkindexlo(gr, i) & checkindexhi(gr, i)
 end
 

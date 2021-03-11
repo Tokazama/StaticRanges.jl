@@ -1,5 +1,4 @@
 
-
 ###
 ### grow_beg!
 ###
@@ -120,10 +119,6 @@ end
 
 function grow_at end
 
-function shrink_beg(x, n::Integer)
-    n < 0 && throw(ArgumentError("n must be positive; got $n"))
-    return unsafe_shrink_beg(x, n)
-end
 function shrink_beg(x, n::Integer)
     n < 0 && throw(ArgumentError("n must be positive; got $n"))
     return unsafe_shrink_beg(x, n)

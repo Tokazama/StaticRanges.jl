@@ -1,25 +1,11 @@
 
 using StaticArrays
 using Test, StaticRanges, Dates, Documenter, IntervalSets
-using StaticRanges: eqmax, eqmin, Unordered
 
 using StaticRanges: grow_beg, grow_beg!, grow_end, grow_end!,
     shrink_beg, shrink_beg!, shrink_end, shrink_end!
 
-using StaticRanges: Continuity, Continuous, Discrete
-using StaticRanges:
-    order,
-    is_forward,
-    is_reverse,
-    is_ordered,
-    is_within,
-    is_after,
-    is_before,
-    is_contiguous,
-    vcat_sort,
-    merge_sort
-
-
+using ChainedFixes
 using OffsetArrays
 using OffsetArrays: IdOffsetRange
 
@@ -31,7 +17,6 @@ using ArrayInterface.Static
 using StaticRanges: ArrayInterface.ismutable
 
 using Base: OneTo, step_hp
-using Base.Order
 
 catch_nothing(x) = x
 catch_nothing(x::Nothing) = 0
@@ -74,17 +59,12 @@ include("length_tests.jl")
 include("find.jl")
 include("gaprange_tests.jl")
 
-include("vcat_tests.jl")
-include("merge_tests.jl")
-include("continuity_tests.jl")
-include("order_tests.jl")
 include("promotion_tests.jl")
 # FIXME include("nitty_gritty_promotion.jl")
 
 @test first(GapRange(2:5, 7:10)) == 2
 @test last(GapRange(2:5, 7:10)) == 10
 
-# FIXME include("staticness_tests.jl")
 include("range_interface.jl")
 include("broadcast.jl")
 include("onetorange.jl")
@@ -811,12 +791,6 @@ include("count_tests.jl")
 #=
 #@test 1.0:(.3-.1)/.1 == 1.0:2.0
 =#
-
-if VERSION < v"1.6"  # printing has changed on nightly
-    @testset "docs" begin
-        doctest(StaticRanges; manual=false)
-    end
-end
 
 #=
 detect_ambiguities(StaticRanges,Base,Core)

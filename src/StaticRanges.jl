@@ -4,26 +4,21 @@ module StaticRanges
 using LinearAlgebra
 using SparseArrays
 using SparseArrays: AbstractSparseMatrixCSC
-
-
-using Dates
-using ChainedFixes
 using Reexport
+using ChainedFixes
 
 using ArrayInterface
 using ArrayInterface: can_change_size, can_setindex, parent_type
 using ArrayInterface: known_first, known_step, known_last, known_length
-using ArrayInterface: static_first, static_last, static_step
+using ArrayInterface: static_first, static_last, static_step, static_length
 using ArrayInterface: OptionallyStaticUnitRange, unsafe_reconstruct, StaticInt, OptionallyStaticRange
 using ArrayInterface.Static
-
+using ArrayInterface.Static: eq, gt, lt, ge, le
 using IntervalSets
-using Requires
 
 using Base.Broadcast: DefaultArrayStyle, broadcasted
 import Base: OneTo, TwicePrecision, unsafe_getindex, step_hp, Fix1, Fix2, tail, front, unsafe_length
 
-using Base.Order
 using Base: @propagate_inbounds, @pure
 
 export
@@ -39,8 +34,7 @@ export
     as_fixed
 
 include("utils.jl")
-include("./GapRange/GapRange.jl")
-include("order.jl")
+include("gap_range.jl")
 
 """
     OneToMRange
@@ -145,13 +139,9 @@ ArrayInterface.can_change_size(::Type{T}) where {T<:MutableRange} = true
 # Currently will return incorrect order or repeated results otherwise
 Base.filter(f::Function, r::MRange)  = r[find_all(f, r)]
 
-Base.filter(f::ChainedFix, r::MRange) = r[findall(f, r)]
-
 include("promotion.jl")
-include("merge.jl")
-include("vcat.jl")
 include("resize.jl")
-include("./Find/Find.jl")
+include("find.jl")
 
 
 Base.show(io::IO, r::OneToMRange) = print(io, "OneToMRange($(last(r)))")
@@ -190,19 +180,6 @@ function Base.in(x::Real, r::OneToMRange{T}) where {T}
     end
 end
 
-
-#=
-function Base.broadcasted(s::DefaultArrayStyle{1}, f::typeof(+), x::Real, r::MutableRange)
-    return broadcasted(s, f, x, parent(r))
-end
-function Base.broadcasted(s::DefaultArrayStyle{1}, f::typeof(+), r::MutableRange, x::Real)
-    return broadcasted(s, f, parent(r), x)
-end
-=#
-
-## TODO
-#Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r1::AbstractRange, r2::AbstractRange) = r1 + r2
-##
 function Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::OneToMRange, x::Number)
     return range(first(r)-x, length=length(r))
 end
@@ -314,43 +291,9 @@ end
     return OneTo(T(last(s)))
 end
 
-###
-###
-###
-#=
-@propagate_inbounds function revindex(x::OneTo{T}, val::T) where {T}
-    @boundscheck ((i > 0) & (i <= last(v))) || throw(BoundsError(x, val))
-    return Int(val)
-end
-
-@propagate_inbounds function revindex(x::AbstractUnitRange{T}, val::T) where {T<:Base.OverflowSafe}
-    @boundscheck first(x) < val > last(x) && throw(BoundsError(x, val))
-    return Int(val - static_first(x)) + 1
-end
-
-@propagate_inbounds function revindex(x::AbstractUnitRange{T}, val::T) where {T}
-    out =  (x - static_first(x)) + 1
-    @boundscheck if !iszero(mod(out, 1))  out > 1 && out
-        throw(BoundsError(x, val))
-    end
-    return Int(out)
-end
-
-@propagate_inbounds function revindex(x::AbstractRange{T}, val::T) where {T}
-    d, r = divrem((x - static_first(x)), static_step(x))
-    @boundscheck iszero(r) || throw(BoundsError(x, i))
-    return Int(d) + 1
-end
-
-@propagate_inbounds revindex(x::AbstractRange{T}, val) where {T} = revindex(x, T(val))
-
-=#
-
 Base.intersect(r::OneToMRange, s::OneToMRange) = OneTo(min(last(r),last(s)))
 Base.intersect(r::OneToMRange, s::OneTo) = OneTo(min(last(r),last(s)))
 Base.intersect(r::OneTo, s::OneToMRange) = OneTo(min(last(r),last(s)))
-
-
 
 Static.known(::Type{StaticRange{T,R}}) where {T,R} = R
 function Static.static(x::AbstractRange)

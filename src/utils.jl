@@ -37,15 +37,64 @@ Base.isassigned(r::AbstractRange, i::Integer) = checkindex(Bool, r, i)
 ###
 ### Generic array traits
 ###
-# TODO This is a more trait like version of the same method from base
-# (base doesn't operate on types)
-has_offset_axes(::T) where {T} = has_offset_axes(T)
-has_offset_axes(::Type{T}) where {T<:AbstractRange} = false
-has_offset_axes(::Type{T}) where {T<:AbstractArray} = _has_offset_axes(axes_type(T))
-Base.@pure function _has_offset_axes(::Type{T}) where {T<:Tuple}
-    for ax_i in T.parameters
-        has_offset_axes(ax_i) && return true
-    end
-    return false
+# TODO should this be in Static.jl
+static_isempty(x::OrdinalRange) = _static_isempty(static_first(x), static_step(x), static_last(x))
+function static_isempty(x)
+    len = static_length(x)
+    return Static.eq(zero(len), len)
 end
+function _static_isempty(start::F, step::S, stop::L) where {F,S,L}
+    return Static.ne(start, stop) & Static.ne(Static.gt(step, zero(step)), Static.gt(stop, start))
+end
+
+# FIXME these absolutely needs to go in ArrayInterface
+function ArrayInterface.known_length(::Type{T}) where {T<:AbstractRange}
+    if parent_type(T) <: T
+        return nothing
+    else
+        return known_length(parent_type(T))
+    end
+end
+
+#Base.rem(::Static.StaticFloat64{X}, ::Static.StaticFloat64{Y}) where {X,Y} = static(rem(X, Y))
+static_div(x::X, y::Y) where {X,Y} = _div(is_static(X) & is_static(Y), x, y)
+_div(::True, x, y) = static(div(known(x), known(y)))
+_div(::False, x, y) = div(dynamic(x), dynamic(y))
+
+static_rem(x::X, y::Y) where {X,Y} = _rem(is_static(X) & is_static(Y), x, y)
+_rem(::True, x, y) = static(rem(known(x), known(y)))
+_rem(::False, x, y) = rem(dynamic(x), dynamic(y))
+
+_add1(x::T) where {T} = x + oneunit(T)
+_int(idx) = round(Integer, idx, RoundToZero)::Int
+_int(idx::Integer) = Int(idx)::Int
+_int(idx::StaticInt{N}) where {N} = idx
+_int(idx::TwicePrecision{T}) where {T} = round(Integer, T(idx), RoundToZero)
+
+_drop_unit(x::X) where {X} = div(x, oneunit(x))
+_drop_unit(x::Real) = x
+
+### empty
+_empty_ur(::Type{T}) where {T} = one(T):zero(T)
+
+_empty(x::X, y::Y) where {X,Y} = Vector{Int}()
+@inline function _empty(x::X, y::Y) where {X<:AbstractRange,Y<:AbstractRange}
+    if (known_step(X) === nothing) | (known_step(Y) === nothing)
+        return 1:1:0
+    else
+        if first_is_known_one(x) && first_is_known_one(y)
+            if known_last(x) isa Nothing || known_last(y) isa Nothing
+                return static(1):0
+            else
+                return static(1):static(0)
+            end
+        else
+            return 1:0
+        end
+    end
+end
+
+const Equal{T} = Union{Fix2{typeof(==),T},Fix2{typeof(isequal),T}}
+const NotEqual{T} = Fix2{typeof(!=),T}
+const NotIn{T} = (typeof(!in(Any)).name.wrapper){Fix2{typeof(in),T}}
 
