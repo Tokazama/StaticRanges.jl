@@ -22,12 +22,6 @@ function _static_isempty(start::F, step::S, stop::L) where {F,S,L}
     return Static.ne(start, stop) & Static.ne(Static.gt(step, zero(step)), Static.gt(stop, start))
 end
 
-# FIXME move to Static.jl
-Base.:(==)(::True, ::True) = True()
-Base.:(==)(::True, ::False) = False()
-Base.:(==)(::False, ::True) = False()
-Base.:(==)(::False, ::False) = True()
-
 # FIXME these absolutely needs to go in ArrayInterface
 function ArrayInterface.known_length(::Type{T}) where {T<:AbstractRange}
     if parent_type(T) <: T

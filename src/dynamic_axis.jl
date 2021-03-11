@@ -9,7 +9,6 @@ mutable struct DynamicAxis <: AbstractUnitRange{Int}
 
     DynamicAxis(stop::Real) = new(Int(max(0, stop)))
 
-
     function DynamicAxis(r::AbstractRange)
         first(r) == 1 || (Base.@_noinline_meta; throw(ArgumentError("first element must be 1, got $(first(r))")))
         step(r)  == 1 || (Base.@_noinline_meta; throw(ArgumentError("step must be 1, got $(step(r))")))
