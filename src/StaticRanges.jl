@@ -4,7 +4,6 @@ module StaticRanges
 using LinearAlgebra
 using SparseArrays
 using SparseArrays: AbstractSparseMatrixCSC
-using Reexport
 using ChainedFixes
 
 using ArrayInterface

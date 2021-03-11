@@ -9,16 +9,12 @@ ChainedFixes = "9706b775-b1f4-4c74-b677-0491368ea71c"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
-Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 ArrayInterface = "3"
 ChainedFixes = "0.2"
 IntervalSets = "0.5"
-Reexport = "0.2"
-Requires = "1"
 julia = "1.4,1.5"
 
 [extras]
