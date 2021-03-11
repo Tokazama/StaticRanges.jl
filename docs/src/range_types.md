@@ -16,8 +16,8 @@ For example, safe methods for mutating ranges without violating the same assumpt
 ## Mutable Ranges
 
 ```@docs
-StaticRanges.OneToMRange
-StaticRanges.UnitMRange
+StaticRanges.DynamicAxis
+StaticRanges.MutableRange
 ```
 
 ## Special Ranges

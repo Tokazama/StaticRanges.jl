@@ -2,7 +2,7 @@ using Base.Broadcast: broadcasted
 bstyle = Base.Broadcast.DefaultArrayStyle{1}()
 
 @testset "broadcast" begin
-    for (title, mr,br,sr) in (("OneTo", OneToMRange(10),         OneTo(10),              static(OneTo(10))),
+    for (title, mr,br,sr) in (("OneTo", DynamicAxis(10),         OneTo(10),              static(OneTo(10))),
                               ("StepRangeLen", as_dynamic(StepRangeLen(1., 1., 10)), StepRangeLen(1., 1., 10), static(StepRangeLen(1., 1., 10))))
         @testset "$title" begin
             @test broadcasted(bstyle, +, mr) == broadcast(+, br) == broadcasted(bstyle, +, sr)

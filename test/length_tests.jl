@@ -1,5 +1,5 @@
 @testset "length - tests" begin
-    for (r,b) in ((OneToMRange(10), OneTo(10)),
+    for (r,b) in ((DynamicAxis(10), OneTo(10)),
                   (mrange(1.0, step=2.0, stop=10.0), 1.0:2.0:10.0),
                   (mrange(UInt32(1), step=UInt32(2), stop=UInt32(10)), UInt32(1):UInt32(2):UInt32(10)),
                  )
@@ -81,7 +81,7 @@
         end
     end
     # small ints
-    @test length(OneToMRange{Int16}(10)) == 10
+    @test length(DynamicAxis{Int16}(10)) == 10
 
-    @test length(OneToMRange(UInt8(10))) == 10
+    @test length(DynamicAxis(UInt8(10))) == 10
 end

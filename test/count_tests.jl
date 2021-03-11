@@ -1,6 +1,6 @@
 
 @testset "cont" begin
-    for (m,s,b) in ((OneToMRange(5), static(OneTo(5)), OneTo(5)),
+    for (m,s,b) in ((DynamicAxis(5), static(OneTo(5)), OneTo(5)),
                    )
         @testset "Type: $(typeof(b))" begin
             for i1 in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))

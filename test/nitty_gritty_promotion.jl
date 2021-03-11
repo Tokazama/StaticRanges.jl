@@ -1,5 +1,5 @@
 @testset "nitty_gritty_promote_rules" begin
-    onetomrange_type = typeof(OneToMRange(10))
+    onetomrange_type = typeof(DynamicAxis(10))
 
     onetorange_type = typeof(OneTo(10))
     steprange_type = typeof(StepRange(1, 1, 2))
@@ -9,20 +9,14 @@
 
     @testset "promote_rule" begin
         # within type promotion
-        @test promote_rule(onetomrange_type, typeof(OneToMRange(5))) <: OneToMRange
+        @test promote_rule(onetomrange_type, typeof(DynamicAxis(5))) <: DynamicAxis
+
+        @test promote_rule(onetomrange_type, onetorange_type) <: DynamicAxis
+        @test promote_rule(onetorange_type, onetomrange_type) <: DynamicAxis
 
 
-
-
-        # many combinations
-
-
-        @test promote_rule(onetomrange_type, onetorange_type) <: OneToMRange
-        @test promote_rule(onetorange_type, onetomrange_type) <: OneToMRange
-
-
-        @test promote_rule(onetorange_type, onetomrange_type) <: OneToMRange
-        @test promote_rule(onetomrange_type, onetorange_type) <: OneToMRange
+        @test promote_rule(onetorange_type, onetomrange_type) <: DynamicAxis
+        @test promote_rule(onetomrange_type, onetorange_type) <: DynamicAxis
 
 
 
@@ -37,8 +31,8 @@
     end
 
     @testset "lower_rangetype" begin
-        @test StaticRanges.lower_rangetype(onetomrange_type) <: OneToMRange
-        @test StaticRanges.lower_rangetype(onetorange_type) <: OneToMRange
+        @test StaticRanges.lower_rangetype(onetomrange_type) <: DynamicAxis
+        @test StaticRanges.lower_rangetype(onetorange_type) <: DynamicAxis
 
     end
 

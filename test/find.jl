@@ -64,7 +64,7 @@ end
     end
 end
 
-const range_list = (OneToMRange(10),
+const range_list = (DynamicAxis(10),
                     #IdOffsetRange(OneTo(10), 2),
                     1:10,
                     #IdOffsetRange(1:10, 2),
@@ -117,7 +117,7 @@ end
     r = @inferred(find_all(in(OneTo(10)), static(OneTo(8))))
     @test r == 1:8
 
-    r = @inferred(find_all(in(OneTo(10)), OneToMRange(8)))
+    r = @inferred(find_all(in(OneTo(10)), DynamicAxis(8)))
     @test r == 1:8
 
     r = @inferred(find_all(in(static(OneTo(8))), static(OneTo(10))))
@@ -182,13 +182,13 @@ function test_find_chained_fix(m, s, b)
 end
 
 @testset "findall(::ChainedFix,...)" begin
-    test_find_chained_fix(OneToMRange(5), static(OneTo(5)), OneTo(5))
+    test_find_chained_fix(DynamicAxis(5), static(OneTo(5)), OneTo(5))
     test_find_chained_fix(as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6))
     test_find_chained_fix(as_dynamic(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
 end
 
 @testset "find not equal" begin
-    for (m,s,b) in ((OneToMRange(5), static(OneTo(5)), OneTo(5)),
+    for (m,s,b) in ((DynamicAxis(5), static(OneTo(5)), OneTo(5)),
                     (as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
                     (as_dynamic(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
                    )
@@ -203,7 +203,7 @@ end
 
 
 @testset "chained finds" begin
-    for (m,s,b) in ((OneToMRange(5), static(OneTo(5)), OneTo(5)),
+    for (m,s,b) in ((DynamicAxis(5), static(OneTo(5)), OneTo(5)),
                     (as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
                     (as_dynamic(StepRange(1, 2, 11)), static(StepRange(1, 2, 11)), StepRange(1, 2, 11)),
                    )
@@ -248,7 +248,7 @@ end
 end
 
 @testset "filter" begin
-    for (m,s,b) in ((OneToMRange(5), static(OneTo(5)), OneTo(5)),
+    for (m,s,b) in ((DynamicAxis(5), static(OneTo(5)), OneTo(5)),
                     (as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
                     (as_dynamic(StepRange(1, 2, 11)), static(StepRange(1, 2, 11)), StepRange(1, 2, 11)),
                     (as_dynamic(StepRange(11, -2, 1)), static(StepRange(11, -2, 1)), StepRange(11, -2, 1)),
@@ -298,7 +298,7 @@ end
     end
     =#
 
-    for (m,s,b) in ((OneToMRange(5), static(OneTo(5)), OneTo(5)),
+    for (m,s,b) in ((DynamicAxis(5), static(OneTo(5)), OneTo(5)),
                     (as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
                     (as_dynamic(StepRange(1, 2, 11)), static(StepRange(1, 2, 11)), StepRange(1, 2, 11)),
                     (as_dynamic(StepRange(11, -2, 1)), static(StepRange(11, -2, 1)), StepRange(11, -2, 1)),

@@ -1,11 +1,6 @@
 
-using ArrayInterface: known_first, known_last, known_step
 
-export
-    find_first,
-    find_last,
-    find_all_in,
-    find_all
+
 
 # Ideally the previous _find_all_in method could be used, but things like `div(::Second, ::Integer)`
 # don't work. So this helps drop units by didingin by oneunit(::T) of the same type.
@@ -22,7 +17,7 @@ end
 unsafe_find_value(x, r::UnitRange) = _add1(_int(x - first(r)))
 unsafe_find_value(x, r::StepRange) = _add1(_int((x - first(r)) / step(r)))
 unsafe_find_value(x, r::OneTo) = _int(x)
-unsafe_find_value(x, r::OneToMRange) = _int(x)
+unsafe_find_value(x, r::DynamicAxis) = _int(x)
 
 
 # only really applies to ordered vectors

@@ -22,7 +22,7 @@ catch_nothing(x) = x
 catch_nothing(x::Nothing) = 0
 
 
-#@test isempty(setdiff(detect_ambiguities(StaticRanges,Base,Core), detect_ambiguities(StaticArrays,Base,Core)))
+@test isempty(setdiff(detect_ambiguities(StaticRanges,Base,Core), detect_ambiguities(StaticArrays,Base,Core)))
 
 #=
 When using ranges find_all will produce either an AbstractUnitRange or GapRange.
@@ -33,7 +33,7 @@ to_vec(x::AbstractUnitRange{Int}) = collect(x)
 to_vec(x::GapRange) = collect(x)
 to_vec(x) = x
 
-@test StaticRanges.ArrayInterface.ismutable(OneToMRange(10))
+@test StaticRanges.ArrayInterface.ismutable(DynamicAxis(10))
 
 @testset "checkindex" begin
     r = 1:5
@@ -65,7 +65,32 @@ include("promotion_tests.jl")
 @test first(GapRange(2:5, 7:10)) == 2
 @test last(GapRange(2:5, 7:10)) == 10
 
-include("range_interface.jl")
+@testset "Range Interface" begin
+    for r in (DynamicAxis(10),
+              as_dynamic(1:10),
+              MutableRange(StepRangeLen(1, 1, 10)))
+        @testset "$(typeof(r))" begin
+            @testset "first" begin
+                @test @inferred(first(r)) == 1
+            end
+            @testset "firstindex" begin
+                @test @inferred(firstindex(r)) == 1
+            end
+            @testset "step" begin
+                @test @inferred(step(r)) == 1
+            end
+            @testset "last" begin
+                @test @inferred(last(r)) == 10
+            end
+            @testset "lastindex" begin
+                @test @inferred(lastindex(r)) == 10
+            end
+            @testset "length" begin
+                @test @inferred(length(r)) == 10
+            end
+        end
+    end
+end
 include("broadcast.jl")
 include("onetorange.jl")
 include("intersect_tests.jl")
@@ -73,7 +98,7 @@ include("intersect_tests.jl")
 
 @testset "empty" begin
     for r in (static(OneTo(10)),
-              OneToMRange(10),
+              DynamicAxis(10),
               srange(1.0, step=1, stop=10.0),
               mrange(1.0, step=1, stop=10.0),
               static(StepRange(1, 1, 10)),
@@ -196,10 +221,10 @@ for frange in (mrange, srange)
             @test valtype_is_correct(frange(Int128(1), Int128(5)))
 
             if frange isa typeof(mrange)
-                @test keytype_is_correct(OneToMRange(4))
-                @test keytype_is_correct(OneToMRange(Int32(4)))
-                @test valtype_is_correct(OneToMRange(4))
-                @test valtype_is_correct(OneToMRange(Int32(4)))
+                @test keytype_is_correct(DynamicAxis(4))
+                @test keytype_is_correct(DynamicAxis(Int32(4)))
+                @test valtype_is_correct(DynamicAxis(4))
+                @test valtype_is_correct(DynamicAxis(Int32(4)))
             else
                 @test keytype_is_correct(static(OneTo((4))))
                 @test keytype_is_correct(static(OneTo((Int32(4)))))
@@ -244,10 +269,10 @@ for frange in (mrange, srange)
                 @test issubset(1:3:10, frange(1, 10))
                 @test !issubset(1:10, frange(1, step=3, stop=10))
                 if frange isa typeof(mrange)
-                    @test issubset(OneToMRange(5), OneToMRange(10))
-                    @test !issubset(OneToMRange(10), OneToMRange(5))
-                    @test issubset(OneToMRange(5), OneToMRange(10))
-                    @test !issubset(OneToMRange(10), OneToMRange(5))
+                    @test issubset(DynamicAxis(5), DynamicAxis(10))
+                    @test !issubset(DynamicAxis(10), DynamicAxis(5))
+                    @test issubset(DynamicAxis(5), DynamicAxis(10))
+                    @test !issubset(DynamicAxis(10), DynamicAxis(5))
                 else
                     @test issubset(static(OneTo(5)), static(OneTo((10))))
                     @test !issubset(static(OneTo(10)), static(OneTo((5))))
@@ -632,9 +657,9 @@ for frange in (mrange, srange)
 
         @testset "comparing UnitRanges and OneTo" begin
             @test frange(1, step=2, stop=10) == 1:2:10 != 1:3:10 != 1:3:13 != frange(2, step=3, stop=13) == 2:3:11 != frange(2, 11)
-            @test frange(1, step=1, stop=10) == 1:10 == 1:10 == OneToMRange(10) == static(OneTo(10))
+            @test frange(1, step=1, stop=10) == 1:10 == 1:10 == DynamicAxis(10) == static(OneTo(10))
             @test 1:10 != frange(2, 10) != 2:11 != Base.OneTo(11)
-            @test OneToMRange(10) != static(OneTo(11)) != frange(1, 10)
+            @test DynamicAxis(10) != static(OneTo(11)) != frange(1, 10)
         end
 
         @testset "issue #7114" begin

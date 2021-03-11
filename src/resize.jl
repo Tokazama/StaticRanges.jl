@@ -3,7 +3,7 @@
 ### grow_beg!
 ###
 # can't call grow_beg! on this
-# function grow_beg!(x::OneToMRange{T}, n::Unsigned) where {T} end
+# function grow_beg!(x::DynamicAxis{T}, n::Unsigned) where {T} end
 
 function grow_beg!(x, n::Integer)
     n < 0 && throw(ArgumentError("new length must be ≥ 0"))
@@ -18,10 +18,6 @@ unsafe_grow_beg!(x::MutableRange, n) = setfield!(x, :parent, unsafe_grow_beg(par
 function grow_end!(x, n::Integer)
     n < 0 && throw(ArgumentError("new length must be ≥ 0"))
     return unsafe_grow_end!(x, n)
-end
-function unsafe_grow_end!(x::OneToMRange{T}, n) where {T}
-    setfield!(x, :stop, T(n + last(x)))
-    return x
 end
 unsafe_grow_end!(x::Vector, n) = Base._growend!(x, n)
 unsafe_grow_end!(x::MutableRange, n) = setfield!(x, :parent, unsafe_grow_end(parent(x), n))

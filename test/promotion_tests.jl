@@ -1,11 +1,11 @@
 
 @testset "promotion" begin
-    for (mr,br) in ((OneToMRange(10),         OneTo(10)),)
+    for (mr,br) in ((DynamicAxis(10),         OneTo(10)),)
         @testset "$(typeof(br)) lower range" begin
             @test last(promote(br, mr)) == mr
             @test last(promote(mr, br)) == mr
         end
-        for (mr2,br2) in ((OneToMRange(10),         OneTo(10)),
+        for (mr2,br2) in ((DynamicAxis(10),         OneTo(10)),
                              )
             if br != br2
                 @testset "$(typeof(br)) & $(typeof(br2))" begin
@@ -18,9 +18,8 @@
         end
     end
     @testset "promote_rule" begin
-        for (t1,t2,p) in ((OneToMRange{Int}, OneTo{Int}, OneToMRange{Int}),
-                          (OneToMRange{Int}, OneTo{Int}, OneToMRange{Int}),
-                         )
+        for (t1,t2,p) in ((DynamicAxis, OneTo{Int}, OneTo{Int}),
+                          (DynamicAxis, OneTo{Int}, OneTo{Int}))
             @testset "$t1 + $t2" begin
                 @test (@inferred(promote_rule(t1, t2)) <: p) == true
                 @test (@inferred(promote_rule(t2, t1)) <: p) == true
