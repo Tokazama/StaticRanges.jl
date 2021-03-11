@@ -60,7 +60,7 @@
     @test DynamicAxis(1:2) == DynamicAxis(2)
     @test DynamicAxis(Int32(1):Int32(2)) == DynamicAxis(2)
     @test DynamicAxis(3.0) == DynamicAxis(3)
-    @test_throws InexactError(:Int16, Int16, 3.2) DynamicAxis(3.2)
+    @test_throws InexactError DynamicAxis(3.2)
 end
 
 if VERSION > v"1.2"

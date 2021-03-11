@@ -236,12 +236,13 @@ for frange in (mrange, srange)
         @testset "findall(::Base.Fix2{typeof(in)}, ::Array)" begin
             @test findall(in(3:20), [5.2, 3.3]) == findall(in(Vector(3:20)), [5.2, 3.3])
 
+            # FIXME shouldn't both be reversed?
             let span = frange(5, 20),
                 r = frange(-7, step=3, stop=42)
                 @test findall(in(span), r) == 5:10
 
                 r = frange(15, step=-2, stop=-38)
-                @test findall(in(span), r) == 1:6
+                @test findall(in(span), r) == 6:-1:1
             end
         end
 

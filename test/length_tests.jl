@@ -81,7 +81,8 @@
         end
     end
     # small ints
-    @test length(DynamicAxis{Int16}(10)) == 10
+    @test length(DynamicAxis(10)) == 10
 
     @test length(DynamicAxis(UInt8(10))) == 10
 end
+

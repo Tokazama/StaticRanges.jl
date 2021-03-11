@@ -30,7 +30,6 @@ export
     mrange,
     srange,
     as_dynamic,
-    as_fixed,
     find_first,
     find_last,
     find_all_in,
@@ -44,9 +43,11 @@ include("static_range.jl")
 # Things I have to had to avoid ambiguities with base
 RANGE_LIST = ( UnitMRange, DynamicAxis)
 
+#=
 function Base.findfirst(f::Union{Base.Fix2{typeof(==),T}, Base.Fix2{typeof(isequal),T}}, r::DynamicAxis) where T<:Integer
     return find_first(f, r)
 end
+=#
 
 const OneToUnion = Union{OneTo,DynamicAxis}
 const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRangeLen{T}}
@@ -70,6 +71,19 @@ Base.filter(f::Function, r::MRange)  = r[find_all(f, r)]
 
 include("resize.jl")
 include("find.jl")
+
+Base.findfirst(f::Equal{T}, r::DynamicAxis) where {T<:Integer} = find_first(f, r)
+for T in (StaticRange,MutableRange,DynamicAxis)
+    @eval begin
+        Base.findfirst(f::Function, r::$T) = find_first(f, r)
+        Base.findlast(f::Function, r::$T) = find_last(f, r)
+        Base.findall(f::Function, r::$T) = find_all(f, r)
+        Base.findall(f::In{Interval{L, R, T}}, r::$T) where {L, R, T} = find_all(f, r)
+        Base.findall(f::In, r::$T) = find_all(f, r)
+    end
+end
+
+
 
 function Base.show(io::IO, r::UnitMRange)
     print(io, "UnitMRange(", repr(first(r)), ':', repr(last(r)), ")")
@@ -126,12 +140,12 @@ for R in (MutableRange, StaticRange)
         Base.intersect(r::$R, s::AbstractRange) = intersect(parent(r), s)
         Base.intersect(r::AbstractRange, s::$R) = intersect(r, parent(s))
         Base.intersect(r::$R, s::$R) = intersect(parent(r), parent(s))
-        Base.:(-)(x::$R, y::AbstractArray) = -(parent(x), y)
-        Base.:(-)(x::AbstractArray, y::$R) = -(x, parent(y))
         Base.:(-)(x::$R, y::$R) = -(parent(x), parent(y))
-        Base.:(+)(x::$R, y::AbstractArray) = +(parent(x), y)
-        Base.:(+)(x::AbstractArray, y::$R) = +(x, parent(y))
+        Base.:(-)(r1::Union{LinRange, OrdinalRange, StepRangeLen}, r2::$R)  = -(r1, parent(r2))
+        Base.:(-)(r1::$R, r2::Union{LinRange, OrdinalRange, StepRangeLen})  = -(parent(r1), r2)
         Base.:(+)(x::$R, y::$R) = +(parent(x), parent(y))
+        Base.:(+)(r1::Union{LinRange, OrdinalRange, StepRangeLen}, r2::$R)  = +(r1, parent(r2))
+        Base.:(+)(r1::$R, r2::Union{LinRange, OrdinalRange, StepRangeLen})  = +(parent(r1), r2)
 
         Base.reverse(r::$R) = reverse(parent(r))
 
@@ -143,11 +157,14 @@ for R in (MutableRange, StaticRange)
     end
 end
 
+Base.intersect(r::StaticRange, s::MutableRange) = intersect(parent(r), s)
+Base.intersect(r::MutableRange, s::StaticRange) = intersect(r, parent(s))
+#intersect(r::MutableRange, s::AbstractRange) in StaticRanges at /Users/zchristensen/projects/StaticRanges.jl/src/StaticRanges.jl:137,
+#intersect(r::AbstractRange, s::StaticRange) in StaticRanges at /Users/zchristensen/projects/StaticRanges.jl/src/StaticRanges.jl:138)
 
 ArrayInterface.known_length(::Type{StaticRange{T,R}}) where {T,R} = length(R)
 
 as_dynamic(x) = MutableRange(x)
-
 # although these should technically not need to be completely typed for
 # each, dispatch ignores TwicePrecision on the static version and only
 # uses the first otherwise

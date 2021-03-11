@@ -524,8 +524,8 @@ end
 ###
 ### manage steps
 ###
-function _to_step(s::S, sx::SX, sy::SY) where {S,SX,SY}
-    return __to_step(eq(gt(sy, zero(SY)), gt(sx, zero(SX))), s)
+function _to_step(s::S, x::SX, y::SY) where {S,SX,SY}
+    return __to_step(eq(gt(y, zero(y)), gt(x, zero(x))), s)
 end
 __to_step(::True, s::S) where {S} = _int(s)
 __to_step(::False, s::S) where {S} = _int(_flip_int(s))

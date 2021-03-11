@@ -26,13 +26,9 @@ function srange(start, stop; kwargs...)
 end
 
 Static.known(::Type{StaticRange{T,R}}) where {T,R} = R
-function Static.static(x::AbstractRange)
-    if can_change_size(x)
-        return as_static(as_fixed(x))
-    else
-        return StaticRange(x)
-    end
-end
+Static.static(x::DynamicAxis) = static(OneTo(last(x)))
+Static.static(x::MutableRange) = static(parent(x))
+Static.static(x::AbstractRange) = StaticRange(x)
 
 Base.parent(::StaticRange{T,R}) where {T,R} = R
 

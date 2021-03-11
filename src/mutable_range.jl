@@ -44,3 +44,7 @@ ArrayInterface.parent_type(::Type{MutableRange{T,R}}) where {T,R} = R
 @inline Base.getproperty(x::MutableRange, s::Symbol) = getproperty(parent(x), s)
 
 
+function Base.promote_rule(::Type{T1}, ::Type{T2}) where {T1<:MutableRange,T2<:MutableRange}
+    return promote_rule(parent_type(T1), parent_type(T2))
+end
+

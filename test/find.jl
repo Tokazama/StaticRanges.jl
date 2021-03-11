@@ -34,23 +34,23 @@ end
     @testset "filter test - $x, $(typeof(collection))" begin
         @test @inferred(filter(>(x), collection)) ==
               filter(i -> i > x, collection) ==
-              filter(>(x), as_fixed(collection))
+              filter(>(x), collection)
 
         @test @inferred(filter(>=(x), collection)) ==
               filter(i -> i >= x, collection) ==
-              filter(>=(x), as_fixed(collection))
+              filter(>=(x), collection)
 
         @test @inferred(filter(<(x), collection)) ==
               filter(i -> i < x, collection) ==
-              filter(<(x), as_fixed(collection))
+              filter(<(x), collection)
 
         @test @inferred(filter(<=(x), collection)) ==
               filter(i -> i <= x, collection) ==
-              filter(<=(x), as_fixed(collection))
+              filter(<=(x), collection)
 
         @test @inferred(filter(==(x), collection)) ==
               filter(i -> i == x, collection) ==
-              filter(==(x), as_fixed(collection))
+              filter(==(x), collection)
     end
 end
 
