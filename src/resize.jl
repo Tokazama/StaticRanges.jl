@@ -57,7 +57,7 @@ unsafe_shrink_beg!(x::MutableRange, n) = setfield!(x, :parent, unsafe_shrink_beg
 ###
 function shrink_end!(x, n::Integer)
     n < 0 && throw(ArgumentError("new length must be ≥ 0"))
-    return unsafe_grow_end!(x, n)
+    return unsafe_shrink_end!(x, n)
 end
 unsafe_shrink_end!(x::Vector, n) = Base._deleteend!(x, n)
 unsafe_shrink_end!(x::MutableRange, n) = setfield!(x, :parent, unsafe_shrink_end(parent(x), n))
@@ -77,20 +77,6 @@ function shrink_to!(x, n::Integer)
 end
 
 unsafe_shrink_to!(x, n) = unsafe_shrink_end!(x, length(x) - n)
-
-###
-### resize!
-###
-function Base.resize!(x::OneToMRange, n::Integer)
-    l = length(x)
-    if n > l
-        unsafe_grow_to!(x, n)
-    elseif n != l
-        n < 0 &&  throw(ArgumentError("new length must be ≥ 0"))
-        unsafe_shrink_to!(x, n)
-    end
-    return x
-end
 
 function grow_beg(x, n::Integer)
     n < 0 && throw(ArgumentError("n must be positive; got $n"))
@@ -116,8 +102,6 @@ function unsafe_grow_end(x::AbstractRange, n::Integer)
         return first(x):(last(x) + n)
     end
 end
-
-function grow_at end
 
 function shrink_beg(x, n::Integer)
     n < 0 && throw(ArgumentError("n must be positive; got $n"))
@@ -145,6 +129,4 @@ function unsafe_shrink_end(x::AbstractRange, n::Integer)
         return first(x):(last(x) - n)
     end
 end
-
-function shrink_at end
 

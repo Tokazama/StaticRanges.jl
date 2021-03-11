@@ -81,26 +81,26 @@ end
         @test x == 3:10
     end
 
-    @testset "shrink_beg" begin
+    @testset "shrink_end" begin
         m,f,s = as_dynamic(UnitRange(1:10)), 1:10, static(UnitRange(1:10))
-        x = @inferred(shrink_beg(m, 2))
+        x = @inferred(shrink_end(m, 2))
         @test m == 1:10
-        @test x == 3:10
+        @test x == 1:8
 
-        x = @inferred(shrink_beg(f, 2))
+        x = @inferred(shrink_end(f, 2))
         @test f == 1:10
-        @test x == 3:10
+        @test x == 1:8
 
-        x = @inferred((s -> shrink_beg(s, 2))(s))
+        x = @inferred((s -> shrink_end(s, 2))(s))
         @test s == 1:10
-        @test x == 3:10
+        @test x == 1:8
     end
 
-    @testset "shrink_beg!" begin
+    @testset "shrink_end!" begin
         m,f,s = as_dynamic(UnitRange(1:10)), 1:10, static(UnitRange(1:10))
-        x = @inferred(shrink_beg!(m, 2))
-        @test m == 3:10
-        @test x == 3:10
+        x = @inferred(shrink_end!(m, 2))
+        @test m == 1:8
+        @test x == 1:8
     end
 end
 
