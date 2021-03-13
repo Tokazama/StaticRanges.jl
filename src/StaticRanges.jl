@@ -2,10 +2,7 @@
 module StaticRanges
 
 using LinearAlgebra
-using SparseArrays
-using SparseArrays: AbstractSparseMatrixCSC
 using ChainedFixes
-
 using ArrayInterface
 using ArrayInterface: can_change_size, can_setindex, parent_type
 using ArrayInterface: known_first, known_step, known_last, known_length
