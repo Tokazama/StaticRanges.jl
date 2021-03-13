@@ -80,6 +80,9 @@ end
 Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(-), r::MutableRange) = broadcasted(s, f, parent(r))
 Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(-), r::StaticRange) = static(broadcasted(s, f, parent(r)))
 
+Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::DynamicAxis, x::Real) = (static(1) + x):(last(r) + x)
+Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::DynamicAxis, x::Real) = (static(1) - x):(last(r) - x)
+
 for R in (MutableRange, StaticRange)
     @eval begin
         Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::$R) = r
