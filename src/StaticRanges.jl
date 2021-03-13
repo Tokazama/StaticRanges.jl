@@ -30,7 +30,9 @@ export
     find_first,
     find_last,
     find_all_in,
-    find_all
+    find_all,
+    and,
+    or
 
 include("utils.jl")
 include("gap_range.jl")

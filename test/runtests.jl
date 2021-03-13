@@ -812,6 +812,10 @@ r = MutableRange(1:1:10)
     include("resize_tests.jl")
 end
 
+@testset "docs" begin
+    doctest(StaticRanges; manual=false)
+end
+
 include("count_tests.jl")
 
 #=

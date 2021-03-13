@@ -10,7 +10,7 @@ more compact storage of numbers where the majority are known to be continuous.
 julia> using StaticRanges
 
 julia> findall(and(>(4), <(10)), 1:10)
-5-element Array{Int64,1}:
+5-element Vector{Int64}:
  5
  6
  7
@@ -18,7 +18,7 @@ julia> findall(and(>(4), <(10)), 1:10)
  9
 
 julia> find_all(or(<(4), >(6)), 1:10)
-7-element GapRange{Int64,UnitRange{Int64},UnitRange{Int64}}:
+7-element GapRange{Int64, UnitRange{Int64}, UnitRange{Int64}}:
   1
   2
   3
