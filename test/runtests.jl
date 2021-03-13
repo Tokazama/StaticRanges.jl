@@ -814,7 +814,7 @@ end
 
 if VERSION > v"1.6" && sizeof(Int) === 8
     @testset "docs" begin
-        doctest(Metadata)
+        doctest(StaticRanges)
     end
 end
 include("count_tests.jl")
