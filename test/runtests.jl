@@ -812,10 +812,11 @@ r = MutableRange(1:1:10)
     include("resize_tests.jl")
 end
 
-@testset "docs" begin
-    doctest(StaticRanges; manual=false)
+if VERSION > v"1.6" && sizeof(Int) === 8
+    @testset "docs" begin
+        doctest(Metadata)
+    end
 end
-
 include("count_tests.jl")
 
 #=
