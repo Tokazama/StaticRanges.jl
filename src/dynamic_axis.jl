@@ -1,8 +1,9 @@
 
 """
-    DynamicAxis
+    DynamicAxis(n::Int)
 
-A mutable range that parallels `OneTo` in behavior.
+A range spanning `1` to `n` by steps of `1`. The value of `n` can be changed after
+construction, but cannot be any less than `0`.
 """
 mutable struct DynamicAxis <: AbstractUnitRange{Int}
     stop::Int

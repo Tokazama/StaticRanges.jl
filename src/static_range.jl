@@ -1,6 +1,10 @@
 
 
-""" StaticRange{T,R} """
+"""
+    StaticRange{T,R}
+
+Wraps a range so that it can be static.
+"""
 struct StaticRange{T,R} <: AbstractRange{T}
 
     function StaticRange{T,R}() where {T,R}

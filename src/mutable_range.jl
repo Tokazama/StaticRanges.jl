@@ -1,5 +1,9 @@
 
-""" MutableRange """
+"""
+    MutableRange(r::AbstractRange)
+
+Wraps a parent range making it mutable.
+"""
 mutable struct MutableRange{T,P<:AbstractRange{T}} <:AbstractRange{T}
     parent::P
 end
@@ -16,8 +20,8 @@ end
 
 const UnitMRange{T} = MutableRange{T,UnitRange{T}}
 const StepMRange{T,S} = MutableRange{T,StepRange{T,S}}
-const StepMRangeLen{T,R,S} = MutableRange{T,StepRangeLen{T,R,S}}
 const LinMRange{T} = MutableRange{T,LinRange{T}}
+const StepMRangeLen{T,R,S} = MutableRange{T,StepRangeLen{T,R,S}}
 
 const MRange = Union{DynamicAxis,MutableRange}
 

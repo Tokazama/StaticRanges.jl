@@ -43,19 +43,10 @@ include("static_range.jl")
 # Things I have to had to avoid ambiguities with base
 RANGE_LIST = ( UnitMRange, DynamicAxis)
 
-#=
-function Base.findfirst(f::Union{Base.Fix2{typeof(==),T}, Base.Fix2{typeof(isequal),T}}, r::DynamicAxis) where T<:Integer
-    return find_first(f, r)
-end
-=#
-
 const OneToUnion = Union{OneTo,DynamicAxis}
 const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRangeLen{T}}
 
-
 ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = true
-
-
 
 MutableRange(x::StaticRange) = MutableRange(parent(x))
 
