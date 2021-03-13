@@ -26,7 +26,7 @@ export
     # methods
     mrange,
     srange,
-    as_dynamic,
+    mutable,
     find_first,
     find_last,
     find_all_in,
@@ -157,7 +157,9 @@ Base.intersect(r::MutableRange, s::StaticRange) = intersect(r, parent(s))
 
 ArrayInterface.known_length(::Type{StaticRange{T,R}}) where {T,R} = length(R)
 
-as_dynamic(x) = MutableRange(x)
+mutable(x::AbstractRange) = MutableRange(x)
+mutable(x::OneTo) = DynamicAxis(last(x))
+
 # although these should technically not need to be completely typed for
 # each, dispatch ignores TwicePrecision on the static version and only
 # uses the first otherwise

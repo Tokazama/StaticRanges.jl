@@ -453,7 +453,7 @@ end
     @test r == 1:8
     @test isa(r, UnitRange)
 
-    r = @inferred(find_all(in(Base.OneTo(10)), StaticRanges.as_dynamic(UnitRange(1, 8))))
+    r = @inferred(find_all(in(Base.OneTo(10)), StaticRanges.mutable(UnitRange(1, 8))))
     @test r == OneTo(8)
     @test isa(r, UnitRange) == true
 

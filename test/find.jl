@@ -68,7 +68,7 @@ const range_list = (DynamicAxis(10),
                     #IdOffsetRange(OneTo(10), 2),
                     1:10,
                     #IdOffsetRange(1:10, 2),
-                    as_dynamic(UnitRange(1.0, 10.0)),
+                    mutable(UnitRange(1.0, 10.0)),
                     StepRange(1, 2, 10),
                     StepRange(10, -2, 1),
                     LinRange(1, 5, 10),
@@ -127,7 +127,7 @@ end
     @test r == 1:8
     @test isa(r, UnitRange)
 
-    r = @inferred(find_all(in(OneTo(10)), as_dynamic(UnitRange(1, 8))))
+    r = @inferred(find_all(in(OneTo(10)), mutable(UnitRange(1, 8))))
     @test r == OneTo(8)
     @test isa(r, UnitRange) == true
 
@@ -183,14 +183,14 @@ end
 
 @testset "findall(::ChainedFix,...)" begin
     test_find_chained_fix(DynamicAxis(5), static(OneTo(5)), OneTo(5))
-    test_find_chained_fix(as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6))
-    test_find_chained_fix(as_dynamic(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
+    test_find_chained_fix(mutable(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6))
+    test_find_chained_fix(mutable(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
 end
 
 @testset "find not equal" begin
     for (m,s,b) in ((DynamicAxis(5), static(OneTo(5)), OneTo(5)),
-                    (as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
-                    (as_dynamic(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
+                    (mutable(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
+                    (mutable(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
                    )
         for i in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
             @testset "find_all(!=($i), $b)" begin
@@ -204,8 +204,8 @@ end
 
 @testset "chained finds" begin
     for (m,s,b) in ((DynamicAxis(5), static(OneTo(5)), OneTo(5)),
-                    (as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
-                    (as_dynamic(StepRange(1, 2, 11)), static(StepRange(1, 2, 11)), StepRange(1, 2, 11)),
+                    (mutable(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
+                    (mutable(StepRange(1, 2, 11)), static(StepRange(1, 2, 11)), StepRange(1, 2, 11)),
                    )
         @testset "Type: $(typeof(b))" begin
             for i1 in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
@@ -249,11 +249,11 @@ end
 
 @testset "filter" begin
     for (m,s,b) in ((DynamicAxis(5), static(OneTo(5)), OneTo(5)),
-                    (as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
-                    (as_dynamic(StepRange(1, 2, 11)), static(StepRange(1, 2, 11)), StepRange(1, 2, 11)),
-                    (as_dynamic(StepRange(11, -2, 1)), static(StepRange(11, -2, 1)), StepRange(11, -2, 1)),
-                    (as_dynamic(LinRange(1, 10, 5)), static(LinRange(1, 10, 5)), LinRange(1, 10, 5)),
-                    (as_dynamic(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
+                    (mutable(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
+                    (mutable(StepRange(1, 2, 11)), static(StepRange(1, 2, 11)), StepRange(1, 2, 11)),
+                    (mutable(StepRange(11, -2, 1)), static(StepRange(11, -2, 1)), StepRange(11, -2, 1)),
+                    (mutable(LinRange(1, 10, 5)), static(LinRange(1, 10, 5)), LinRange(1, 10, 5)),
+                    (mutable(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
                    )
         @testset "Type: $(typeof(b))" begin
             for i1 in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
@@ -299,11 +299,11 @@ end
     =#
 
     for (m,s,b) in ((DynamicAxis(5), static(OneTo(5)), OneTo(5)),
-                    (as_dynamic(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
-                    (as_dynamic(StepRange(1, 2, 11)), static(StepRange(1, 2, 11)), StepRange(1, 2, 11)),
-                    (as_dynamic(StepRange(11, -2, 1)), static(StepRange(11, -2, 1)), StepRange(11, -2, 1)),
-                    (as_dynamic(LinRange(1, 10, 5)), static(LinRange(1, 10, 5)), LinRange(1, 10, 5)),
-                    (as_dynamic(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
+                    (mutable(UnitRange(2, 6)), static(UnitRange(2, 6)), UnitRange(2, 6)),
+                    (mutable(StepRange(1, 2, 11)), static(StepRange(1, 2, 11)), StepRange(1, 2, 11)),
+                    (mutable(StepRange(11, -2, 1)), static(StepRange(11, -2, 1)), StepRange(11, -2, 1)),
+                    (mutable(LinRange(1, 10, 5)), static(LinRange(1, 10, 5)), LinRange(1, 10, 5)),
+                    (mutable(StepRangeLen(1, 3, 5)), static(StepRangeLen(1, 3, 5)), StepRangeLen(1, 3, 5))
                    )
         for i in (m[1] - step(m), m[1], m[4], m[5] + 2step(m))
             @testset "filter(!=($i), $b)" begin

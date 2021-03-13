@@ -3,12 +3,23 @@
 """
     StaticRange{T,R}
 
-Wraps a range so that it can be static.
+Wraps a range parametrically, making it static.
+
+```jldoctest
+julia> using StaticRanges
+
+julia> StaticRange(1:10)
+static(1:10)
+
+julia> StaticRange{Float64}(1.0:1:10)
+static(1.0:1.0:10.0)
+
+```
 """
 struct StaticRange{T,R} <: AbstractRange{T}
 
     function StaticRange{T,R}() where {T,R}
-        @assert R <: AbstractRange
+        @assert R isa AbstractRange
         @assert T <: eltype(R)
         return new{T,R}()
     end
@@ -49,3 +60,10 @@ ArrayInterface.static_last(x::StaticRange) = static(known_last(x))
 ArrayInterface.known_first(::Type{StaticRange{T,R}}) where {T,R} = first(R)
 ArrayInterface.known_step(::Type{StaticRange{T,R}}) where {T,R} = step(R)
 ArrayInterface.known_last(::Type{StaticRange{T,R}}) where {T,R} = last(R)
+
+function Base.show(io::IO, r::StaticRange)
+    print(io, "static(")
+    print(io, parent(r))
+    print(io, ")")
+end
+

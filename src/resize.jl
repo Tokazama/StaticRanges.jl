@@ -15,12 +15,28 @@ unsafe_grow_beg!(x::MutableRange, n) = setfield!(x, :parent, unsafe_grow_beg(par
 ###
 ### grow_end!
 ###
+""" grow_end! """
 function grow_end!(x, n::Integer)
     n < 0 && throw(ArgumentError("new length must be ≥ 0"))
-    return unsafe_grow_end!(x, n)
+    unsafe_grow_end!(x, n)
+    return x
 end
 unsafe_grow_end!(x::Vector, n) = Base._growend!(x, n)
 unsafe_grow_end!(x::MutableRange, n) = setfield!(x, :parent, unsafe_grow_end(parent(x), n))
+
+""" grow_end """
+function grow_end(x, n::Integer)
+    n < 0 && throw(ArgumentError("n must be positive; got $n"))
+    return unsafe_grow_end(x, n)
+end
+function unsafe_grow_end(x::AbstractRange, n::Integer)
+    if known_step(x) === 0
+        s = step(x)
+        return first(x):s:(last(x) + (s * n))
+    else
+        return first(x):(last(x) + n)
+    end
+end
 
 ###
 ### grow_to!
@@ -28,7 +44,8 @@ unsafe_grow_end!(x::MutableRange, n) = setfield!(x, :parent, unsafe_grow_end(par
 function grow_to!(x, n::Integer)
     len = length(x)
     if len < n
-        return unsafe_grow_to!(x, n)
+        unsafe_grow_to!(x, n)
+        return x
     elseif len == n
         return x
     else
@@ -36,7 +53,17 @@ function grow_to!(x, n::Integer)
     end
 end
 
-unsafe_grow_to!(x, n) = unsafe_grow_end!(x, length(x) - n)
+unsafe_grow_to!(x::AbstractRange, n::Integer) = unsafe_grow_end!(x, n - length(x))
+
+function grow_to(x, n::Integer)
+    len = length(x)
+    if len <= n
+        return unsafe_grow_to(x, n)
+    else
+        throw(ArgumentError("new length must be ≥ than length of collection, got length $(length(x))."))
+    end
+end
+unsafe_grow_to(x::AbstractRange, n::Integer) = unsafe_grow_end(x, n - length(x))
 
 ###
 ### shrink_beg!
@@ -86,19 +113,6 @@ function unsafe_grow_beg(x::AbstractRange, n::Integer)
         return (first(x) - n):last(x)
     end
 end
-function grow_end(x, n::Integer)
-    n < 0 && throw(ArgumentError("n must be positive; got $n"))
-    return unsafe_grow_end(x, n)
-end
-function unsafe_grow_end(x::AbstractRange, n::Integer)
-    if known_step(x) === 0
-        s = step(x)
-        return first(x):s:(last(x) + (s * n))
-    else
-        return first(x):(last(x) + n)
-    end
-end
-
 function shrink_beg(x, n::Integer)
     n < 0 && throw(ArgumentError("n must be positive; got $n"))
     return unsafe_shrink_beg(x, n)

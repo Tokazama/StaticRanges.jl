@@ -67,7 +67,7 @@ include("promotion_tests.jl")
 
 @testset "Range Interface" begin
     for r in (DynamicAxis(10),
-              as_dynamic(1:10),
+              mutable(1:10),
               MutableRange(StepRangeLen(1, 1, 10)))
         @testset "$(typeof(r))" begin
             @testset "first" begin
