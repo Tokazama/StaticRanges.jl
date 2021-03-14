@@ -92,7 +92,7 @@ include("promotion_tests.jl")
     end
 end
 include("broadcast.jl")
-include("onetorange.jl")
+include("dynamic_axis.jl")
 include("intersect_tests.jl")
 
 

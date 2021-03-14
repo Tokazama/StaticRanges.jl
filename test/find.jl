@@ -341,12 +341,12 @@ for collection in range_list
 end
 
 
-    #=
-    for x in (-1, -0.5, 0, 0.5, 1, 9, 9.5, 10, 10.5, 11)
-        find_first_tests(x, collect(1:10))
-        find_last_tests(x, collect(1:10))
-        find_all_tests(x, collect(1:10))
-    end
-    =#
+#=
+for x in (-1, -0.5, 0, 0.5, 1, 9, 9.5, 10, 10.5, 11)
+    find_first_tests(x, collect(1:10))
+    find_last_tests(x, collect(1:10))
+    find_all_tests(x, collect(1:10))
+end
+=#
 
 

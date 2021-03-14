@@ -1,5 +1,5 @@
 
-@testset "OneTo" begin
+@testset "DynamicAxis" begin
     let r = DynamicAxis(-5)
         @test isempty(r)
         @test length(r) == 0
@@ -9,6 +9,8 @@
         @test !isempty(r)
         @test last(r) == r.stop
         @test getindex(r, DynamicAxis(2)) == DynamicAxis(2)
+
+        @test getindex(r, OneTo(2)) === OneTo(2)
 
         @test getindex(r, DynamicAxis(2)) == DynamicAxis(2)
         @test_throws ErrorException r.notfield
@@ -61,6 +63,12 @@
     @test DynamicAxis(Int32(1):Int32(2)) == DynamicAxis(2)
     @test DynamicAxis(3.0) == DynamicAxis(3)
     @test_throws InexactError DynamicAxis(3.2)
+
+    x = DynamicAxis(10)
+    StaticRanges.grow_end!(x, 1)
+    @test length(x) == 11
+    StaticRanges.shrink_end!(x, 2)
+    @test length(x) == 9
 end
 
 if VERSION > v"1.2"

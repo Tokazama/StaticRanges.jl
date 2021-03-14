@@ -92,12 +92,12 @@ Base.promote_rule(a::Type{DynamicAxis}, b::Type{UnitMRange{T2}}) where {T1,T2} =
 =#
 
 function unsafe_grow_end!(x::DynamicAxis, n)
-    setfield!(x, :stop, Int(n + last(x)))
+    setfield!(x, :stop, Int(last(x) + n))
     return x
 end
 
 function unsafe_shrink_end!(x::DynamicAxis, n)
-    setfield!(x, :stop, Int(n - last(x)))
+    setfield!(x, :stop, Int(last(x) - n))
     return x
 end
 
