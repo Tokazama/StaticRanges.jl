@@ -40,6 +40,7 @@ static_rem(x::X, y::Y) where {X,Y} = _rem(is_static(X) & is_static(Y), x, y)
 _rem(::True, x, y) = static(rem(known(x), known(y)))
 _rem(::False, x, y) = rem(dynamic(x), dynamic(y))
 
+_sub1(x::T) where {T} = x - oneunit(T)
 _add1(x::T) where {T} = x + oneunit(T)
 _int(idx) = round(Integer, idx, RoundToZero)::Int
 _int(idx::Integer) = Int(idx)::Int
@@ -73,4 +74,31 @@ const Equal{T} = Union{Fix2{typeof(==),T},Fix2{typeof(isequal),T}}
 const NotEqual{T} = Fix2{typeof(!=),T}
 const NotIn{T} = (typeof(!in(Any)).name.wrapper){Fix2{typeof(in),T}}
 const In{T} = Fix2{typeof(in),T}
+
+_maybe_static(::True, x::Int) = static(x)
+_maybe_static(::True, x::StaticInt) = x
+_maybe_static(::False, x::Int) = x
+_maybe_static(::False, x::StaticInt) = dynamic(x)
+
+
+ifelseop(::True, t, f, args...) = t(args...)
+ifelseop(::False, t, f, args...) = f(args...)
+@inline function ifelseop(b::Bool, t, f, args...)
+    if b
+        return dynamic(t(args...))
+    else
+        return dynamic(f(args...))
+    end
+end
+
+return_nothing(args...) = nothing
+
+return_static_one(args...) = static(1)
+
+ifadd1(x, val) = ifelseop(x, _add1, identity, val)
+ifsub1(x, val) = ifelseop(x, _sub1, identity, val)
+
+_static_length(_, r) = static_length(r)
+_static_length(_, _, r) = static_length(r)
+
 

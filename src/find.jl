@@ -1,19 +1,13 @@
 
 
-
-
 # Ideally the previous _find_all_in method could be used, but things like `div(::Second, ::Integer)`
 # don't work. So this helps drop units by didingin by oneunit(::T) of the same type.
 unsafe_find_value(val, r::R) where {R}= _add1(_int(static_div(val - static_first(r), static_step(r))))
 
 unsafe_find_value(x, r::MutableRange) = unsafe_find_value(x, parent(r))
 unsafe_find_value(x, r::StaticRange) = unsafe_find_value(x, parent(r))
-function unsafe_find_value(x, r::LinRange)
-    return _add1(_int((x - r.start) / (r.stop - r.start) * r.lendiv))
-end
-function unsafe_find_value(x, r::StepRangeLen)
-    return _int(((x - r.ref) / step_hp(r)) + r.offset)
-end
+unsafe_find_value(x, r::LinRange) = _add1(_int((x - r.start) / (r.stop - r.start) * r.lendiv))
+unsafe_find_value(x, r::StepRangeLen) = _int(((x - r.ref) / step_hp(r)) + r.offset)
 unsafe_find_value(x, r::UnitRange) = _add1(_int(x - first(r)))
 unsafe_find_value(x, r::StepRange) = _add1(_int((x - first(r)) / step(r)))
 unsafe_find_value(x, r::OneTo) = _int(x)
@@ -57,11 +51,14 @@ julia> find_first(iseven, [1 4; 2 2])
 CartesianIndex(2, 1)
 ```
 """
-function find_first(f, collection)
-    if isempty(collection)
+find_first(f, collection) = _find_first(static_isempty(collection), f, collection)
+_find_first(::True, f, collection) = nothing
+_find_first(::False, f, collection) = unsafe_find_first(f, collection)
+function _find_first(b::Bool, f, collection)
+    if b
         return nothing
     else
-        return unsafe_find_first(f, collection)
+        return dynamic(unsafe_find_first(f, collection))
     end
 end
 @inline function unsafe_find_first(f, x)
@@ -70,107 +67,150 @@ end
     end
     return nothing
 end
-@inline function unsafe_find_first(f::Fix2{typeof(<)}, collection::AbstractRange)
-    x = f.x
-    if step(collection) > 0
-        if first(collection) >= x
-            return nothing
-        else
-            return firstindex(collection)
-        end
+
+
+# <
+function _unsafe_find_first_lt_forward(val, r::AbstractRange)
+    return ifelseop(ge(static_first(r), val), return_nothing, return_static_one, r)
+end
+function _unsafe_find_first_lt_reverse(val, r::AbstractRange)
+    index = unsafe_find_value(val, r)
+    len = static_length(r)
+    return ifelseop(le(len, index),
+        return_nothing,
+        __unsafe_find_first_lt_reverse,
+        val, index, r
+    )
+end
+function __unsafe_find_first_lt_reverse(val, index, r::AbstractRange)
+    return ifelseop(gt(static(1), index),
+        return_static_one,
+        ___unsafe_find_first_lt_reverse,
+        val, index, r
+    )
+end
+___unsafe_find_first_lt_reverse(val, index, r) = ifadd1(@inbounds(r[index]) >= val, index)
+@inline function unsafe_find_first(f::Fix2{typeof(<)}, r::AbstractRange)
+    start = static_first(r)
+    s = static_step(r)
+    return ifelseop(gt(s, zero(s)),
+        _unsafe_find_first_lt_forward,
+        _unsafe_find_first_lt_reverse,
+        f.x, r
+    )
+end
+
+# <=
+@inline function unsafe_find_first(f::Fix2{typeof(<=)}, r::AbstractRange)
+    s = static_step(r)
+    return ifelseop(gt(s, zero(s)),
+        _find_first_le_forward,
+        _find_first_le_reverse,
+        f.x, r
+    )
+end
+function _find_first_le_forward(val, r::AbstractRange)
+    return ifelseop(gt(static_first(r), val), return_nothing, return_static_one, val)
+end
+function _find_first_le_reverse(val, r::AbstractRange)
+    return ifelseop(le(static_first(r), val), return_static_one, __find_first_le_reverse, val, r)
+end
+function __find_first_le_reverse(val, r::AbstractRange)
+    return ifelseop(gt(static_last(r), val), return_nothing, ___find_first_le_reverse, val, r)
+end
+function ___find_first_le_reverse(val, r::AbstractRange)
+    index = unsafe_find_value(val, r)
+    if @inbounds(r[index]) > val
+        return _add1(index)
     else
-        index = unsafe_find_value(x, collection)
-        if lastindex(collection) <= index
-            return nothing
-        elseif firstindex(collection) > index
-            return firstindex(collection)
-        elseif @inbounds(collection[index]) < x
-            return index
-        else
-            return index + oneunit(index)
-        end
+        return index
     end
 end
 
-@inline function unsafe_find_first(f::Fix2{typeof(<=)}, collection::AbstractRange)
-    x = f.x
-    if step(collection) > 0
-        if first(collection) > x
-            return nothing
-        else
-            return firstindex(collection)
-        end
-    else
-        if first(collection) <= x
-            return firstindex(collection)
-        elseif last(collection) > x
-            return nothing
-        else
-            index = unsafe_find_value(x, collection)
-            if @inbounds(collection[index]) <= x
-                return index
-            else
-                return index + oneunit(index)
-            end
-        end
-    end
-end
-
+# >
 @inline function unsafe_find_first(f::Fix2{typeof(>)}, r::AbstractRange)
-    x = f.x
     s = static_step(r)
-    f = static_first(r)
-    l = static_last(r)
-    if s > zero(s)
-        if last(r) <= x
-            return nothing
-        elseif f > x
-            return 1
-        else
-            index = unsafe_find_value(x, r)
-            if @inbounds(r[index]) > x
-                return index
-            else
-                return index + oneunit(index)
-            end
-        end
+    return ifelseop(gt(s, zero(s)), _find_first_gt_forward, _find_first_gt_reverse, f.x, r)
+end
+function _find_first_gt_forward(val, r::AbstractRange)
+    return ifelseop(le(static_last(r), val),
+        return_nothing,
+        __find_first_gt_forward,
+        val, r
+    )
+end
+function __find_first_gt_forward(val, r::AbstractRange)
+    return ifelseop(gt(static_first(r), val),
+        return_static_one,
+        ___find_first_gt_forward,
+        val, r
+    )
+end
+function ___find_first_gt_forward(val, r::AbstractRange)
+    index = unsafe_find_value(val, r)
+    if @inbounds(r[index]) <= val
+        return _add1(index)
     else
-        if f > x
-            return 1
-        elseif l < x
-            return nothing
-        else
-            return unsafe_find_value(x, r)
-        end
+        return index
     end
 end
 
+function _find_first_gt_reverse(val, r::AbstractRange)
+    return ifelseop(gt(static_first(r), val),
+        return_static_one,
+        __find_first_gt_reverse,
+        val, r
+    )
+end
+function __find_first_gt_reverse(val, r)
+    return ifelseop(lt(static_last(r), val),
+        return_nothing,
+        unsafe_find_value,
+        val, r
+    )
+end
+
+
+# >=
 @inline function unsafe_find_first(f::Fix2{typeof(>=)}, r::AbstractRange)
-    x = f.x
     s = static_step(r)
-    f = static_first(r)
-    l = static_last(r)
-    if s > zero(s)
-        if last(r) < x
-            return nothing
-        elseif f >= x
-            return 1
-        else
-            index = unsafe_find_value(x, r)
-            if @inbounds(r[index]) >= x
-                return index
-            else
-                return index + oneunit(index)
-            end
-        end
+    return ifelseop(gt(s, zero(s)),
+        _find_first_ge_forward,
+        _find_first_ge_reverse,
+        f.x, r
+    )
+end
+function _find_first_ge_forward(val, r::AbstractRange)
+    return ifelseop(lt(static_last(r), val),
+        return_nothing,
+        __find_first_ge_forward,
+        val, r
+    )
+end
+function __find_first_ge_forward(val, r::AbstractRange)
+    return ifelseop(ge(static_first(r), val),
+        return_static_one,
+        ___find_first_ge_forward,
+        val, r
+    )
+end
+function ___find_first_ge_forward(val, r::AbstractRange)
+    index = unsafe_find_value(val, r)
+    if @inbounds(r[index]) < val
+        return _add1(index)
     else
-        if f >= x
-            return 1
-        else
-            return nothing
-        end
+        return index
     end
 end
+function _find_first_ge_reverse(val, r::AbstractRange)
+    return ifelseop(ge(static_first(r), val),
+        return_static_one,
+        return_nothing,
+        r
+    )
+end
+
+# ==
 function unsafe_find_first(f::Equal, collection::AbstractRange)
     x = f.x
     if minimum(collection) > x || maximum(collection) < x
@@ -188,7 +228,6 @@ end
 ###
 ### find_last
 ###
-
 """
     find_last(predicate::Function, A)
 
@@ -214,11 +253,14 @@ julia> find_last(iseven, [1 4; 2 2])
 CartesianIndex(2, 2)
 ```
 """
-function find_last(f, x)
-    if isempty(x)
+find_last(f, collection) = _find_last(static_isempty(collection), f, collection)
+_find_last(::True, f, collection) = nothing
+_find_last(::False, f, collection) = unsafe_find_last(f, collection)
+function _find_last(b::Bool, f, collection)
+    if b
         return nothing
     else
-        return unsafe_find_last(f, x)
+        return dynamic(unsafe_find_last(f, collection))
     end
 end
 
@@ -230,112 +272,197 @@ end
     return nothing
 end
 
-@inline function unsafe_find_last(f::Fix2{typeof(>)}, collection::AbstractRange)
-    x = f.x
-    if step(collection) > 0
-        if last(collection) <= x
-            return nothing
-        else
-            return lastindex(collection)
-        end
+# >
+@inline function unsafe_find_last(f::Fix2{typeof(>)}, r::AbstractRange)
+    s = static_step(r)
+    return ifelseop(gt(s, zero(s)),
+        _find_last_gt_forward,
+        _find_last_gt_reverse,
+        f.x, r
+    )
+end
+function _find_last_gt_forward(val, r::AbstractRange)
+    return ifelseop(le(static_last(r), val),
+        return_nothing,
+        static_length,
+        r
+    )
+end
+
+function _find_last_gt_reverse(val, r::AbstractRange)
+    return ifelseop(le(static_first(r), val),
+        return_nothing,
+        __find_last_gt_reverse,
+        val, r
+    )
+end
+function __find_last_gt_reverse(val, r::AbstractRange)
+    ifelseop(gt(static_last(r), val),
+        _static_length,
+        ___find_last_gt_reverse,
+        val, r
+    )
+end
+function ___find_last_gt_reverse(val, r::AbstractRange)
+    index = unsafe_find_value(val, r)
+    if (@inbounds(r[index]) == val) & (index != 1)
+        return _sub1(index)
     else
-        if first(collection) <= x
+        return index
+    end
+end
+
+# >=
+@inline function unsafe_find_last(f::Fix2{typeof(>=)}, r::AbstractRange)
+    s = static_step(r)
+    return ifelseop(gt(s, zero(s)),
+        _find_last_ge_forward,
+        _find_last_ge_reverse,
+        f.x, r
+    )
+end
+function _find_last_ge_forward(val, r::AbstractRange)
+    return ifelseop(lt(static_last(r), val),
+        return_nothing,
+        static_length,
+        r
+    )
+end
+function _find_last_ge_reverse(val, r::AbstractRange)
+    index = unsafe_find_value(val, r)
+    return ifelseop(gt(static(1), index),
+        return_nothing,
+        __find_last_ge_reverse,
+        val, index, r
+    )
+end
+function __find_last_ge_reverse(val, index, r::AbstractRange)
+    ifelseop(gt(static_last(r), val),
+        _static_length,
+        ___find_last_ge_reverse,
+        val, index, r
+    )
+end
+function ___find_last_ge_reverse(val, index, r::AbstractRange)
+    if @inbounds(r[index]) < val
+        return _sub1(index)
+    else
+        return index
+    end
+end
+
+
+# <
+#=@inline function unsafe_find_last(f::Fix2{typeof(<)}, r::AbstractRange)
+    x = f.x
+    if step(r) > 0
+        index = unsafe_find_value(x, r)
+        if 1 > index
             return nothing
-        elseif last(collection) > x
-            return lastindex(collection)
         else
-            index = unsafe_find_value(x, collection)
-            if (@inbounds(collection[index]) == x) & (index != firstindex(collection))
-                return index - oneunit(index)
+            if lastindex(r) < index
+                return lastindex(r)
             else
-                return index
+                if @inbounds(r[index]) < x
+                    return index
+                else
+                    return ifelseop(ne(index, static(1)), _sub1, return_nothing, index)
+                end
             end
         end
-    end
-end
-
-function unsafe_find_last(f::Fix2{typeof(>=)}, collection::AbstractRange)
-    x = f.x
-    if step(collection) > 0
-        if last(collection) < x
-            return nothing
-        else
-            return lastindex(collection)
-        end
     else
-        index = unsafe_find_value(x, collection)
-        if firstindex(collection) > index
+        if last(r) >= x
             return nothing
-        elseif lastindex(collection) <= index
-            return lastindex(collection)
-        elseif @inbounds(collection[index]) >= x
-            return index
         else
-            return index - oneunit(index)
+            return lastindex(r)
         end
     end
-end
+end=#
 
-@inline function unsafe_find_last(f::Fix2{typeof(<)}, collection::AbstractRange)
-    x = f.x
-    if step(collection) > 0
-        index = unsafe_find_value(x, collection)
-        if firstindex(collection) > index
-            return nothing
-        elseif lastindex(collection) < index
-            return lastindex(collection)
-        elseif @inbounds(collection[index]) < x
-            return index
-        else
-            if index != firstindex(collection)
-                return index - oneunit(index)
-            else
-                return nothing
-            end
-        end
+@inline function unsafe_find_last(f::Fix2{typeof(<)}, r::AbstractRange)
+    s = static_step(r)
+    return ifelseop(gt(s, zero(s)),
+        _find_last_lt_forward,
+        _find_last_lt_reverse,
+        f.x, r
+    )
+end
+function _find_last_lt_forward(val, r::AbstractRange)
+    index = unsafe_find_value(val, r)
+    ifelseop(gt(static(1), index), return_nothing, __find_last_lt_forward, val, index, r)
+end
+function __find_last_lt_forward(val, index, r::AbstractRange)
+    len = static_length(r)
+    return ifelseop(lt(len, index), first, ___find_last_lt_forward, (len, val, index, r))
+end
+___find_last_lt_forward(x::Tuple) = ___find_last_lt_forward(x...)
+function ___find_last_lt_forward(len, val, index, r::AbstractRange)
+    if @inbounds(r[index]) < val
+        return index
+    elseif index != 1
+        return _sub1(index)
     else
-        if last(collection) >= x
-            return nothing
-        else
-            return lastindex(collection)
-        end
+        return nothing
     end
 end
+function _find_last_lt_reverse(val, r::AbstractRange)
+    return ifelseop(lt(static_last(r), val),
+        static_length,
+        return_nothing,
+        r
+    )
+end
 
-@inline function unsafe_find_last(f::Fix2{typeof(<=)}, collection::AbstractRange)
-    x = f.x
-    s = static_step(collection)
-    if s > zero(s)
-        if last(collection) <= x
-            return lastindex(collection)
-        elseif first(collection) > x
-            return nothing
-        else
-            index = unsafe_find_value(x, collection)
-            if @inbounds(collection[index]) <= x
-                return index
-            elseif index != firstindex(collection)
-                return index - oneunit(index)
-            else
-                return nothing
-            end
-        end
+# <=
+@inline function unsafe_find_last(f::Fix2{typeof(<=)}, r::AbstractRange)
+    s = static_step(r)
+    return ifelseop(gt(s, zero(s)),
+        _find_last_le_forward,
+        _find_last_le_reverse,
+        f.x, r
+    )
+end
+function _find_last_le_forward(val, r::AbstractRange)
+    return ifelseop(gt(static_first(r), val),
+        return_nothing,
+        __find_last_le_forward,
+        val, r
+    )
+end
+function __find_last_le_forward(val, r::AbstractRange)
+    return ifelseop(
+        le(static_last(r), val),
+        _static_length,
+        ___find_last_le_forward,
+        val, r
+    )
+end
+function ___find_last_le_forward(val, r::AbstractRange)
+    index = unsafe_find_value(val, r)
+    if @inbounds(r[index]) <=  val
+        return index
+    elseif index != 1
+        return _sub1(index)
     else
-        if last(collection) > x
-            return nothing
-        else
-            return lastindex(collection)
-        end
+        return nothing
     end
 end
-unsafe_find_last(f::Equal, collection::AbstractRange) = unsafe_find_first(f, collection)
+function _find_last_le_reverse(val, r::AbstractRange)
+    return ifelseop(gt(static_last(r), val),
+        return_nothing,
+        static_length,
+        r
+    )
+end
 
+# ==
 function unsafe_find_lasteq(x, collection)
     for (i, collection_i) in Iterators.reverse(pairs(collection))
         x == collection_i && return i
     end
     return nothing
 end
+unsafe_find_last(f::Equal, collection::AbstractRange) = unsafe_find_first(f, collection)
 
 ###
 ### find_all

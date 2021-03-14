@@ -9,7 +9,7 @@ using ArrayInterface: known_first, known_step, known_last, known_length
 using ArrayInterface: static_first, static_last, static_step, static_length
 using ArrayInterface: OptionallyStaticUnitRange, unsafe_reconstruct, StaticInt, OptionallyStaticRange
 using ArrayInterface.Static
-using ArrayInterface.Static: eq, gt, lt, ge, le
+using ArrayInterface.Static: eq, gt, lt, ge, le, ne
 using IntervalSets
 
 using Base.Broadcast: DefaultArrayStyle, broadcasted
