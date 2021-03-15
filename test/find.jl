@@ -138,12 +138,12 @@ end
     @test find_all(in(1:10), collect(1:20)) == 1:10
 
     @testset "steps match but no overlap" begin
-        r = @inferred(find_all_in(1:3, 4:5))
+        r = @inferred(find_all(in(1:3), 4:5))
         @test r == 1:0
         @test isa(r, UnitRange)
     end
 
-    @test find_all_in([1, 2, 3], collect(1:10)) == [1, 2, 3]
+    @test find_all(in([1, 2, 3]), collect(1:10)) == [1, 2, 3]
 end
 
 @testset "find_all(in(::IntervalSets), r)" begin
@@ -241,10 +241,10 @@ end
 @testset "filter non numerics" begin
     x = Second(1):Second(1):Second(10)
     @test @inferred(find_all(and(>=(Second(1)), <=(Second(3))), x)) == 1:3
-    @test @inferred(find_all_in(Second(1):Second(1):Second(3), x)) == 1:3
+    @test @inferred(find_all(in(Second(1):Second(1):Second(3)), x)) == 1:3
 
     x = Second(10):Second(-1):Second(1)
-    @test @inferred(find_all_in(Second(1):Second(1):Second(3), x)) == 10:1:9
+    @test @inferred(find_all(in(Second(1):Second(1):Second(3)), x)) == 10:1:9
 end
 
 @testset "filter" begin

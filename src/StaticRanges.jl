@@ -29,7 +29,6 @@ export
     mutable,
     find_first,
     find_last,
-    find_all_in,
     find_all,
     and,
     or
