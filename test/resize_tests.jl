@@ -34,6 +34,10 @@ using StaticRanges: grow_to, grow_to!
         @test s == 1:10
         @test x == 1:12
         =#
+
+        v = Vector{Int}(undef, 10)
+        grow_end!(v, 2)
+        @test length(v) == 12
     end
 
     @testset "grow_beg" begin
@@ -56,6 +60,10 @@ using StaticRanges: grow_to, grow_to!
         x = @inferred(grow_beg!(m, 2))
         @test m == -1:10
         @test x == -1:10
+
+        v = Vector{Int}(undef, 10)
+        grow_beg!(v, 2)
+        @test length(v) == 12
     end
 end
 
@@ -80,6 +88,10 @@ end
         x = @inferred(shrink_beg!(m, 2))
         @test m == 3:10
         @test x == 3:10
+
+        v = Vector{Int}(undef, 10)
+        shrink_beg!(v, 2)
+        @test length(v) == 8
     end
 
     @testset "shrink_end" begin
@@ -102,6 +114,10 @@ end
         x = @inferred(shrink_end!(m, 2))
         @test m == 1:8
         @test x == 1:8
+
+        v = Vector{Int}(undef, 10)
+        shrink_end!(v, 2)
+        @test length(v) == 8
     end
 end
 
