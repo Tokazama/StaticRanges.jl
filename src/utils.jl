@@ -1,102 +1,6 @@
-
-gethi(x::TwicePrecision) = x.hi
-gethi(x) = x
-
-getlo(x::TwicePrecision) = x.lo
-getlo(x) = x
-
-stephi(x) = gethi(Base.step_hp(x))
-steplo(x) = getlo(Base.step_hp(x))
-
-refhi(x) = gethi(x.ref)
-reflo(x) = getlo(x.ref)
-
-first_is_known_one(x) = first_is_known_one(typeof(x))
-function first_is_known_one(::Type{R}) where {R}
-    T = eltype(R)
-    if T <: Number
-        return known_first(R) === oneunit(T)
-    else
-        return false
-    end
-end
-
-step_is_known_one(x) = step_is_known_one(typeof(x))
-step_is_known_one(::Type{R}) where {R<:AbstractUnitRange} = true
-function step_is_known_one(::Type{R}) where {T,S,R<:OrdinalRange{T,S}}
-    if S <: Number
-        return known_step(R) === oneunit(S)
-    else
-        return false
-    end
-end
-function step_is_known_one(::Type{R}) where {R<:AbstractVector}
-    T = eltype(R)
-    if T <: Number
-        return known_step(R) === oneunit(T)
-    else
-        return false
-    end
-end
-
 ###
 ### iterate
 ###
-# unsafe_iterate
-function unsafe_iterate(x::OrdinalRange{T}, state) where {T}
-    if step_is_known_one(x)
-        next = state + one(T)
-    else
-        next = convert(T, state + step(x))
-    end
-    return next, next
-end
-unsafe_iterate(r::AbstractRange, i) = unsafe_getindex(r, i + 1), i + 1
-
-# check_iterate
-check_iterate(r::AbstractRange, i) = length(r) == i
-check_iterate(r::OrdinalRange, i) = last(r) == i
-
-function init_iterate(r::AbstractRange)
-    if isempty(r)
-        return nothing
-    else
-        return first(r), 1
-    end
-end
-function init_iterate(r::OrdinalRange)
-    if isempty(r)
-        return nothing
-    else
-        itr = first(r)
-        return itr, itr
-    end
-end
-
-macro defiterate(T)
-    esc(quote
-        Base.iterate(x::$T) = StaticRanges.init_iterate(x)
-
-        @inline function Base.iterate(x::$T, state)
-            if StaticRanges.check_iterate(x, state)
-                return nothing
-            else
-                return StaticRanges.unsafe_iterate(x, state)
-            end
-        end
-    end)
-end
-
-is_range(x) = is_range(typeof(x))
-is_range(::Type{T}) where {T<:AbstractRange} = true
-function is_range(::Type{T}) where {T}
-    if has_parent(T)
-        return is_range(parent_type(T))
-    else
-        return false
-    end
-end
-
 checkindexlo(r, i::AbstractVector) = checkindexlo(r, minimum(i))
 checkindexlo(r, i) = firstindex(r) <= i
 checkindexlo(r, i::CartesianIndex{1}) = firstindex(r) <= first(i.I)
@@ -105,67 +9,96 @@ checkindexhi(r, i::AbstractVector) = checkindexhi(r, maximum(i))
 checkindexhi(r, i) = lastindex(r) >= i
 checkindexhi(r, i::CartesianIndex{1}) = firstindex(r) <= first(i.I)
 
-# TODO this needs to be in base
-Base.isassigned(r::AbstractRange, i::Integer) = checkindex(Bool, r, i)
-
 ###
 ### Generic array traits
 ###
-# TODO This is a more trait like version of the same method from base
-# (base doesn't operate on types)
-has_offset_axes(::T) where {T} = has_offset_axes(T)
-has_offset_axes(::Type{T}) where {T<:AbstractRange} = false
-has_offset_axes(::Type{T}) where {T<:AbstractArray} = _has_offset_axes(axes_type(T))
-Base.@pure function _has_offset_axes(::Type{T}) where {T<:Tuple}
-    for ax_i in T.parameters
-        has_offset_axes(ax_i) && return true
-    end
-    return false
+# TODO should this be in Static.jl
+static_isempty(x::OrdinalRange) = _static_isempty(static_first(x), static_step(x), static_last(x))
+function static_isempty(x)
+    len = static_length(x)
+    return Static.eq(zero(len), len)
+end
+function _static_isempty(start::F, step::S, stop::L) where {F,S,L}
+    return Static.ne(start, stop) & Static.ne(Static.gt(step, zero(step)), Static.gt(stop, start))
 end
 
-"""
-    has_parent(::Type{T}) -> Bool
-
-Returns `true` if `T` has parent field.
-"""
-has_parent(x) = has_parent(typeof(x))
-@inline function has_parent(::Type{T}) where {T}
+# FIXME these absolutely needs to go in ArrayInterface
+function ArrayInterface.known_length(::Type{T}) where {T<:AbstractRange}
     if parent_type(T) <: T
-        return false
+        return nothing
     else
-        return true
+        return known_length(parent_type(T))
     end
 end
 
-###
-### axes_type
-###
-axes_type(x) = axes_type(typeof(x))
-@inline function axes_type(::Type{T}) where {T<:AbstractArray}
-    return Tuple{ntuple(i -> axes_type(T, i), Val(ndims(T)))...}
+#Base.rem(::Static.StaticFloat64{X}, ::Static.StaticFloat64{Y}) where {X,Y} = static(rem(X, Y))
+static_div(x::X, y::Y) where {X,Y} = _div(is_static(X) & is_static(Y), x, y)
+_div(::True, x, y) = static(div(known(x), known(y)))
+_div(::False, x, y) = div(dynamic(x), dynamic(y))
+
+static_rem(x::X, y::Y) where {X,Y} = _rem(is_static(X) & is_static(Y), x, y)
+_rem(::True, x, y) = static(rem(known(x), known(y)))
+_rem(::False, x, y) = rem(dynamic(x), dynamic(y))
+
+_sub1(x::T) where {T} = x - oneunit(T)
+_add1(x::T) where {T} = x + oneunit(T)
+_int(idx) = round(Integer, idx, RoundToZero)::Int
+_int(idx::Integer) = Int(idx)::Int
+_int(idx::StaticInt{N}) where {N} = idx
+_int(idx::TwicePrecision{T}) where {T} = round(Integer, T(idx), RoundToZero)
+
+_drop_unit(x::X) where {X} = div(x, oneunit(x))
+_drop_unit(x::Real) = x
+
+### empty
+_empty_ur(::Type{T}) where {T} = one(T):zero(T)
+
+_empty(x::X, y::Y) where {X,Y} = Vector{Int}()
+@inline function _empty(x::X, y::Y) where {X<:AbstractRange,Y<:AbstractRange}
+    if (known_step(X) === nothing) | (known_step(Y) === nothing)
+        return 1:1:0
+    else
+        if known_first(x) === one(eltype(X))  && known_first(y) === one(eltype(Y))
+            if known_last(x) isa Nothing || known_last(y) isa Nothing
+                return static(1):0
+            else
+                return static(1):static(0)
+            end
+        else
+            return 1:0
+        end
+    end
 end
 
-axes_type(::T, i::Int) where {T} = axes_type(T, i)
-axes_type(::Type{T}, i::Int) where {T<:Array} = OneTo{Int}
-function axes_type(::Type{T}, i::Int) where {T<:AbstractArray}
-    if parent_type(T) <: T
-        return OneTo{Int}
+const Equal{T} = Union{Fix2{typeof(==),T},Fix2{typeof(isequal),T}}
+const NotEqual{T} = Fix2{typeof(!=),T}
+const NotIn{T} = (typeof(!in(Any)).name.wrapper){Fix2{typeof(in),T}}
+const In{T} = Fix2{typeof(in),T}
+
+_maybe_static(::True, x::Int) = static(x)
+_maybe_static(::True, x::StaticInt) = x
+_maybe_static(::False, x::Int) = x
+_maybe_static(::False, x::StaticInt) = dynamic(x)
+
+
+ifelseop(::True, t, f, args...) = t(args...)
+ifelseop(::False, t, f, args...) = f(args...)
+@inline function ifelseop(b::Bool, t, f, args...)
+    if b
+        return dynamic(t(args...))
     else
-        return axes_type(parent_type(T), i)
+        return dynamic(f(args...))
     end
 end
-function axes_type(::Type{T}, i::Int) where {T<:Union{Adjoint,Transpose}}
-    if i === 1
-        return axes_type(parent_type(T), 2)
-    elseif i === 2
-        return axes_type(parent_type(T), 1)
-    else
-        # let parent type throw error or choose automatic type
-        return axes_type(parent_type(T), i)
-    end
-end
-axes_type(::Type{T}, i::Int) where {T} = axes_type(T).parameters[i]
-function axes_type(::Type{<:PermutedDimsArray{<:Any,<:Any,I1,<:Any,A}}, i::Int) where {I1,A}
-    return parent_type(A, I1[i])
-end
+
+return_nothing(args...) = nothing
+
+return_static_one(args...) = static(1)
+
+ifadd1(x, val) = ifelseop(x, _add1, identity, val)
+ifsub1(x, val) = ifelseop(x, _sub1, identity, val)
+
+_static_length(_, r) = static_length(r)
+_static_length(_, _, r) = static_length(r)
+
 

@@ -2,11 +2,8 @@ using Base.Broadcast: broadcasted
 bstyle = Base.Broadcast.DefaultArrayStyle{1}()
 
 @testset "broadcast" begin
-    for (title, mr,br,sr) in (("OneTo", OneToMRange(10),         OneTo(10),              OneToSRange(10)),
-                       ("UnitRange", UnitMRange(1, 10),       UnitRange(1, 10),       UnitSRange(1, 10)),
-                       ("StepRange", StepMRange(1, 1, 10),    StepRange(1, 1, 10),    StepSRange(1, 1, 10)),
-                       ("LinRange", LinMRange(1, 10, 10),    LinRange(1, 10, 10),    LinSRange(1, 10, 10)),
-                       ("StepRangeLen", StepMRangeLen(1., 1., 10), StepRangeLen(1., 1., 10), StepSRangeLen(1., 1., 10)))
+    for (title, mr,br,sr) in (("OneTo", DynamicAxis(10),         OneTo(10),              static(OneTo(10))),
+                              ("StepRangeLen", mutable(StepRangeLen(1., 1., 10)), StepRangeLen(1., 1., 10), static(StepRangeLen(1., 1., 10))))
         @testset "$title" begin
             @test broadcasted(bstyle, +, mr) == broadcast(+, br) == broadcasted(bstyle, +, sr)
             @test broadcasted(bstyle, -, mr) == broadcast(-, br) == broadcasted(bstyle, -, sr)
@@ -27,7 +24,4 @@ bstyle = Base.Broadcast.DefaultArrayStyle{1}()
         end
     end
 end
-#title, mr, br, sr = ("StepRange", StepMRange(1, 1, 10),    StepRange(1, 1, 10),    StepSRange(1, 1, 10))
-#title, mr, br, sr = ("UnitRange", UnitMRange(1, 10),       UnitRange(1, 10),       UnitSRange(1, 10))
-#title, mr, br, sr = ("LinRange", LinMRange(1, 10, 10),    LinRange(1, 10, 10),    LinSRange(1, 10, 10))
-#title, mr, br, sr = ("StepRangeLen", StepMRangeLen(1., 1., 10), StepRangeLen(1., 1., 10), StepSRangeLen(1., 1., 10))
+

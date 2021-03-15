@@ -1,40 +1,22 @@
 
 using StaticArrays
 using Test, StaticRanges, Dates, Documenter, IntervalSets
-using StaticRanges: can_set_first, can_set_last, can_set_step, can_set_length,
-    stephi, steplo, refhi, reflo, eqmax, eqmin,
-    Unordered, set_offset!, set_lendiv!
 
-using StaticRanges: prev_type, next_type, grow_first, grow_first!, grow_last, grow_last!,
-    shrink_first, shrink_first!, shrink_last, shrink_last!, resize_first, resize_first!,
-    resize_last, resize_last!
+using StaticRanges: grow_beg, grow_beg!, grow_end, grow_end!,
+    shrink_beg, shrink_beg!, shrink_end, shrink_end!
 
-using StaticRanges: Continuity, Continuous, Discrete
-using StaticRanges:
-    order,
-    is_static,
-    is_fixed,
-    is_forward,
-    is_reverse,
-    is_ordered,
-    is_within,
-    is_after,
-    is_before,
-    is_contiguous,
-    vcat_sort,
-    merge_sort,
-    axes_type
-
+using ChainedFixes
 using OffsetArrays
 using OffsetArrays: IdOffsetRange
 
 using ArrayInterface
-using ArrayInterface: can_change_size, known_first, known_last, known_step
+using ArrayInterface: can_change_size, known_first, known_last, known_step, axes_types
+using ArrayInterface.Static
+
 # Uniqueness methods
 using StaticRanges: ArrayInterface.ismutable
 
 using Base: OneTo, step_hp
-using Base.Order
 
 catch_nothing(x) = x
 catch_nothing(x::Nothing) = 0
@@ -51,26 +33,7 @@ to_vec(x::AbstractUnitRange{Int}) = collect(x)
 to_vec(x::GapRange) = collect(x)
 to_vec(x) = x
 
-@test srange(1.0, step=Float32(2.0), length=10) isa StepSRangeLen
-@test mrange(1.0, step=Float32(2.0), length=10) isa StepMRangeLen
-@test srange(1, step=Float32(2.0), length=10) isa StepSRangeLen
-@test mrange(1, step=Float32(2.0), length=10) isa StepMRangeLen
-@test srange(1.0, step=2, length=10) isa StepSRangeLen
-@test mrange(1.0, step=2, length=10) isa StepMRangeLen
-
-@test srange(Complex(1,1), length=10) isa StepSRangeLen
-@test mrange(Complex(1,1), length=10) isa StepMRangeLen
-
-@test srange(Complex(1,1), stop=8, length=10) isa LinSRange
-@test mrange(Complex(1,1), stop=8, length=10) isa LinMRange
-
-@test srange(Rational(1,1), stop=8, length=10) isa LinSRange
-@test mrange(Rational(1,1), stop=8, length=10) isa LinMRange
-
-# NOTE: can't use BigInt with srange
-@test mrange(BigInt(1), stop=8, length=10) isa LinMRange
-
-@test StaticRanges.ArrayInterface.ismutable(OneToMRange(10))
+@test StaticRanges.ArrayInterface.ismutable(DynamicAxis(10))
 
 @testset "checkindex" begin
     r = 1:5
@@ -96,45 +59,51 @@ include("length_tests.jl")
 include("find.jl")
 include("gaprange_tests.jl")
 
-include("vcat_tests.jl")
-include("merge_tests.jl")
-include("pop_tests.jl")
-include("continuity_tests.jl")
-include("order_tests.jl")
-include("unitrange_tests.jl")
 include("promotion_tests.jl")
-include("nitty_gritty_promotion.jl")
+# FIXME include("nitty_gritty_promotion.jl")
 
-include("mutate.jl")
+@test first(GapRange(2:5, 7:10)) == 2
+@test last(GapRange(2:5, 7:10)) == 10
 
-include("first_tests.jl")
-include("step_tests.jl")
-include("last_tests.jl")
-
-include("staticness_tests.jl")
-include("range_interface.jl")
+@testset "Range Interface" begin
+    for r in (DynamicAxis(10),
+              mutable(1:10),
+              MutableRange(StepRangeLen(1, 1, 10)))
+        @testset "$(typeof(r))" begin
+            @testset "first" begin
+                @test @inferred(first(r)) == 1
+            end
+            @testset "firstindex" begin
+                @test @inferred(firstindex(r)) == 1
+            end
+            @testset "step" begin
+                @test @inferred(step(r)) == 1
+            end
+            @testset "last" begin
+                @test @inferred(last(r)) == 10
+            end
+            @testset "lastindex" begin
+                @test @inferred(lastindex(r)) == 10
+            end
+            @testset "length" begin
+                @test @inferred(length(r)) == 10
+            end
+        end
+    end
+end
 include("broadcast.jl")
-include("onetorange.jl")
-include("unitrange_tests.jl")
-include("steprange_tests.jl")
+include("dynamic_axis.jl")
 include("intersect_tests.jl")
-include("reverse.jl")
-
-include("steprangelen_test.jl")
-include("linrange_test.jl")
 
 
 @testset "empty" begin
-    for r in (OneToSRange(10),
-              OneToMRange(10),
+    for r in (static(OneTo(10)),
+              DynamicAxis(10),
               srange(1.0, step=1, stop=10.0),
               mrange(1.0, step=1, stop=10.0),
-              StepSRange(1, 1, 10),
-              StepMRange(1, 1, 10),
-              UnitSRange(1, 10),
-              UnitMRange(1, 10),
-              LinMRange(1.5, 5.5, 9),
-              LinSRange(1.5, 5.5, 9))
+              static(StepRange(1, 1, 10)),
+              static(UnitRange(1, 10)),
+              static(LinRange(1.5, 5.5, 9)))
         @test isempty(empty(r))
         if can_change_size(r)
             empty!(r)
@@ -142,6 +111,38 @@ include("linrange_test.jl")
         end
     end
 end
+
+#=
+@testset "UnitRange" begin
+    r = MutableRange(1:10)
+    b = UnitRange(1, 10)
+    rfloat = AbstractUnitRange{Float64}(r)
+    @test eltype(rfloat) == Float64
+    @test isa(rfloat, R)
+    @test R{Int}(r) == r  # we don't use `===` because dynamic ranges should construct different ones
+    @test R{Float64}(r) == R(1., 10.)
+    @test eltype(R{Int}(UnitRange(UInt(1), UInt(10)))) == Int
+    @test R(UnitRange(UInt(1), UInt(10))) == R(UInt(1), UInt(10))
+    @test first(r) == r.start
+    @test last(r) == r.stop
+
+    @test intersect(r, r[2]) == intersect(b, b[2])
+    @test intersect(r, r[2]) == intersect(b, b[2])
+
+    @test @inferred(getindex(UnitMRange(1.0, 10.0), 2)) == 2.0
+
+    @test_throws ErrorException r.notfield
+    #=
+    setproperty!(r, :start, 2)
+    @test r == UnitMRange(2, 10)
+
+    setproperty!(r, :stop, 8)
+    @test r == UnitMRange(2, 8)
+
+    @test_throws ErrorException setproperty!(r, :anything, 3)
+    =#
+end
+=#
 
 for frange in (mrange, srange)
     @testset "$frange" begin
@@ -220,27 +221,28 @@ for frange in (mrange, srange)
             @test valtype_is_correct(frange(Int128(1), Int128(5)))
 
             if frange isa typeof(mrange)
-                @test keytype_is_correct(OneToMRange(4))
-                @test keytype_is_correct(OneToMRange(Int32(4)))
-                @test valtype_is_correct(OneToMRange(4))
-                @test valtype_is_correct(OneToMRange(Int32(4)))
+                @test keytype_is_correct(DynamicAxis(4))
+                @test keytype_is_correct(DynamicAxis(Int32(4)))
+                @test valtype_is_correct(DynamicAxis(4))
+                @test valtype_is_correct(DynamicAxis(Int32(4)))
             else
-                @test keytype_is_correct(OneToSRange(4))
-                @test keytype_is_correct(OneToSRange(Int32(4)))
-                @test valtype_is_correct(OneToSRange(4))
-                @test valtype_is_correct(OneToSRange(Int32(4)))
+                @test keytype_is_correct(static(OneTo((4))))
+                @test keytype_is_correct(static(OneTo((Int32(4)))))
+                @test valtype_is_correct(static(OneTo((4))))
+                @test valtype_is_correct(static(OneTo((Int32(4)))))
             end
         end
 
         @testset "findall(::Base.Fix2{typeof(in)}, ::Array)" begin
             @test findall(in(3:20), [5.2, 3.3]) == findall(in(Vector(3:20)), [5.2, 3.3])
 
+            # FIXME shouldn't both be reversed?
             let span = frange(5, 20),
                 r = frange(-7, step=3, stop=42)
                 @test findall(in(span), r) == 5:10
 
                 r = frange(15, step=-2, stop=-38)
-                @test findall(in(span), r) == 1:6
+                @test findall(in(span), r) == 6:-1:1
             end
         end
 
@@ -268,15 +270,15 @@ for frange in (mrange, srange)
                 @test issubset(1:3:10, frange(1, 10))
                 @test !issubset(1:10, frange(1, step=3, stop=10))
                 if frange isa typeof(mrange)
-                    @test issubset(OneToMRange(5), OneToMRange(10))
-                    @test !issubset(OneToMRange(10), OneToMRange(5))
-                    @test issubset(OneToMRange(5), OneToMRange(10))
-                    @test !issubset(OneToMRange(10), OneToMRange(5))
+                    @test issubset(DynamicAxis(5), DynamicAxis(10))
+                    @test !issubset(DynamicAxis(10), DynamicAxis(5))
+                    @test issubset(DynamicAxis(5), DynamicAxis(10))
+                    @test !issubset(DynamicAxis(10), DynamicAxis(5))
                 else
-                    @test issubset(OneToSRange(5), OneToSRange(10))
-                    @test !issubset(OneToSRange(10), OneToSRange(5))
-                    @test issubset(OneToSRange(5), OneToSRange(10))
-                    @test !issubset(OneToSRange(10), OneToSRange(5))
+                    @test issubset(static(OneTo(5)), static(OneTo((10))))
+                    @test !issubset(static(OneTo(10)), static(OneTo((5))))
+                    @test issubset(static(OneTo(5)), static(OneTo((10))))
+                    @test !issubset(static(OneTo(10)), static(OneTo((5))))
                 end
  
             end
@@ -656,9 +658,9 @@ for frange in (mrange, srange)
 
         @testset "comparing UnitRanges and OneTo" begin
             @test frange(1, step=2, stop=10) == 1:2:10 != 1:3:10 != 1:3:13 != frange(2, step=3, stop=13) == 2:3:11 != frange(2, 11)
-            @test frange(1, step=1, stop=10) == 1:10 == 1:10 == OneToMRange(10) == OneToSRange(10)
+            @test frange(1, step=1, stop=10) == 1:10 == 1:10 == DynamicAxis(10) == static(OneTo(10))
             @test 1:10 != frange(2, 10) != 2:11 != Base.OneTo(11)
-            @test OneToMRange(10) != OneToSRange(11) != frange(1, 10)
+            @test DynamicAxis(10) != static(OneTo(11)) != frange(1, 10)
         end
 
         @testset "issue #7114" begin
@@ -706,7 +708,9 @@ for frange in (mrange, srange)
         end
         @testset "sort/sort!/partialsort" begin
             @test sort(frange(1, 2)) == UnitRange(1,2)
-            @test sort!(frange(1, 2)) == UnitRange(1,2)
+            if frange == mrange
+                @test sort!(frange(1, 2)) == UnitRange(1,2)
+            end
             @test sort(frange(1, 10), rev=true) == 10:-1:1
             @test sort(frange(-3, 3), by=abs) == [0,-1,1,-2,2,-3,3]
             @test partialsort(frange(1, 10), 4) == 4
@@ -757,7 +761,6 @@ for frange in (mrange, srange)
                       frange(17, 0, step=-3),
                       frange(0.0, step=0.1, stop=1.0),
                       map(Float32, frange(0.0, step=0.1, stop=1.0)),
-                      map(Float32, ifelse(frange == mrange, LinMRange(0.0, 1.0, 11), LinSRange(0.0, 1.0, 11))),
                       frange(1.0, step=eps(), stop=1.0) .+ 10eps(),
                       frange(9007199254740990., step=1.0, stop=9007199254740994),
                       frange(0, stop=1, length=20),
@@ -793,28 +796,32 @@ end
     @test_throws DivideError mod(3, 1:0)
 end
 =#
-
-
-@testset "AbstractStepRangeLen" begin
-    @test StaticRanges.floatmrange(1.0, 1.0, 10, 2.0) == Base.floatrange(1.0, 1.0, 10, 2.0)
-    @test StaticRanges.floatsrange(1.0, 1.0, 10, 2.0) == Base.floatrange(1.0, 1.0, 10, 2.0)
+for frange in (mrange,srange)
+    @testset "reverse-$frange" begin
+        @test reverse(reverse(frange(1, 10))) == 1:10
+        @test reverse(reverse(frange(typemin(Int), typemax(Int)))) == typemin(Int):typemax(Int)
+        @test reverse(reverse(frange(typemin(Int), step=2, stop=typemax(Int)))) == typemin(Int):2:typemax(Int)
+    end
 end
+
+r = MutableRange(1:1:10)
+@test reverse!(r) == reverse(1:1:10)
+@test reverse!(r) == 1:1:10
 
 @testset "resize tests" begin
     include("resize_tests.jl")
 end
 
+if VERSION > v"1.6" && sizeof(Int) === 8
+    @testset "docs" begin
+        doctest(StaticRanges)
+    end
+end
 include("count_tests.jl")
 
 #=
 #@test 1.0:(.3-.1)/.1 == 1.0:2.0
 =#
-
-if VERSION < v"1.6"  # printing has changed on nightly
-    @testset "docs" begin
-        doctest(StaticRanges; manual=false)
-    end
-end
 
 #=
 detect_ambiguities(StaticRanges,Base,Core)

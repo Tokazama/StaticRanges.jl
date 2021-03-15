@@ -2,144 +2,169 @@
 module StaticRanges
 
 using LinearAlgebra
-using SparseArrays
-using SparseArrays: AbstractSparseMatrixCSC
-
-
-using Dates
 using ChainedFixes
-using Reexport
-
 using ArrayInterface
 using ArrayInterface: can_change_size, can_setindex, parent_type
 using ArrayInterface: known_first, known_step, known_last, known_length
-using ArrayInterface: static_first, static_last
+using ArrayInterface: static_first, static_last, static_step, static_length
 using ArrayInterface: OptionallyStaticUnitRange, unsafe_reconstruct, StaticInt, OptionallyStaticRange
-
+using ArrayInterface.Static
+using ArrayInterface.Static: eq, gt, lt, ge, le, ne
 using IntervalSets
-using Requires
 
-using Base.Broadcast: DefaultArrayStyle
-import Base: OneTo, TwicePrecision, el_same, unsafe_getindex, nbitslen, rat,
-             IEEEFloat, floatrange, sumpair, add12, twiceprecision, step_hp,
-             truncbits, Fix1, Fix2, tail, front, to_index, unsafe_length
+using Base.Broadcast: DefaultArrayStyle, broadcasted
+import Base: OneTo, TwicePrecision, unsafe_getindex, step_hp, Fix1, Fix2, tail, front, unsafe_length
 
-using Base.Order
 using Base: @propagate_inbounds, @pure
 
 export
     # Types
     GapRange,
-    AbstractLinRange,
-    LinMRange,
-    LinSRange,
-    OneToRange,
-    OneToMRange,
-    OneToSRange,
-    AbstractStepRangeLen,
-    StepMRangeLen,
-    StepSRangeLen,
-    AbstractStepRange,
-    StepMRange,
-    StepSRange,
-    UnitMRange,
-    UnitSRange,
+    DynamicAxis,
+    MutableRange,
+    StaticRange,
     # methods
     mrange,
     srange,
-    as_dynamic,
-    as_fixed,
-    as_static,
-    of_staticness,
-    set_first!,
-    set_first,
-    set_step!,
-    set_step,
-    set_last!,
-    set_last,
-    set_length!,
-    set_length
+    mutable,
+    find_first,
+    find_last,
+    find_all,
+    and,
+    or
 
 include("utils.jl")
-include("./GapRange/GapRange.jl")
-include("order.jl")
-include("onetorange.jl")
-include("unitrange.jl")
-include("abstractsteprange.jl")
-include("abstractlinrange.jl")
-include("abstractsteprangelen.jl")
-const LinRangeUnion{T} = Union{LinRange{T},AbstractLinRange{T}}
-const StepRangeUnion{T,S} = Union{StepRange{T,S},AbstractStepRange{T,S}}
-const UnitRangeUnion{T} = Union{UnitRange{T},UnitSRange{T},UnitMRange{T}}
-
+include("gap_range.jl")
+include("dynamic_axis.jl")
+include("mutable_range.jl")
+include("static_range.jl")
 # Things I have to had to avoid ambiguities with base
-RANGE_LIST = (LinSRange, LinMRange, StepSRange, StepMRange, UnitSRange, UnitMRange, OneToSRange, OneToMRange, StepSRangeLen, StepMRangeLen)
+RANGE_LIST = ( UnitMRange, DynamicAxis)
 
-for R in RANGE_LIST
-    @eval begin
-        function Base.findfirst(f::Union{Base.Fix2{typeof(==),T}, Base.Fix2{typeof(isequal),T}}, r::$R) where T<:Integer
-            return find_first(f, r)
-        end
-    end
-end
-
-const OneToUnion{T} = Union{OneTo{T},OneToRange{T}}
-const SRange{T} = Union{OneToSRange{T},UnitSRange{T},StepSRange{T},LinSRange{T},StepSRangeLen{T}}
-const MRange{T} = Union{OneToMRange{T},UnitMRange{T},StepMRange{T},LinMRange{T},StepMRangeLen{T}}
-const UnionRange{T} = Union{SRange{T},MRange{T}}
+const OneToUnion = Union{OneTo,DynamicAxis}
 const FRange{T} = Union{OneTo{T},UnitRange{T},StepRange{T},LinRange{T}, StepRangeLen{T}}
-
 
 ArrayInterface.ismutable(::Type{X}) where {X<:MRange} = true
 
-###
-### can_change_size
-###
-ArrayInterface.can_change_size(::Type{T}) where {T<:OneToMRange} = true
-ArrayInterface.can_change_size(::Type{T}) where {T<:UnitMRange} = true
-ArrayInterface.can_change_size(::Type{T}) where {T<:StepMRange} = true
-ArrayInterface.can_change_size(::Type{T}) where {T<:LinMRange} = true
-ArrayInterface.can_change_size(::Type{T}) where {T<:StepMRangeLen} = true
-
-@defiterate OneToRange
-@defiterate UnitSRange
-@defiterate UnitMRange
-@defiterate StepSRange
-@defiterate StepMRange
-@defiterate AbstractLinRange
-@defiterate AbstractStepRangeLen
-
+MutableRange(x::StaticRange) = MutableRange(parent(x))
 
 # Notes on implementation:
 # Currently Base Julia reutrns an empty vector on empty(::AbstractRange)
 # We want the appropriate variant of the range that returns true when isempty(::AbstractRange)
-# We index by OneToSRange(0) in order to force this.
 # Using the static version also ensures that it doesn't accidently "promote down" the type
 
 
 # FIXME specify Bit operator filters here to <,<=,>=,>,==,isequal,isless
 # Currently will return incorrect order or repeated results otherwise
-Base.filter(f::Function, r::UnionRange)  = r[find_all(f, r)]
+Base.filter(f::Function, r::MRange)  = r[find_all(f, r)]
 
-Base.filter(f::ChainedFix, r::UnionRange) = r[findall(f, r)]
-
-include("traits.jl")
-include("first.jl")
-include("last.jl")
-include("step.jl")
-include("length.jl")
-include("promotion.jl")
-include("range.jl")
-include("merge.jl")
-include("intersect.jl")
-include("broadcast.jl")
-include("operators.jl")
-include("getindex.jl")
-include("pop.jl")
-include("show.jl")
-include("vcat.jl")
 include("resize.jl")
-include("./Find/Find.jl")
+include("find.jl")
+
+Base.findfirst(f::Equal{T}, r::DynamicAxis) where {T<:Integer} = find_first(f, r)
+for T in (StaticRange,MutableRange,DynamicAxis)
+    @eval begin
+        Base.findfirst(f::Function, r::$T) = find_first(f, r)
+        Base.findlast(f::Function, r::$T) = find_last(f, r)
+        Base.findall(f::Function, r::$T) = find_all(f, r)
+        Base.findall(f::In{Interval{L, R, T}}, r::$T) where {L, R, T} = find_all(f, r)
+        Base.findall(f::In, r::$T) = find_all(f, r)
+    end
+end
+
+
+
+function Base.show(io::IO, r::UnitMRange)
+    print(io, "UnitMRange(", repr(first(r)), ':', repr(last(r)), ")")
+end
+
+Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(-), r::MutableRange) = broadcasted(s, f, parent(r))
+Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(-), r::StaticRange) = static(broadcasted(s, f, parent(r)))
+
+Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::DynamicAxis, x::Real) = (static(1) + x):(last(r) + x)
+Base.broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::DynamicAxis, x::Real) = (static(1) - x):(last(r) - x)
+
+for R in (MutableRange, StaticRange)
+    @eval begin
+        Base.Broadcast.broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::$R) = r
+        function Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(+), r::$R, x::Number)
+            return broadcasted(s, f, parent(r), x)
+        end
+        function Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(+), x::Number, r::$R)
+            return broadcasted(s, f, x, parent(r))
+        end
+        function Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(-), r::$R, x::Number)
+            return broadcasted(s, f, parent(r), x)
+        end
+        function Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(-), x::Number, r::$R)
+            return broadcasted(s, f, x, parent(r))
+        end
+        function Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(*), r::$R, x::Number)
+            return broadcasted(s, f, parent(r), x)
+        end
+        function Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(*), x::Number, r::$R)
+            return broadcasted(s, f, x, parent(r))
+        end
+        function Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(/), r::$R, x::Number)
+            return broadcasted(s, f, parent(r), x)
+        end
+        function Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(/), x::Number, r::$R)
+            return broadcasted(s, f, x, parent(r))
+        end
+        function Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(\), r::$R, x::Number)
+            return broadcasted(s, f, parent(r), x)
+        end
+        function Base.Broadcast.broadcasted(s::DefaultArrayStyle{1}, f::typeof(\), x::Number, r::$R)
+            return broadcasted(s, f, x, parent(r))
+        end
+
+        Base.first(x::$R) = first(parent(x))
+        Base.step(x::$R) = step(parent(x))
+        Base.last(x::$R) = last(parent(x))
+        Base.length(x::$R) = length(parent(x))
+        Base.step_hp(x::$R) = Base.step_hp(parent(x))
+
+        Base.AbstractUnitRange{T}(x::$R) where {T} = AbstractUnitRange{T}(parent(x))
+
+        @propagate_inbounds Base.getindex(x::$R, i::Integer) = parent(x)[i]
+        @propagate_inbounds Base.getindex(x::$R, i::AbstractRange{<:Integer}) = parent(x)[i]
+
+        Base.intersect(r::$R, s::AbstractRange) = intersect(parent(r), s)
+        Base.intersect(r::AbstractRange, s::$R) = intersect(r, parent(s))
+        Base.intersect(r::$R, s::$R) = intersect(parent(r), parent(s))
+        Base.:(-)(x::$R, y::$R) = -(parent(x), parent(y))
+        Base.:(-)(r1::Union{LinRange, OrdinalRange, StepRangeLen}, r2::$R)  = -(r1, parent(r2))
+        Base.:(-)(r1::$R, r2::Union{LinRange, OrdinalRange, StepRangeLen})  = -(parent(r1), r2)
+        Base.:(+)(x::$R, y::$R) = +(parent(x), parent(y))
+        Base.:(+)(r1::Union{LinRange, OrdinalRange, StepRangeLen}, r2::$R)  = +(r1, parent(r2))
+        Base.:(+)(r1::$R, r2::Union{LinRange, OrdinalRange, StepRangeLen})  = +(parent(r1), r2)
+
+        Base.reverse(r::$R) = reverse(parent(r))
+
+        Base.empty(r::$R) = _empty(parent(r))
+        Base.sum(r::$R) = sum(parent(r))
+
+        Base.iterate(x::$R) = iterate(parent(x))
+        Base.iterate(x::$R, state) = iterate(parent(x), state)
+    end
+end
+
+Base.intersect(r::StaticRange, s::MutableRange) = intersect(parent(r), s)
+Base.intersect(r::MutableRange, s::StaticRange) = intersect(r, parent(s))
+#intersect(r::MutableRange, s::AbstractRange) in StaticRanges at /Users/zchristensen/projects/StaticRanges.jl/src/StaticRanges.jl:137,
+#intersect(r::AbstractRange, s::StaticRange) in StaticRanges at /Users/zchristensen/projects/StaticRanges.jl/src/StaticRanges.jl:138)
+
+ArrayInterface.known_length(::Type{StaticRange{T,R}}) where {T,R} = length(R)
+
+mutable(x::AbstractRange) = MutableRange(x)
+mutable(x::OneTo) = DynamicAxis(last(x))
+
+# although these should technically not need to be completely typed for
+# each, dispatch ignores TwicePrecision on the static version and only
+# uses the first otherwise
+###
+### OneToRange
+###
 
 end
 

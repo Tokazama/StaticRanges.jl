@@ -5,8 +5,9 @@
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://Tokazama.github.io/StaticRanges.jl/dev)
 
 This package was originally inspired by the StaticArrays package.
-It attempts to cover all basic types and methods that would naturally be present given ranges that are either static, fixed, or dynamic.
-The details of what exactly this means are more fully explored in the documentation.
-For those simply wishing to take this package for a spin, try using `srange` and `mrange` just as you would the `range` method from base Julia.
-This will provide you with static and mutable ranges, respectively.
+It provides a basic `srange` method that produces a static range with the same syntax and arguments as `range`.
+Similarly, there is `mrange` constructs mutable ranges.
+Currently, much of this package serves as a place to develop traits that are necessary (but not specific to) [AxisIndices.jl](https://github.com/Tokazama/AxisIndices.jl).
+As more generally applicable traits and interfaces evolve they are often pushed to [ArrayInterface.jl](https://github.com/JuliaArrays/ArrayInterface.jl).
+Therefore, users should consider this package in development and subject to unexpected changes.
 
