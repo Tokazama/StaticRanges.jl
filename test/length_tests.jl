@@ -1,3 +1,10 @@
+if !isdefined(Base, :checked_length)
+    const checked_length = length
+else
+    using Base: checked_length
+end
+
+
 @testset "length - tests" begin
     for (r,b) in ((DynamicAxis(10), OneTo(10)),
                   (mrange(1.0, step=2.0, stop=10.0), 1.0:2.0:10.0),
@@ -35,11 +42,11 @@
         let r = mrange(typemin(Int64), step=2, stop=typemax(Int64)), s = mrange(typemax(Int64), step=-2, stop=typemin(Int64))
             @test first(r) == typemin(Int64)
             @test last(r) == (typemax(Int64)-1)
-            #@test_throws OverflowError length(r)
+            #@test_throws OverflowError checked_length(r)
 
             @test first(s) == typemax(Int64)
             @test last(s) == (typemin(Int64)+1)
-            #@test_throws OverflowError length(s)
+            #@test_throws OverflowError checked_length(s)
         end
 
         @test length(mrange(typemin(Int64), step=3, stop=typemax(Int64))) == 6148914691236517206
@@ -70,13 +77,13 @@
         Tset = Int === Int64 ? (Int,UInt,Int128,UInt128) :
                                (Int,UInt,Int64,UInt64,Int128, UInt128)
         for T in Tset
-            @test_throws OverflowError length(zero(T):typemax(T))
-            @test_throws OverflowError length(typemin(T):typemax(T))
-            @test_throws OverflowError length(zero(T):one(T):typemax(T))
-            @test_throws OverflowError length(typemin(T):one(T):typemax(T))
+            @test_throws OverflowError checked_length(zero(T):typemax(T))
+            @test_throws OverflowError checked_length(typemin(T):typemax(T))
+            @test_throws OverflowError checked_length(zero(T):one(T):typemax(T))
+            @test_throws OverflowError checked_length(typemin(T):one(T):typemax(T))
             if T <: Signed
-                @test_throws OverflowError length(-one(T):typemax(T)-one(T))
-                @test_throws OverflowError length(-one(T):one(T):typemax(T)-one(T))
+                @test_throws OverflowError checked_length(-one(T):typemax(T)-one(T))
+                @test_throws OverflowError checked_length(-one(T):one(T):typemax(T)-one(T))
             end
         end
     end
