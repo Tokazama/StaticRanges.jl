@@ -1,5 +1,4 @@
 
-
 # Ideally the previous _find_all_in method could be used, but things like `div(::Second, ::Integer)`
 # don't work. So this helps drop units by didingin by oneunit(::T) of the same type.
 unsafe_find_value(val, r::R) where {R}= _add1(_int(static_div(val - static_first(r), static_step(r))))

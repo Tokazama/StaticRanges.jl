@@ -3,6 +3,7 @@ module StaticRanges
 
 using LinearAlgebra
 using ChainedFixes
+using ChainedFixes.ChainedCore
 using ArrayInterface
 using ArrayInterface: can_change_size, can_setindex, parent_type
 using ArrayInterface: known_first, known_step, known_last, known_length
