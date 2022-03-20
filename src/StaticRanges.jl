@@ -150,6 +150,11 @@ for R in (MutableRange, StaticRange)
     end
 end
 
+@generated function Base.getindex(t::Tuple, ::StaticRange{<:Any, sr}) where {sr} 
+    Expr(:tuple, (:(t[$i]) for i ∈ sr)...)
+end
+                    
+                    
 Base.intersect(r::StaticRange, s::MutableRange) = intersect(parent(r), s)
 Base.intersect(r::MutableRange, s::StaticRange) = intersect(r, parent(s))
 #intersect(r::MutableRange, s::AbstractRange) in StaticRanges at /Users/zchristensen/projects/StaticRanges.jl/src/StaticRanges.jl:137,
