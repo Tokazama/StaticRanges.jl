@@ -819,6 +819,11 @@ if VERSION > v"1.6" && sizeof(Int) === 8
 end
 include("count_tests.jl")
 
+@testset "Tuple getindex on static range" begin
+    f(t) = t[StaticRange(1:2:end-1)] .+ t[StaticRange(2:2:end)]
+    @test @inferred f((1,2,3,4,5,6)) == (3, 7, 11)
+end
+
 #=
 #@test 1.0:(.3-.1)/.1 == 1.0:2.0
 =#
